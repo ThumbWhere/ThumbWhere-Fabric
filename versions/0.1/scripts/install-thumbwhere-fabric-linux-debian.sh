@@ -10,7 +10,9 @@
 #
 
 INSTALL_IRC=false
-INSTALL_REDIS=true
+INSTALL_REDIS=false
+INSTALL_NODEJS=false
+INSTALL_VARNISH=true
 
 IRCURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
 REDISURL=http://redis.googlecode.com/files/redis-2.4.6.tar.gz
@@ -22,7 +24,7 @@ VARNISHURL=http://repo.varnish-cache.org/source/varnish-3.0.2.tar.gz
 # Generate some more convenient variables based on our config.
 #
 
-DOWNLOADS=tw-downloads
+DOWNLOADS=~/tw-downloads
 HOMEROOT=/home
 
 GROUP=thumbwhere
@@ -55,14 +57,14 @@ echo "*** Creating users and groups...."
 groupadd thumbwhere
 useradd $REDISUSER -m -g $GROUP
 useradd $VARNISHUSER -m -g $GROUP
-useradd $NODEKSUSER -m -g $GROUP
+useradd $NODEJSUSER -m -g $GROUP
 useradd $IRCUSER -m -g $GROUP
 
 #
 # Install the tools we will need
 #
 
-sudo apt-get -y install wget bzip2 binutils g++ make tcl8.5 libv8-dev curl build-essential openssl libssl-dev libssh-dev pkg-config
+sudo apt-get -y install wget bzip2 binutils g++ make tcl8.5 libv8-dev curl build-essential openssl libssl-dev libssh-dev pkg-config libpcre4 libpcre4-dev libpcre++0 xsltproc libncurses5-dev
 
 #
 # Install the source packages...
@@ -253,17 +255,50 @@ then
         cd  $HOMEROOT/$NODEJSUSER
         echo " - Deleting old instance"
         rm -rf $NODEJSFOLDER
-        echo " - Uncompressing $NODEJSFILE"
+        echo " - Uncompressing"
         tar -xzf $NODEJSFILE
-        echo " - Building $NODEJSFILE"
+        echo " - Building"
         cd $NODEJSFOLDER
         ./configure --shared-zlib --shared-cares
         make
-        echo " - Installing $NODEJSFILE"
+	echo " - Testing"
+	make test
+        echo " - Installing"
         make install
+	echo " - Configuring"
 
         echo " - Setting permissions"
+        chown -R $NODEJSUSER.$GROUP $HOMEROOT/$NODEJSUSER/
 
-        chown -R $NODEJSUSER.$GROUP $HOMEROOT/$NODEUSER/
+fi
+
+#
+# Install VARNISH
+#
+
+if [ $INSTALL_VARNISH == 'true' ]
+then
+        echo "*** Installing VARNISH ($VARNISHFOLDER)"
+
+        cp $DOWNLOADS/$VARNISHFILE $HOMEROOT/$VARNISHUSER
+        chown $VARNISHUSER.$GROUP $HOMEROOT/$VARNISHUSER
+        cd  $HOMEROOT/$VARNISHUSER
+        echo " - Deleting old instance"
+        rm -rf $VARNISHFOLDER
+        echo " - Uncompressing"
+        tar -xzf $VARNISHFILE
+        echo " - Building"
+        cd $VARNISHFOLDER
+        ./configure  --sysconfdir=$HOMEROOT/$VARNISHUSER/
+        make
+        #echo " - Testing"
+        #make test
+        echo " - Installing"
+        make install
+        echo " - Configuring"
+
+        echo " - Setting permissions"
+        chown -R $VARNISHUSER.$GROUP $HOMEROOT/$VARNISHUSER/
+
 fi
 
