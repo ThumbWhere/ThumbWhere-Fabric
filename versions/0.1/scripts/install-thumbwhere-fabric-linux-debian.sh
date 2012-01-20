@@ -12,12 +12,16 @@
 INSTALL_IRC=false
 INSTALL_REDIS=false
 INSTALL_NODEJS=false
-INSTALL_VARNISH=true
+INSTALL_VARNISH=false
+INSTALL_HTTPD=true
+INSTALL_FTPD=false
 
 IRCURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
 REDISURL=http://redis.googlecode.com/files/redis-2.4.6.tar.gz
 NODEJSURL=http://nodejs.org/dist/v0.6.8/node-v0.6.8.tar.gz
 VARNISHURL=http://repo.varnish-cache.org/source/varnish-3.0.2.tar.gz
+HTTPDURL=http://apache.mirror.aussiehq.net.au//httpd/httpd-2.2.21.tar.gz
+FTPDURL=ftp://ftp.proftpd.org/distrib/source/proftpd-1.3.4a.tar.gz
 
 
 #
@@ -32,17 +36,23 @@ IRCUSER=tw-irc
 REDISUSER=tw-redis
 NODEJSUSER=tw-nodejs
 VARNISHUSER=tw-varnish
+HTTPDUSER=tw-apache
+FTPDUSER=tw-ftpd
 
 
 IRCFILE=`echo $IRCURL | rev | cut -d\/ -f1 | rev`
 REDISFILE=`echo $REDISURL | rev | cut -d\/ -f1 | rev`
 NODEJSFILE=`echo $NODEJSURL | rev | cut -d\/ -f1 | rev`
 VARNISHFILE=`echo $VARNISHURL | rev | cut -d\/ -f1 | rev`
+HTTPDFILE=`echo $VARNISHURL | rev | cut -d\/ -f1 | rev`
+FTPDFILE=`echo $VARNISHURL | rev | cut -d\/ -f1 | rev`
 
 IRCFOLDER=inspircd
 REDISFOLDER=`echo $REDISFILE | rev | cut -d\. -f3- | rev`
 NODEJSFOLDER=`echo $NODEJSFILE | rev | cut -d\. -f3- | rev`
 VARNISHFOLDER=`echo $VARNISHFILE | rev | cut -d\. -f3- | rev`
+HTTPDFOLDER=`echo $HTTPDFILE | rev | cut -d\. -f3- | rev`
+FTPDFOLDER=`echo $FTPDFILE | rev | cut -d\. -f3- | rev`
 
 REDISCONFIG=$HOMEROOT/$REDISUSER/redis.conf
 REDISLOGS=$HOMEROOT/$REDISUSER
@@ -55,10 +65,12 @@ REDISPID=$HOMEROOT/$REDISUSER/redis.pid
 echo "*** Creating users and groups...."
 
 groupadd thumbwhere
-useradd $REDISUSER -m -g $GROUP
-useradd $VARNISHUSER -m -g $GROUP
-useradd $NODEJSUSER -m -g $GROUP
 useradd $IRCUSER -m -g $GROUP
+useradd $REDISUSER -m -g $GROUP
+useradd $NODEJSUSER -m -g $GROUP
+useradd $VARNISHUSER -m -g $GROUP
+useradd $HTTPDUSER -m -g $GROUP
+useradd $FTPDSER -m -g $GROUP
 
 #
 # Install the tools we will need
@@ -78,6 +90,8 @@ cd $DOWNLOADS
 [ -f $REDISFILE ] && echo "$REDISFILE exists" || wget $REDISURL
 [ -f $NODEJSFILE ] && echo "$NODEJSFILE exists" || wget $NODEJSURL
 [ -f $VARNISHFILE ] && echo "$VARNISHFILE exists" || wget $VARNISHURL
+[ -f $HTTPDFILE ] && echo "$VARNISHFILE exists" || wget $HTTPDURL
+[ -f $FTPDFILE ] && echo "$VARNISHFILE exists" || wget $FTPDURL
 cd ..
 
 #
@@ -301,4 +315,67 @@ then
         chown -R $VARNISHUSER.$GROUP $HOMEROOT/$VARNISHUSER/
 
 fi
+
+#
+# Install HTTPD
+#
+
+if [ $INSTALL_HTTPD == 'true' ]
+then
+        echo "*** Installing HTTPD ($HTTPDFOLDER)"
+
+        cp $DOWNLOADS/$HTTPDFILE $HOMEROOT/$HTTPDUSER
+        chown $HTTPDUSER.$GROUP $HOMEROOT/$HTTPDUSER
+        cd  $HOMEROOT/$HTTPDUSER
+        echo " - Deleting old instance"
+        rm -rf $HTTPDFOLDER
+        echo " - Uncompressing"
+        tar -xzf $HTTPDFILE
+        echo " - Building"
+        cd $HTTPDFOLDER
+        ./configure  --sysconfdir=$HOMEROOT/$HTTPDUSER/
+        make
+        #echo " - Testing"
+        #make test
+        echo " - Installing"
+        make install
+        echo " - Configuring"
+
+        echo " - Setting permissions"
+        chown -R $HTTPDUSER.$GROUP $HOMEROOT/$HTTPDUSER/
+
+fi
+
+
+#
+# Install FTPD
+#
+
+if [ $INSTALL_FTPD == 'true' ]
+then
+        echo "*** Installing FTPD ($FTPDFOLDER)"
+
+        cp $DOWNLOADS/$FTPDFILE $HOMEROOT/$FTPDUSER
+        chown $FTPDUSER.$GROUP $HOMEROOT/$FTPDUSER
+        cd  $HOMEROOT/$FTPDUSER
+        echo " - Deleting old instance"
+        rm -rf $FTPDFOLDER
+        echo " - Uncompressing"
+        tar -xzf $FTPDFILE
+        echo " - Building"
+        cd $FTPDFOLDER
+        ./configure  --sysconfdir=$HOMEROOT/$FTPDUSER/
+        make
+        #echo " - Testing"
+        #make test
+        echo " - Installing"
+        make install
+        echo " - Configuring"
+
+        echo " - Setting permissions"
+        chown -R $FTPDUSER.$GROUP $HOMEROOT/$FTPDUSER/
+
+fi
+
+
 
