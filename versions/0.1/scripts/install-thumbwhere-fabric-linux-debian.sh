@@ -8,14 +8,15 @@
 # We want the script to fail on any errors... so..
 set -e
 
+###############################################################################
 #
 # Config variables
 #
 
-INSTALL_IRC=true
+INSTALL_IRC=false
 INSTALL_REDIS=false
 INSTALL_NODEJS=false
-INSTALL_VARNISH=false
+INSTALL_VARNISH=true
 INSTALL_HTTPD=false
 INSTALL_FTPD=false
 
@@ -26,7 +27,7 @@ VARNISHURL=http://repo.varnish-cache.org/source/varnish-3.0.2.tar.gz
 HTTPDURL=http://apache.mirror.aussiehq.net.au//httpd/httpd-2.2.21.tar.gz
 FTPDURL=ftp://ftp.proftpd.org/distrib/source/proftpd-1.3.4a.tar.gz
 
-
+###############################################################################
 #
 # Generate some more convenient variables based on our config.
 #
@@ -57,42 +58,15 @@ HTTPDFOLDER=`echo $HTTPDFILE | rev | cut -d\. -f3- | rev`
 FTPDFOLDER=`echo $FTPDFILE | rev | cut -d\. -f3- | rev`
 
 IRCCONFIG=/etc/inspircd/inspircd.conf
-IRCPID=$HOMEROOT/$REDISUSER/redis.pid
+IRCPID=$HOMEROOT/$IRCUSER/inspircd.pid
 
 REDISCONFIG=$HOMEROOT/$REDISUSER/redis.conf
 REDISLOGS=$HOMEROOT/$REDISUSER
 REDISPID=$HOMEROOT/$REDISUSER/redis.pid
 
-#
-# Create the users and groups we will need 
-#
-
-echo "*** Creating users and groups...."
+VARNISHCONFIG=$HOMEROOT/$VARNISHUSER/thumbwhere.vcl
 
 groupadd -f thumbwhere
-
-if [ `id -un $IRCUSER` != $IRCUSER ]
-then
- 	useradd $IRCUSER -m -g $GROUP
-else
-	echo "xxx"
- 	#/etc/init.d/$IRCUSER-server stop
-fi
-
-if [ `id -un $REDISUSER` != $REDISUSER ]
-then
-	useradd $REDISUSER -m -g $GROUP
-fi
-
-if [ `id -un $NODEJSUSER` != $NODEJSUSER ]
-then
-	useradd $NODEJSUSER -m -g $GROUP
-fi
-
-if [ `id -un $VARNISHUSER` != $VARNISHUSER ]
-then
-	useradd $VARNISHUSER -m -g $GROUP
-fi
 
 if [ `id -un $HTTPDUSER` != $HTTPDUSER ]
 then
@@ -127,7 +101,7 @@ cd $DOWNLOADS
 cd ..
 
 
-###################################################################
+###############################################################################
 #
 # Install IRC
 # 
@@ -136,21 +110,35 @@ if [ $INSTALL_IRC == 'true' ]
 then
 	echo "*** Installing IRC ($IRCFOLDER)"
 
+	if [ `id -un $IRCUSER` != $IRCUSER ]
+	then
+		 echo " - Adding user $IRCUSER"
+        	useradd $IRCUSER -m -g $GROUP
+	else
+		 echo " - Stopping service"
+        	/etc/init.d/$IRCUSER-server stop
+	fi
+
 	cp $DOWNLOADS/$IRCFILE $HOMEROOT/$IRCUSER
 	chown $IRCUSER.$GROUP $HOMEROOT/$IRCUSER
 	cd  $HOMEROOT/$IRCUSER
 	echo " - Deleting old instance"
-	#rm -rf $IRCFOLDER
-	#rm -rf inspircd
-	echo " - Uncompressing $IRCFILE"
-	#tar -xjf $IRCFILE
-	#mv inspircd $IRCFOLDER # For some reason this package unzips in 'inspircd' so we tweak that..
-	echo " - Building $IRCFILE"
+	rm -rf $IRCFOLDER
+	rm -rf inspircd
+	echo " - Uncompressing"
+	tar -xjf $IRCFILE
+	mv inspircd $IRCFOLDER # For some reason this package unzips in 'inspircd' so we tweak that..
+	echo " - Building"
 	cd $IRCFOLDER
-	#./configure  --uid=$IRCUSER --disable-interactive
-	#make
-	echo " - Installing $IRCFILE"
+	./configure  --uid=$IRCUSER --disable-interactive
+	make
+	echo " - Installing"
 	make install
+
+	#
+	# Generate configure scripts
+	#
+
 	
 # ---- IRC CONFIG -- START ----	
 	
@@ -189,12 +177,12 @@ then
 <files motd="$IRCCONFIG.motd" rules="$IRCCONFIG.rules">
 #<execfiles rules="wget -O - http://www.example.com/rules.txt">
 <channels users="20" opers="60">
-<pid file="$HOMEROOT/$IRCUSER/inspircd.pid">
+<pid file="$IRCPID">
 <banlist chan="*" limit="69">
 #<disabled commands="TOPIC MODE" usermodes="" chanmodes="" fakenonexistant="yes">
 <options prefixquit="Quit: " suffixquit="" prefixpart="&quot;" suffixpart="&quot;" syntaxhints="yes" cyclehosts="yes" cyclehostsfromuser="no" ircumsgprefix="no" announcets="yes" allowmismatched="no" defaultbind="auto" hostintopic="yes" pingwarning="15" serverpingfreq="60" defaultmodes="nt" moronbanner="You're banned! Email abuse@thumbwhere.com with the ERROR line below for help." exemptchanops="nonick:v flood:o" invitebypassmodes="yes">
 <performance netbuffersize="10240" maxwho="4096" somaxconn="128" softlimit="12800" quietbursts="yes" nouserdns="no">
-<security announceinvites="dynamic" hidemodes="eI" hideulines="no" flatlinks="no" hidewhois="" hidebans="no" hidekills="" hidesplits="no" maxtargets="20" customversion="" operspywhois="no" runasuser="tw-irc" restrictbannedusers="yes" genericoper="no" userstats="Pu">
+<security announceinvites="dynamic" hidemodes="eI" hideulines="no" flatlinks="no" hidewhois="" hidebans="no" hidekills="" hidesplits="no" maxtargets="20" customversion="" operspywhois="no" runasuser="$IRCUSER" restrictbannedusers="yes" genericoper="no" userstats="Pu">
 <limits maxnick="31" maxchan="64" maxmodes="20" maxident="11" maxquit="255" maxtopic="307" maxkick="255" maxgecos="128" maxaway="200">
 <log method="file" type="* -USERINPUT -USEROUTPUT" level="default" target="ircd.log">
 <whowas groupsize="10" maxgroups="100000" maxkeep="3d">
@@ -242,25 +230,29 @@ EOF
 
 # ---- IRC CONTROL SCRIPT -- START --
 
-	cat > /etc/init.d/tw-irc-server << EOF
+	cat > /etc/init.d/$IRCUSER-server << EOF
 #!/bin/sh
 ### BEGIN INIT INFO
-# Provides:          inspircd
+# Provides:          $IRCUSER-server
 # Required-Start:    \$network \$syslog \$time
 # Required-Stop:     \$syslog
 # Should-Start:      \$local_fs
 # Should-Stop:       \$local_fs
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Start inspircd
-# Description:       Starts the inspircd irc server
+# Short-Description: Controls the irc server
+# Description:       Controls the irc server.
 ### END INIT INFO
 # GPL Licensed
 
-IRCD="/var/lib/inspircd/inspircd"
-IRCDPID="$HOMEROOT/$IRCUSER/inspircd.pid"
+# Source function library
+. /lib/lsb/init-functions
+
+IRCD="/usr/sbin/inspircd"
+IRCDPID="$IRCPID"
 IRCDLOG="/var/log/inspircd.log"
-IRCDARGS="--logfile \$IRCDLOG"
+IRCDCONFIG="$IRCCONFIG"
+IRCDARGS="--logfile \$IRCDLOG --config \$IRCDCONFIG"
 USER="$IRCUSER"
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
@@ -271,20 +263,20 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 if [ ! -x "\$IRCD" ]; then exit 0; fi
 
 if [ -f "\$IRCDPID" ]; then
-        IRCDPIDN=`cat "\$IRCDPID" 2> /dev/null`
+	IRCDPIDN="\`cat \"\$IRCDPID\" 2> /dev/null\`"
 fi
 
 start_ircd()
 {
         [ -f "\$IRCDPID" ] || ( touch "\$IRCDPID" ; chown "\$USER" "\$IRCDPID" )
         [ -f "\$IRCDLOG" ] || ( touch "\$IRCDLOG" ; chown "\$USER:thumbwhere" "\$IRCDLOG" ; chmod 0640 "\$IRCDLOG" )
-        #export LD_LIBRARY_PATH=/usr/lib/inspircd
-        start-stop-daemon --start --quiet --oknodo --chuid "\$USER" --pidfile "\$IRCDPID" --exec "\$IRCD" -- start
+        export LD_LIBRARY_PATH=/usr/lib/inspircd
+        start-stop-daemon --start --quiet --oknodo --chuid "\$USER" --pidfile "\$IRCDPID" --exec "\$IRCD" --  \$IRCDARGS
 }
 
 stop_ircd()
 {
-        start-stop-daemon --stop --quiet --pidfile "\$IRCDPID" > /dev/null 2> /dev/null
+        start-stop-daemon --stop --quiet --pidfile "\$IRCDPID" 
         rm -f "\$IRCDPID"
         return 0
 }
@@ -332,9 +324,10 @@ case "\$1" in
 esac
 EOF
 
-chmod +x /etc/init.d/tw-irc-server
-chown root.root /etc/init.d/tw-irc-server
-ln -fs /etc/init.d/tw-irc-server /etc/rc2.d/S19tw-irc-server
+chmod +x /etc/init.d/$IRCUSER-server
+insserv /etc/init.d/$IRCUSER-server
+chown root.root /etc/init.d/$IRCUSER-server
+#ln -fs /etc/init.d/$IRCUSER-server /etc/rc2.d/S19$IRCUSER-server
 
 # ---- IRC CONTROL SCRIPT --- END ---
 
@@ -342,12 +335,12 @@ ln -fs /etc/init.d/tw-irc-server /etc/rc2.d/S19tw-irc-server
 	chown -R $IRCUSER.$GROUP $HOMEROOT/$IRCUSER/
 
 	echo " - Starting service"
-	 /etc/init.d/$IRCUSER-server start
+	/etc/init.d/$IRCUSER-server start
 
 fi
 
 
-###################################################
+###############################################################################
 #
 # Install Redis
 #
@@ -355,47 +348,52 @@ fi
 if [ $INSTALL_REDIS == 'true' ]
 then
 	echo "*** Installing REDIS ($REDISFILE)"
-
+	if [ `id -un $REDISUSER` != $REDISUSER ]
+	then
+		 echo " - Adding user $REDISUSER"
+		useradd $REDISUSER -m -g $GROUP
+	else
+		/etc/init.d/$REDISUSER-server stop
+	fi
 	cp $DOWNLOADS/$REDISFILE $HOMEROOT/$REDISUSER
 	chown $REDISUSER.$GROUP $HOMEROOT/$REDISUSER
 	cd  $HOMEROOT/$REDISUSER
 	echo " - Deleting old instance"
 	rm -rf $REDISFOLDER
-	echo " - Uncompressing $REDISILE"
+	echo " - Uncompressing"
 	tar -xvf $REDISFILE
-	echo " - Building $REDISFILE"
+	echo " - Building"
 	cd $REDISFOLDER
-	#make
-	echo " - Testing $REDISFILE"
-	#make test
-	echo " - Installing $REDISFILE"
-	#make install
+	make
+	echo " - Testing"
+	make test
+	echo " - Installing"
+	make install
 
 	# 
 	# Generate configure scripts
 	#	
 
-
 	echo " - Configuring"
-
-
-
 
 # --- REDIS CONTROL SCRIPT -- START ----
 	
-	cat > /etc/init.d/tw-redis-server << EOF
+	cat > /etc/init.d/$REDISUSER-server << EOF
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides:             tw-redis-server
+# Provides:             $REDISUSER-server
 # Required-Start:       $syslog $remote_fs
 # Required-Stop:        $syslog $remote_fs
 # Should-Start:         $local_fs
 # Should-Stop:          $local_fs
 # Default-Start:        2 3 4 5
 # Default-Stop:         0 1 6
-# Short-Description:    tw-redis-server - Persistent key-value db for ThumbWhere
-# Description:          tw-redis-server - Persistent key-value db for ThumbWhere
+# Short-Description:    $REDISUSER-server - Persistent key-value db for ThumbWhere
+# Description:          $REDISUSER-server - Persistent key-value db for ThumbWhere
 ### END INIT INFO
+
+# Source function library
+. /lib/lsb/init-functions
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/local/bin/redis-server
@@ -416,18 +414,18 @@ case "\$1" in
         chown $REDISUSER:$GROUP \$PIDFILE
         if start-stop-daemon --start --quiet --umask 007 --pidfile \$PIDFILE --chuid $REDISUSER:$GROUP --exec \$DAEMON -- \$DAEMON_ARGS
         then
-                echo "\$NAME."
+		 log_end_msg 0
         else
-                echo "failed"
+		 log_end_msg 1
         fi
         ;;
   stop)
         echo -n "Stopping \$DESC: "
         if start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE --exec \$DAEMON
         then
-                echo "\$NAME."
+		log_end_msg 0
         else
-                echo "failed"
+		log_end_msg 1
         fi
         rm -f \$PIDFILE
         ;;
@@ -445,9 +443,10 @@ esac
 exit 0
 EOF
 
-chmod +x /etc/init.d/tw-redis-server
-chown root.root /etc/init.d/tw-redis-server
-ln -fs /etc/init.d/tw-redis-server /etc/rc2.d/S19tw-redis-server 
+chmod +x /etc/init.d/$REDISUSER-server
+chown root.root /etc/init.d/$REDISUSER-server
+insserv /etc/init.d/$REDISUSER-server
+#ln -fs /etc/init.d/$REDISUSER-server /etc/rc2.d/S19$REDISUSER-server 
 
 # ---- REDIS CONTROL SCRIPT -- END ----
 
@@ -489,8 +488,11 @@ EOF
 
 	chown -R $REDISUSER.$GROUP $HOMEROOT/$REDISUSER/
 
+        echo " - Starting service"
+        /etc/init.d/$REDISUSER-server start
 fi
 
+###############################################################################
 #
 # Install NODEJS
 #
@@ -498,6 +500,12 @@ fi
 if [ $INSTALL_NODEJS == 'true' ]
 then
         echo "*** Installing NODEJS ($NODEJSFOLDER)"
+
+	if [ `id -un $NODEJSUSER` != $NODEJSUSER ]
+	then
+		echo " - Adding user $NODEJSUSER"
+		useradd $NODEJSUSER -m -g $GROUP
+	fi
 
         cp $DOWNLOADS/$NODEJSFILE $HOMEROOT/$NODEJSUSER
         chown $NODEJSUSER.$GROUP $HOMEROOT/$NODEJSUSER
@@ -508,10 +516,10 @@ then
         tar -xzf $NODEJSFILE
         echo " - Building"
         cd $NODEJSFOLDER
-        ./configure --shared-zlib --shared-cares  --sysconfdir=$HOMEROOT/$NODEJSUSER/
+        ./configure --shared-zlib --shared-cares
         make
-	echo " - Testing"
-	make test
+	#echo " - Testing"
+	#make test
         echo " - Installing"
         make install
 	echo " - Configuring"
@@ -521,6 +529,7 @@ then
 
 fi
 
+###############################################################################
 #
 # Install VARNISH
 #
@@ -529,28 +538,169 @@ if [ $INSTALL_VARNISH == 'true' ]
 then
         echo "*** Installing VARNISH ($VARNISHFOLDER)"
 
+	
+	if [ `id -un $VARNISHUSER` != $VARNISHUSER ]
+	then
+		echo " - Adding user $VARNISHUSER"
+		useradd $VARNISHUSER -m -g $GROUP
+	else
+		echo " - Starting service"
+		/etc/init.d/$VARNISHUSER-server stop
+	fi
+
         cp $DOWNLOADS/$VARNISHFILE $HOMEROOT/$VARNISHUSER
         chown $VARNISHUSER.$GROUP $HOMEROOT/$VARNISHUSER
         cd  $HOMEROOT/$VARNISHUSER
         echo " - Deleting old instance"
-        rm -rf $VARNISHFOLDER
+        #rm -rf $VARNISHFOLDER
         echo " - Uncompressing"
-        tar -xzf $VARNISHFILE
+        #tar -xzf $VARNISHFILE
         echo " - Building"
         cd $VARNISHFOLDER
-        ./configure  --sysconfdir=$HOMEROOT/$VARNISHUSER/
-        make
-        #echo " - Testing"
-        #make test
+        #./configure 
+        #make
         echo " - Installing"
         make install
         echo " - Configuring"
 
+# ---- VARNISH CONTROL SCRIPT -- START ----
+
+        cat > /etc/init.d/$VARNISHUSER-server << EOF
+#! /bin/sh
+
+### BEGIN INIT INFO
+# Provides:          $VARNISHUSER-server
+# Required-Start:    \$local_fs \$remote_fs \$network
+# Required-Stop:     \$local_fs \$remote_fs \$network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start HTTP accelerator
+# Description:       This script provides a server-side cache
+#                    to be run in front of a httpd and should
+#                    listen on port 80 on a properly configured
+#                    system
+### END INIT INFO
+
+# Source function library
+. /lib/lsb/init-functions
+
+NAME=varnishd
+DESC="ThumbWhere HTTP accelerator (Varnish)"
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin/
+DAEMON=/usr/local/sbin/varnishd
+PIDFILE=/var/run/\$NAME.pid
+
+test -x \$DAEMON || echo "Could not locate \$DAEMON" exit 0
+
+# Open files (usually 1024, which is way too small for varnish)
+ulimit -n \${NFILES:-131072}
+
+# Maxiumum locked memory size for shared memory log
+ulimit -l \${MEMLOCK:-82000}
+
+DAEMON_OPTS="-f $VARNISHCONFIG"
+
+# Ensure we have a PATH
+export PATH="\${PATH:+\$PATH:}/usr/sbin:/usr/bin:/sbin:/bin"
+
+start_varnishd() {
+    log_daemon_msg "Starting \$DESC" "\$NAME"
+    output=\$(/bin/tempfile -s.varnish)
+    if start-stop-daemon --start --quiet --pidfile \${PIDFILE} --exec \${DAEMON} -- -P \${PIDFILE} \$DAEMON_OPTS > \${output} 2>&1; then
+        log_end_msg 0
+    else
+        log_end_msg 1
+        cat \$output
+        exit 1
+    fi
+    rm \$output
+}
+
+disabled_varnishd() {
+    log_daemon_msg "Not starting \$DESC" "\$NAME"
+    log_progress_msg "disabled in /etc/default/varnish"
+    log_end_msg 0
+}
+
+stop_varnishd() {
+    log_daemon_msg "Stopping \$DESC" "\$NAME"
+    if start-stop-daemon \
+        --stop --quiet --pidfile \$PIDFILE --retry 10 \
+        --exec \$DAEMON; then
+        log_end_msg 0
+    else
+        log_end_msg 1
+    fi
+}
+
+reload_varnishd() {
+    log_daemon_msg "Reloading \$DESC" "\$NAME"
+    if /usr/share/varnish/reload-vcl -q; then
+        log_end_msg 0
+    else
+        log_end_msg 1
+    fi
+}
+
+status_varnishd() {
+    status_of_proc -p "\${PIDFILE}" "\${DAEMON}" "\${NAME}"
+}
+
+case "\$1" in
+    start)
+        start_varnishd
+        ;;
+    stop)
+        stop_varnishd
+        ;;
+    reload)
+        reload_varnishd
+        ;;
+    status)
+        status_varnishd
+        ;;
+    restart|force-reload)
+        \$0 stop
+        \$0 start
+        ;;
+    *)
+        log_success_msg "Usage: \$0 {start|stop|restart|force-reload}"
+        exit 1
+        ;;
+esac
+
+exit 0
+EOF
+
+# ---- VARNISH CONTROL SCRIPT -- END ----
+
+# ---- VARNISH CONFIG -- START ----
+
+cat > $VARNISHCONFIG << EOF
+backend default {
+	.host = "127.0.0.1";
+	.port = "80";
+}
+EOF
+
+# ---- VARNISH CONFIG -- END ----
+
+chmod +x /etc/init.d/$VARNISHUSER-server
+chown root.root /etc/init.d/$VARNISHUSER-server
+insserv /etc/init.d/$VARNISHUSER-server
+#ln -fs /etc/init.d/$VARNISHUSER-server /etc/rc2.d/S19$VARNISHUSER-server
+
+# ---- VARNISH CONTROL SCRIPT -- END ----
+
         echo " - Setting permissions"
         chown -R $VARNISHUSER.$GROUP $HOMEROOT/$VARNISHUSER/
 
+        echo " - Starting service"
+        /etc/init.d/$VARNISHUSER-server start
+
 fi
 
+###############################################################################
 #
 # Install HTTPD
 #
@@ -608,8 +758,4 @@ then
 
         echo " - Setting permissions"
         chown -R $FTPDUSER.$GROUP $HOMEROOT/$FTPDUSER/
-
 fi
-
-
-
