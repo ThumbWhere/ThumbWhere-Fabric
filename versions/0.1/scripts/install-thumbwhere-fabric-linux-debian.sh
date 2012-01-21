@@ -58,6 +58,7 @@ HTTPDFOLDER=`echo $HTTPDFILE | rev | cut -d\. -f3- | rev`
 FTPDFOLDER=`echo $FTPDFILE | rev | cut -d\. -f3- | rev`
 
 IRCCONFIG=/etc/inspircd/inspircd.conf
+IRCPID=$HOMEROOT/$REDISUSER/redis.pid
 
 REDISCONFIG=$HOMEROOT/$REDISUSER/redis.conf
 REDISLOGS=$HOMEROOT/$REDISUSER
@@ -252,7 +253,7 @@ EOF
 ### END INIT INFO
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=/usr/local/bin/irc-server
+DAEMON=$HOMEROOT/$IRCUSER/inspircd/inspircd
 NAME=irc-server
 DESC=irc-server
 PIDFILE=$IRCPID
@@ -276,7 +277,7 @@ case "\$1" in
         ;;
   stop)
         echo -n "Stopping \$DESC: "
-        if start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE --exec \$DAEMON -- stop
+        if start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE  --chuid $IRCUSER:$GROUP --exec \$DAEMON -- stop
         then
                 echo "\$NAME."
         else
