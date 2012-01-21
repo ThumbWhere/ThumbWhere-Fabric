@@ -1,4 +1,4 @@
-########################################################
+#######################################################
 #
 # This will setup ThumbWhere Fabric node on a Linux Box
 #
@@ -135,33 +135,50 @@ then
 	chown $IRCUSER.$GROUP $HOMEROOT/$IRCUSER
 	cd  $HOMEROOT/$IRCUSER
 	echo " - Deleting old instance"
-	rm -rf $IRCFOLDER
+	#rm -rf $IRCFOLDER
+	#rm -rf inspircd
 	echo " - Uncompressing $IRCFILE"
-	tar -xjf $IRCFILE
-	mv inspircd $IRCFOLDER # For some reason this package unzips in 'inspircd' so we tweak that..
+	#tar -xjf $IRCFILE
+	#mv inspircd $IRCFOLDER # For some reason this package unzips in 'inspircd' so we tweak that..
 	echo " - Building $IRCFILE"
 	cd $IRCFOLDER
-	./configure  --uid=$IRCUSER --disable-interactive  --prefix=$HOMEROOT/$IRCUSER/inspircd
-	make
+	#./configure  --uid=$IRCUSER --disable-interactive  --prefix=$HOMEROOT/$IRCUSER/inspircd
+	#make
 	echo " - Installing $IRCFILE"
-	make install
-		cat > $IRCCONFIG << EOF
+	#make install
+	cat > $IRCCONFIG << EOF
 <config format="xml">
 <define name="bindip" value="0.0.0.0">
 <define name="localips" value="&bindip;/24">
 <server name="irc.thumbwhere.com" description="ThumbWhere IRC Server" network="ThumbWhere">
 <admin name="ThumbWhere" nick="ThumbWhere" email="thumbwhere@thumbwhere.com">
-<bind address="" port="6697" type="clients" ssl="gnutls" >
-<bind address="" port="6660-6669" type="clients">
-<bind address="" port="7000,7001" type="servers">
+<bind address="&bindip;" port="6697" type="clients" ssl="openssl" >
+<bind address="&bindip;" port="6660-6669" type="clients">
+<bind address="&bindip;" port="7000,7001" type="servers">
 <bind address="&bindip;" port="7005" type="servers" ssl="openssl">
 <power diepass="" restartpass="">
 <connect deny="69.254.*">
 <connect deny="3ffe::0/32" reason="The 6bone address space is deprecated">
 <connect name="main" allow="*" maxchans="30" timeout="10" pingfreq="120" hardsendq="1048576" softsendq="8192" recvq="8192" threshold="10" commandrate="1000" fakelag="on" localmax="3" globalmax="3" useident="no" limit="5000" modes="+x">
-<include file="conf/opers.conf">
-<include file="conf/links.conf">
-<files motd="conf/inspircd.motd" rules="conf/inspircd.rules">
+# OPERS
+<class name="Shutdown" commands="DIE RESTART REHASH LOADMODULE UNLOADMODULE RELOAD GUNLOADMODULE GRELOADMODULE SAJOIN SAPART SANICK SAQUIT SATOPIC"  
+	    privs="users/auspex channels/auspex servers/auspex users/mass-message channels/high-join-limit channels/set-permanent users/flood/no-throttle users/flood/increased-buffers"     
+		usermodes="*" chanmodes="*">
+<class name="ServerLink" commands="CONNECT SQUIT CONNECT MKPASSWD ALLTIME SWHOIS CLOSE JUMPSERVER LOCKSERV" usermodes="*" chanmodes="*" privs="servers/auspex">
+<class name="BanControl" commands="KILL GLINE KLINE ZLINE QLINE ELINE TLINE RLINE CHECK NICKLOCK SHUN CLONES CBAN" usermodes="*" chanmodes="*">
+<class name="OperChat" commands="WALLOPS GLOBOPS SETIDLE" usermodes="*" chanmodes="*" privs="users/mass-message">
+<class name="HostCloak" commands="SETHOST SETIDENT SETNAME CHGHOST CHGIDENT TAXONOMY" usermodes="*" chanmodes="*" privs="users/auspex">
+<type name="NetAdmin" classes="OperChat BanControl HostCloak Shutdown ServerLink" vhost="netadmin.irc.thumbwhere.com" modes="+s +cCqQ">
+<type name="GlobalOp" classes="OperChat BanControl HostCloak ServerLink" vhost="ircop.irc.thumbwhere.com">
+<type name="Helper" classes="HostCloak" vhost="helper.irc.thumbwhere.com">
+<oper name="ThumbWhere" hash="sha256" password="accff88f4b5fa17ac2bdf6fb7428119f999cf9bed698663a65a5681a4023d4fe" host="*@*" type="NetAdmin">
+# LINKS
+#<link name="hub.irc.thumbwhere.com" ipaddr="hub.irc.thumbwhere.com" port="7000" allowmask="*/24"  timeout="300"  ssl="openssl"  bind="&bindip;" statshidden="no" hidden="no" sendpass="outgoing!password" recvpass="incoming!password">
+#<link name="services.irc.thumbwhere.com" ipaddr="localhost" port="7000" allowmask="127.0.0.0/8" sendpass="password" recvpass="password">
+#<autoconnect period="300" server="hub.irc.thumbwhere.com">
+#<autoconnect period="120" server="hub-backup.irc.thumbwhere.com ">
+<uline server="services.irc.thumbwhere.com" silent="yes">
+<files motd="$IRCCONFIG.motd" rules="$IRCCONFIG.rules">
 #<execfiles rules="wget -O - http://www.example.com/rules.txt">
 <channels users="20" opers="60">
 <pid file="$HOMEROOT/$IRCUSER/inspircd.pid">
@@ -169,7 +186,7 @@ then
 #<disabled commands="TOPIC MODE" usermodes="" chanmodes="" fakenonexistant="yes">
 <options prefixquit="Quit: " suffixquit="" prefixpart="&quot;" suffixpart="&quot;" syntaxhints="yes" cyclehosts="yes" cyclehostsfromuser="no" ircumsgprefix="no" announcets="yes" allowmismatched="no" defaultbind="auto" hostintopic="yes" pingwarning="15" serverpingfreq="60" defaultmodes="nt" moronbanner="You're banned! Email abuse@thumbwhere.com with the ERROR line below for help." exemptchanops="nonick:v flood:o" invitebypassmodes="yes">
 <performance netbuffersize="10240" maxwho="4096" somaxconn="128" softlimit="12800" quietbursts="yes" nouserdns="no">
-<security announceinvites="dynamic" hidemodes="eI" hideulines="no" flatlinks="no" hidewhois="" hidebans="no" hidekills="" hidesplits="no" maxtargets="20" customversion="" operspywhois="no" runasuser="tw-irc" runasgroup="thumbwhere" restrictbannedusers="yes" genericoper="no" userstats="Pu">
+<security announceinvites="dynamic" hidemodes="eI" hideulines="no" flatlinks="no" hidewhois="" hidebans="no" hidekills="" hidesplits="no" maxtargets="20" customversion="" operspywhois="no" runasuser="tw-irc" restrictbannedusers="yes" genericoper="no" userstats="Pu">
 <limits maxnick="31" maxchan="64" maxmodes="20" maxident="11" maxquit="255" maxtopic="307" maxkick="255" maxgecos="128" maxaway="200">
 <log method="file" type="* -USERINPUT -USEROUTPUT" level="default" target="ircd.log">
 <whowas groupsize="10" maxgroups="100000" maxkeep="3d">
@@ -181,8 +198,38 @@ then
 <badhost host="*@172.32.0.0/16" reason="This subnet is bad.">
 <exception host="*@ircop.host.com" reason="Opers hostname">
 <insane hostmasks="no" ipmasks="no" nickmasks="no" trigger="95.5">
-<include file="conf/modules.conf">
+# MODULES
+<module name="m_md5.so">
+<module name="m_sha256.so">
+<module name="m_ripemd160.so">
+<module name="m_password_hash.so">
+<module name="m_abbreviation.so">
+<module name="m_alias.so">
+<alias text="NICKSERV" replace="PRIVMSG NickServ :$2-" requires="NickServ" uline="yes">
+<alias text="CHANSERV" replace="PRIVMSG ChanServ :$2-" requires="ChanServ" uline="yes">
+<alias text="OPERSERV" replace="PRIVMSG OperServ :$2-" requires="OperServ" uline="yes" operonly="yes">
+<alias text="BOTSERV" replace="PRIVMSG BotServ :$2-" requires="BotServ" uline="yes">
+<alias text="HOSTSERV" replace="PRIVMSG HostServ :$2-" requires="HostServ" uline="yes">
+<alias text="MEMOSERV" replace="PRIVMSG MemoServ :$2-" requires="MemoServ" uline="yes">
+<module name="m_autoop.so">
+<module name="m_banexception.so">
+<module name="m_banredirect.so">
+<module name="m_botmode.so">
+<module name="m_chanprotect.so">
+<chanprotect noservices="no" qprefix="~" aprefix="&amp;" deprotectself="yes" deprotectothers="yes">
+<module name="m_check.so">
+<module name="m_spanningtree.so">
 EOF
+
+cat > $IRCCONFIG.rules << EOF
+These are the rules.
+EOF
+
+cat > $IRCCONFIG.motd << EOF
+This is the MOTD
+EOF
+
+
 
 	echo " - Setting permissions"
 	chown -R $IRCUSER.$GROUP $HOMEROOT/$IRCUSER/
@@ -225,6 +272,17 @@ then
 	
 	cat > /etc/init.d/tw-redis-server << EOF
 #! /bin/sh
+### BEGIN INIT INFO
+# Provides:             tw-redis-server
+# Required-Start:       $syslog $remote_fs
+# Required-Stop:        $syslog $remote_fs
+# Should-Start:         $local_fs
+# Should-Stop:          $local_fs
+# Default-Start:        2 3 4 5
+# Default-Stop:         0 1 6
+# Short-Description:    tw-redis-server - Persistent key-value db for ThumbWhere
+# Description:          tw-redis-server - Persistent key-value db for ThumbWhere
+### END INIT INFO
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/local/bin/redis-server
