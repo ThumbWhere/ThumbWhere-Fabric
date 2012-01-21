@@ -5,15 +5,18 @@
 # Although this script can be run manually, in will generally
 # be executed as part of an automated install.
 
+# We want the script to fail on any errors... so..
+set -e
+
 #
 # Config variables
 #
 
-INSTALL_IRC=false
+INSTALL_IRC=true
 INSTALL_REDIS=false
 INSTALL_NODEJS=false
 INSTALL_VARNISH=false
-INSTALL_HTTPD=true
+INSTALL_HTTPD=false
 INSTALL_FTPD=false
 
 IRCURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
@@ -36,7 +39,7 @@ IRCUSER=tw-irc
 REDISUSER=tw-redis
 NODEJSUSER=tw-nodejs
 VARNISHUSER=tw-varnish
-HTTPDUSER=tw-apache
+HTTPDUSER=tw-httpd
 FTPDUSER=tw-ftpd
 
 
@@ -44,8 +47,8 @@ IRCFILE=`echo $IRCURL | rev | cut -d\/ -f1 | rev`
 REDISFILE=`echo $REDISURL | rev | cut -d\/ -f1 | rev`
 NODEJSFILE=`echo $NODEJSURL | rev | cut -d\/ -f1 | rev`
 VARNISHFILE=`echo $VARNISHURL | rev | cut -d\/ -f1 | rev`
-HTTPDFILE=`echo $VARNISHURL | rev | cut -d\/ -f1 | rev`
-FTPDFILE=`echo $VARNISHURL | rev | cut -d\/ -f1 | rev`
+HTTPDFILE=`echo $HTTPDURL | rev | cut -d\/ -f1 | rev`
+FTPDFILE=`echo $FTPDURL | rev | cut -d\/ -f1 | rev`
 
 IRCFOLDER=inspircd
 REDISFOLDER=`echo $REDISFILE | rev | cut -d\. -f3- | rev`
@@ -64,19 +67,43 @@ REDISPID=$HOMEROOT/$REDISUSER/redis.pid
 
 echo "*** Creating users and groups...."
 
-groupadd thumbwhere
-useradd $IRCUSER -m -g $GROUP
-useradd $REDISUSER -m -g $GROUP
-useradd $NODEJSUSER -m -g $GROUP
-useradd $VARNISHUSER -m -g $GROUP
-useradd $HTTPDUSER -m -g $GROUP
-useradd $FTPDSER -m -g $GROUP
+groupadd -f thumbwhere
+
+if [ `id -un $IRCUSER` != $IRCUSER ]
+then
+ 	useradd $IRCUSER -m -g $GROUP
+fi
+
+if [ `id -un $REDISUSER` != $REDISUSER ]
+then
+	useradd $REDISUSER -m -g $GROUP
+fi
+
+if [ `id -un $NODEJSUSER` != $NODEJSUSER ]
+then
+	useradd $NODEJSUSER -m -g $GROUP
+fi
+
+if [ `id -un $VARNISHUSER` != $VARNISHUSER ]
+then
+	useradd $VARNISHUSER -m -g $GROUP
+fi
+
+if [ `id -un $HTTPDUSER` != $HTTPDUSER ]
+then
+	useradd $HTTPDUSER -m -g $GROUP
+fi
+
+if [ `id -un $FTPDUSER` != $FTPDUSER ]
+then
+	useradd $FTPDUSER -m -g $GROUP
+fi
 
 #
 # Install the tools we will need
 #
 
-sudo apt-get -y install wget bzip2 binutils g++ make tcl8.5 libv8-dev curl build-essential openssl libssl-dev libssh-dev pkg-config libpcre4 libpcre4-dev libpcre++0 xsltproc libncurses5-dev
+sudo apt-get -y install wget bzip2 binutils g++ make tcl8.5 libv8-dev curl build-essential openssl libssl-dev libssh-dev pkg-config libpcre3 libpcre3-dev libpcre++0 xsltproc libncurses5-dev
 
 #
 # Install the source packages...
@@ -90,8 +117,8 @@ cd $DOWNLOADS
 [ -f $REDISFILE ] && echo "$REDISFILE exists" || wget $REDISURL
 [ -f $NODEJSFILE ] && echo "$NODEJSFILE exists" || wget $NODEJSURL
 [ -f $VARNISHFILE ] && echo "$VARNISHFILE exists" || wget $VARNISHURL
-[ -f $HTTPDFILE ] && echo "$VARNISHFILE exists" || wget $HTTPDURL
-[ -f $FTPDFILE ] && echo "$VARNISHFILE exists" || wget $FTPDURL
+[ -f $HTTPDFILE ] && echo "$HTTPDFILE exists" || wget $HTTPDURL
+[ -f $FTPDFILE ] && echo "$FTPDFILE exists" || wget $FTPDURL
 cd ..
 
 #
@@ -111,7 +138,7 @@ then
 	tar -xjf $IRCFILE
 	echo " - Building $IRCFILE"
 	cd $IRCFOLDER
-	./configure  --uid=$IRCUSER --disable-interactive 
+	./configure  --uid=$IRCUSER --disable-interactive  --sysconfdir=$HOMEROOT/$FTPDUSER/
 	make
 	echo " - Installing $IRCFILE"
 	#make INSTUID=` id -u $IRCUSER` install
@@ -273,7 +300,7 @@ then
         tar -xzf $NODEJSFILE
         echo " - Building"
         cd $NODEJSFOLDER
-        ./configure --shared-zlib --shared-cares
+        ./configure --shared-zlib --shared-cares  --sysconfdir=$HOMEROOT/$NODEJSUSER/
         make
 	echo " - Testing"
 	make test
