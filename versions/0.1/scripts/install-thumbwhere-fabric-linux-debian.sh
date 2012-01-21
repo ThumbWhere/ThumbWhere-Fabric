@@ -42,7 +42,6 @@ VARNISHUSER=tw-varnish
 HTTPDUSER=tw-httpd
 FTPDUSER=tw-ftpd
 
-
 IRCFILE=`echo $IRCURL | rev | cut -d\/ -f1 | rev`
 REDISFILE=`echo $REDISURL | rev | cut -d\/ -f1 | rev`
 NODEJSFILE=`echo $NODEJSURL | rev | cut -d\/ -f1 | rev`
@@ -75,6 +74,9 @@ groupadd -f thumbwhere
 if [ `id -un $IRCUSER` != $IRCUSER ]
 then
  	useradd $IRCUSER -m -g $GROUP
+else
+	echo "xxx"
+ 	#/etc/init.d/$IRCUSER-server stop
 fi
 
 if [ `id -un $REDISUSER` != $REDISUSER ]
@@ -124,6 +126,8 @@ cd $DOWNLOADS
 [ -f $FTPDFILE ] && echo "$FTPDFILE exists" || wget $FTPDURL
 cd ..
 
+
+###################################################################
 #
 # Install IRC
 # 
@@ -143,10 +147,10 @@ then
 	#mv inspircd $IRCFOLDER # For some reason this package unzips in 'inspircd' so we tweak that..
 	echo " - Building $IRCFILE"
 	cd $IRCFOLDER
-	#./configure  --uid=$IRCUSER --disable-interactive  --prefix=$HOMEROOT/$IRCUSER/inspircd
+	#./configure  --uid=$IRCUSER --disable-interactive
 	#make
 	echo " - Installing $IRCFILE"
-	#make install
+	make install
 	
 # ---- IRC CONFIG -- START ----	
 	
@@ -239,64 +243,93 @@ EOF
 # ---- IRC CONTROL SCRIPT -- START --
 
 	cat > /etc/init.d/tw-irc-server << EOF
-#! /bin/sh
+#!/bin/sh
 ### BEGIN INIT INFO
-# Provides:             tw-irc-server
-# Required-Start:       $syslog $remote_fs
-# Required-Stop:        $syslog $remote_fs
-# Should-Start:         $local_fs
-# Should-Stop:          $local_fs
-# Default-Start:        2 3 4 5
-# Default-Stop:         0 1 6
-# Short-Description:    tw-irc-server - Persistent key-value db for ThumbWhere
-# Description:          tw-irc-server - Persistent key-value db for ThumbWhere
+# Provides:          inspircd
+# Required-Start:    \$network \$syslog \$time
+# Required-Stop:     \$syslog
+# Should-Start:      \$local_fs
+# Should-Stop:       \$local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start inspircd
+# Description:       Starts the inspircd irc server
 ### END INIT INFO
+# GPL Licensed
 
+IRCD="/var/lib/inspircd/inspircd"
+IRCDPID="$HOMEROOT/$IRCUSER/inspircd.pid"
+IRCDLOG="/var/log/inspircd.log"
+IRCDARGS="--logfile \$IRCDLOG"
+USER="$IRCUSER"
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=$HOMEROOT/$IRCUSER/inspircd/inspircd
-NAME=irc-server
-DESC=irc-server
-PIDFILE=$IRCPID
 
-test -x \$DAEMON || exit 0
-test -x \$DAEMONBOOTSTRAP || exit 0
+#if [ -f "/var/lib/inspircd/inspircd" ]; then
+#        . /var/lib/inspircd/inspircd
+#fi
 
-set -e
+if [ ! -x "\$IRCD" ]; then exit 0; fi
+
+if [ -f "\$IRCDPID" ]; then
+        IRCDPIDN=`cat "\$IRCDPID" 2> /dev/null`
+fi
+
+start_ircd()
+{
+        [ -f "\$IRCDPID" ] || ( touch "\$IRCDPID" ; chown "\$USER" "\$IRCDPID" )
+        [ -f "\$IRCDLOG" ] || ( touch "\$IRCDLOG" ; chown "\$USER:thumbwhere" "\$IRCDLOG" ; chmod 0640 "\$IRCDLOG" )
+        #export LD_LIBRARY_PATH=/usr/lib/inspircd
+        start-stop-daemon --start --quiet --oknodo --chuid "\$USER" --pidfile "\$IRCDPID" --exec "\$IRCD" -- start
+}
+
+stop_ircd()
+{
+        start-stop-daemon --stop --quiet --pidfile "\$IRCDPID" > /dev/null 2> /dev/null
+        rm -f "\$IRCDPID"
+        return 0
+}
+
+reload_ircd()
+{
+        if [ ! -z "\$IRCDPIDN" ] && kill -0 \$IRCDPIDN 2> /dev/null; then
+                kill -HUP \$IRCDPIDN >/dev/null 2>&1 || return 1
+                return 0
+        else
+                echo "Error: IRCD is not running."
+                return 1
+        fi
+}
 
 case "\$1" in
   start)
-        echo -n "Starting \$DESC: "
-        touch \$PIDFILE
-        chown $IRCUSER:$GROUP \$PIDFILE
-        if start-stop-daemon --start --quiet --umask 007 --pidfile \$PIDFILE --chuid $IRCUSER:$GROUP --exec \$DAEMON -- start
-        then
-                echo "\$NAME."
-        else
-                echo "failed"
-        fi
+        #if [ "\$INSPIRCD_ENABLED" != "1" ]; then
+        #        echo -n "Please configure inspircd first and edit /etc/default/inspircd, otherwise inspircd won't start"
+        #        exit 0
+        #fi
+        echo -n "Starting Inspircd... "
+        start_ircd && echo "done."
         ;;
   stop)
-        echo -n "Stopping \$DESC: "
-        if start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE  --chuid $IRCUSER:$GROUP --exec \$DAEMON -- stop
-        then
-                echo "\$NAME."
-        else
-                echo "failed"
-        fi
-        rm -f \$PIDFILE
+        echo -n "Stopping Inspircd... "
+        stop_ircd && echo "done."
+        ;;
+  force-reload|reload)
+        echo -n "Reloading Inspircd... "
+        reload_ircd && echo "done."
+        ;;
+  restart)
+        \$0 stop
+        sleep 2s
+        \$0 start
+        ;;
+  cron)
+        start_ircd || echo "Inspircd not running, starting it"
         ;;
 
-  restart|force-reload)
-        \${0} stop
-        \${0} start
-        ;;
   *)
-        echo "Usage: /etc/init.d/\$NAME {start|stop|restart|force-reload}" >&2
+        echo "Usage: \$0 {start|stop|restart|reload|force-reload|cron}"
         exit 1
-        ;;
 esac
-
-exit 0
 EOF
 
 chmod +x /etc/init.d/tw-irc-server
@@ -307,8 +340,14 @@ ln -fs /etc/init.d/tw-irc-server /etc/rc2.d/S19tw-irc-server
 
 	echo " - Setting permissions"
 	chown -R $IRCUSER.$GROUP $HOMEROOT/$IRCUSER/
+
+	echo " - Starting service"
+	 /etc/init.d/$IRCUSER-server start
+
 fi
 
+
+###################################################
 #
 # Install Redis
 #
