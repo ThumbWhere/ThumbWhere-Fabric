@@ -50,7 +50,7 @@ VARNISHFILE=`echo $VARNISHURL | rev | cut -d\/ -f1 | rev`
 HTTPDFILE=`echo $HTTPDURL | rev | cut -d\/ -f1 | rev`
 FTPDFILE=`echo $FTPDURL | rev | cut -d\/ -f1 | rev`
 
-IRCFOLDER=inspircd
+IRCFOLDER=`echo $IRCFILE | rev | cut -d\. -f3- | rev`
 REDISFOLDER=`echo $REDISFILE | rev | cut -d\. -f3- | rev`
 NODEJSFOLDER=`echo $NODEJSFILE | rev | cut -d\. -f3- | rev`
 VARNISHFOLDER=`echo $VARNISHFILE | rev | cut -d\. -f3- | rev`
@@ -138,12 +138,12 @@ then
 	rm -rf $IRCFOLDER
 	echo " - Uncompressing $IRCFILE"
 	tar -xjf $IRCFILE
+	mv inspircd $IRCFOLDER # For some reason this package unzips in 'inspircd' so we tweak that..
 	echo " - Building $IRCFILE"
 	cd $IRCFOLDER
-	./configure  --uid=$IRCUSER --disable-interactive  --sysconfdir=$HOMEROOT/$FTPDUSER/
+	./configure  --uid=$IRCUSER --disable-interactive  --prefix=$HOMEROOT/$IRCUSER/inspircd
 	make
 	echo " - Installing $IRCFILE"
-	#make INSTUID=` id -u $IRCUSER` install
 	make install
 		cat > $IRCCONFIG << EOF
 <config format="xml">
@@ -159,12 +159,12 @@ then
 <connect deny="69.254.*">
 <connect deny="3ffe::0/32" reason="The 6bone address space is deprecated">
 <connect name="main" allow="*" maxchans="30" timeout="10" pingfreq="120" hardsendq="1048576" softsendq="8192" recvq="8192" threshold="10" commandrate="1000" fakelag="on" localmax="3" globalmax="3" useident="no" limit="5000" modes="+x">
-<include file="conf/opers.conf.example">
-<include file="conf/links.conf.example">
-<files motd="conf/inspircd.motd.example" rules="conf/inspircd.rules.example">
+<include file="conf/opers.conf">
+<include file="conf/links.conf">
+<files motd="conf/inspircd.motd" rules="conf/inspircd.rules">
 #<execfiles rules="wget -O - http://www.example.com/rules.txt">
 <channels users="20" opers="60">
-<pid file="/home/tw-irc/inspircd.pid">
+<pid file="$HOMEROOT/$IRCUSER/inspircd.pid">
 <banlist chan="*" limit="69">
 #<disabled commands="TOPIC MODE" usermodes="" chanmodes="" fakenonexistant="yes">
 <options prefixquit="Quit: " suffixquit="" prefixpart="&quot;" suffixpart="&quot;" syntaxhints="yes" cyclehosts="yes" cyclehostsfromuser="no" ircumsgprefix="no" announcets="yes" allowmismatched="no" defaultbind="auto" hostintopic="yes" pingwarning="15" serverpingfreq="60" defaultmodes="nt" moronbanner="You're banned! Email abuse@thumbwhere.com with the ERROR line below for help." exemptchanops="nonick:v flood:o" invitebypassmodes="yes">
@@ -181,7 +181,7 @@ then
 <badhost host="*@172.32.0.0/16" reason="This subnet is bad.">
 <exception host="*@ircop.host.com" reason="Opers hostname">
 <insane hostmasks="no" ipmasks="no" nickmasks="no" trigger="95.5">
-<include file="conf/modules.conf.example">
+<include file="conf/modules.conf">
 EOF
 
 	echo " - Setting permissions"
