@@ -57,6 +57,8 @@ VARNISHFOLDER=`echo $VARNISHFILE | rev | cut -d\. -f3- | rev`
 HTTPDFOLDER=`echo $HTTPDFILE | rev | cut -d\. -f3- | rev`
 FTPDFOLDER=`echo $FTPDFILE | rev | cut -d\. -f3- | rev`
 
+IRCCONFIG=/etc/inspircd/inspircd.conf
+
 REDISCONFIG=$HOMEROOT/$REDISUSER/redis.conf
 REDISLOGS=$HOMEROOT/$REDISUSER
 REDISPID=$HOMEROOT/$REDISUSER/redis.pid
@@ -143,12 +145,47 @@ then
 	echo " - Installing $IRCFILE"
 	#make INSTUID=` id -u $IRCUSER` install
 	make install
-	cp /etc/inspircd/inspircd.conf.example /etc/inspircd/inspircd.conf
+		cat > $IRCCONFIG << EOF
+<config format="xml">
+<define name="bindip" value="0.0.0.0">
+<define name="localips" value="&bindip;/24">
+<server name="irc.thumbwhere.com" description="ThumbWhere IRC Server" network="ThumbWhere">
+<admin name="ThumbWhere" nick="ThumbWhere" email="thumbwhere@thumbwhere.com">
+<bind address="" port="6697" type="clients" ssl="gnutls" >
+<bind address="" port="6660-6669" type="clients">
+<bind address="" port="7000,7001" type="servers">
+<bind address="&bindip;" port="7005" type="servers" ssl="openssl">
+<power diepass="" restartpass="">
+<connect deny="69.254.*">
+<connect deny="3ffe::0/32" reason="The 6bone address space is deprecated">
+<connect name="main" allow="*" maxchans="30" timeout="10" pingfreq="120" hardsendq="1048576" softsendq="8192" recvq="8192" threshold="10" commandrate="1000" fakelag="on" localmax="3" globalmax="3" useident="no" limit="5000" modes="+x">
+<include file="conf/opers.conf.example">
+<include file="conf/links.conf.example">
+<files motd="conf/inspircd.motd.example" rules="conf/inspircd.rules.example">
+#<execfiles rules="wget -O - http://www.example.com/rules.txt">
+<channels users="20" opers="60">
+<pid file="/home/tw-irc/inspircd.pid">
+<banlist chan="*" limit="69">
+#<disabled commands="TOPIC MODE" usermodes="" chanmodes="" fakenonexistant="yes">
+<options prefixquit="Quit: " suffixquit="" prefixpart="&quot;" suffixpart="&quot;" syntaxhints="yes" cyclehosts="yes" cyclehostsfromuser="no" ircumsgprefix="no" announcets="yes" allowmismatched="no" defaultbind="auto" hostintopic="yes" pingwarning="15" serverpingfreq="60" defaultmodes="nt" moronbanner="You're banned! Email abuse@thumbwhere.com with the ERROR line below for help." exemptchanops="nonick:v flood:o" invitebypassmodes="yes">
+<performance netbuffersize="10240" maxwho="4096" somaxconn="128" softlimit="12800" quietbursts="yes" nouserdns="no">
+<security announceinvites="dynamic" hidemodes="eI" hideulines="no" flatlinks="no" hidewhois="" hidebans="no" hidekills="" hidesplits="no" maxtargets="20" customversion="" operspywhois="no" runasuser="tw-irc" runasgroup="thumbwhere" restrictbannedusers="yes" genericoper="no" userstats="Pu">
+<limits maxnick="31" maxchan="64" maxmodes="20" maxident="11" maxquit="255" maxtopic="307" maxkick="255" maxgecos="128" maxaway="200">
+<log method="file" type="* -USERINPUT -USEROUTPUT" level="default" target="ircd.log">
+<whowas groupsize="10" maxgroups="100000" maxkeep="3d">
+<badnick nick="ChanServ" reason="Reserved For Services">
+<badnick nick="NickServ" reason="Reserved For Services">
+<badnick nick="OperServ" reason="Reserved For Services">
+<badnick nick="MemoServ" reason="Reserved For Services">
+<badhost host="root@*" reason="Don't irc as root!">
+<badhost host="*@172.32.0.0/16" reason="This subnet is bad.">
+<exception host="*@ircop.host.com" reason="Opers hostname">
+<insane hostmasks="no" ipmasks="no" nickmasks="no" trigger="95.5">
+<include file="conf/modules.conf.example">
+EOF
 
-        echo " - Setting permissions"
-
-      	chown -R $IRCUSER.$GROUP $HOMEROOT/$IRCUSER/
-
+	echo " - Setting permissions"
+	chown -R $IRCUSER.$GROUP $HOMEROOT/$IRCUSER/
 fi
 
 #
@@ -372,7 +409,6 @@ then
         chown -R $HTTPDUSER.$GROUP $HOMEROOT/$HTTPDUSER/
 
 fi
-
 
 #
 # Install FTPD
