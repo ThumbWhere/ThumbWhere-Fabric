@@ -146,6 +146,9 @@ then
 	#make
 	echo " - Installing $IRCFILE"
 	#make install
+	
+# ---- IRC CONFIG -- START ----	
+	
 	cat > $IRCCONFIG << EOF
 <config format="xml">
 <define name="bindip" value="0.0.0.0">
@@ -229,7 +232,77 @@ cat > $IRCCONFIG.motd << EOF
 This is the MOTD
 EOF
 
+# ---- IRC CONFIG -- END ----
 
+
+# ---- IRC CONTROL SCRIPT -- START --
+
+	cat > /etc/init.d/tw-irc-server << EOF
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:             tw-irc-server
+# Required-Start:       $syslog $remote_fs
+# Required-Stop:        $syslog $remote_fs
+# Should-Start:         $local_fs
+# Should-Stop:          $local_fs
+# Default-Start:        2 3 4 5
+# Default-Stop:         0 1 6
+# Short-Description:    tw-irc-server - Persistent key-value db for ThumbWhere
+# Description:          tw-irc-server - Persistent key-value db for ThumbWhere
+### END INIT INFO
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+DAEMON=/usr/local/bin/irc-server
+NAME=irc-server
+DESC=irc-server
+PIDFILE=$IRCPID
+
+test -x \$DAEMON || exit 0
+test -x \$DAEMONBOOTSTRAP || exit 0
+
+set -e
+
+case "\$1" in
+  start)
+        echo -n "Starting \$DESC: "
+        touch \$PIDFILE
+        chown $IRCUSER:$GROUP \$PIDFILE
+        if start-stop-daemon --start --quiet --umask 007 --pidfile \$PIDFILE --chuid $IRCUSER:$GROUP --exec \$DAEMON -- start
+        then
+                echo "\$NAME."
+        else
+                echo "failed"
+        fi
+        ;;
+  stop)
+        echo -n "Stopping \$DESC: "
+        if start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE --exec \$DAEMON -- stop
+        then
+                echo "\$NAME."
+        else
+                echo "failed"
+        fi
+        rm -f \$PIDFILE
+        ;;
+
+  restart|force-reload)
+        \${0} stop
+        \${0} start
+        ;;
+  *)
+        echo "Usage: /etc/init.d/\$NAME {start|stop|restart|force-reload}" >&2
+        exit 1
+        ;;
+esac
+
+exit 0
+EOF
+
+chmod +x /etc/init.d/tw-irc-server
+chown root.root /etc/init.d/tw-irc-server
+ln -fs /etc/init.d/tw-irc-server /etc/rc2.d/S19tw-irc-server
+
+# ---- IRC CONTROL SCRIPT --- END ---
 
 	echo " - Setting permissions"
 	chown -R $IRCUSER.$GROUP $HOMEROOT/$IRCUSER/
