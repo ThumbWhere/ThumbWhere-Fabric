@@ -952,7 +952,7 @@ then
         tar -xzf $FTPDFILE
         echo " - Building"
         cd $FTPDFOLDER
-        ./configure  --prefix=$FTPDROOT
+        ./configure  --prefix=$FTPDROOT  --enable-ctrls
         make
         #echo " - Testing"
         #make test
