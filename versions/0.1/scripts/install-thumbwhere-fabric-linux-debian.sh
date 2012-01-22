@@ -70,8 +70,10 @@ HTTPDROOT=$HOMEROOT/$HTTPDUSER/apache2
 HTTPDCONFIG=$HTTPDROOT/conf/httpd.conf
 HTTPDPID=$HOMEROOT/$HTTPDUSER/httpd.pid
 
-
 FTPDROOT=$HOMEROOT/$FTPDUSER/ftpd
+FTPDCONFIG=$FTPDROOT/conf/proftpd.conf
+FTPDPID=$HOMEROOT/$FTPDUSER/ftpd.pid
+
 
 groupadd -f thumbwhere
 
@@ -119,12 +121,12 @@ then
 	if [ `id -un $IRCUSER` != $IRCUSER ]
 	then
 		 echo " - Adding user $IRCUSER"
-        	useradd $IRCUSER -m -g $GROUP
+		useradd $IRCUSER -m -g $GROUP
 	else
 		if [ -f /etc/init.d/$IRCUSER-server ]
 		then
 		 	echo " - Stopping service"
-        		/etc/init.d/$IRCUSER-server stop
+			/etc/init.d/$IRCUSER-server stop
 		else
 		 	echo " - Killing service (control script not found at /etc/init.d/$IRCUSER-server)"
 			for i in `ps ax | grep inspircd | cut -d ' ' -f 1`
@@ -245,7 +247,7 @@ EOF
 	cat > /etc/init.d/$IRCUSER-server << EOF
 #!/bin/sh
 ### BEGIN INIT INFO
-# Provides:          $IRCUSER-server
+# Provides:	  $IRCUSER-server
 # Required-Start:    \$network \$syslog \$time
 # Required-Stop:     \$syslog
 # Should-Start:      \$local_fs
@@ -269,7 +271,7 @@ USER="$IRCUSER"
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
 #if [ -f "/var/lib/inspircd/inspircd" ]; then
-#        . /var/lib/inspircd/inspircd
+#	. /var/lib/inspircd/inspircd
 #fi
 
 if [ ! -x "\$IRCD" ]; then exit 0; fi
@@ -280,59 +282,59 @@ fi
 
 start_ircd()
 {
-        [ -f "\$IRCDPID" ] || ( touch "\$IRCDPID" ; chown "\$USER" "\$IRCDPID" )
-        [ -f "\$IRCDLOG" ] || ( touch "\$IRCDLOG" ; chown "\$USER:thumbwhere" "\$IRCDLOG" ; chmod 0640 "\$IRCDLOG" )
-        export LD_LIBRARY_PATH=/usr/lib/inspircd
-        start-stop-daemon --start --quiet --oknodo --chuid "\$USER" --pidfile "\$IRCDPID" --exec "\$IRCD" --  \$IRCDARGS
+	[ -f "\$IRCDPID" ] || ( touch "\$IRCDPID" ; chown "\$USER" "\$IRCDPID" )
+	[ -f "\$IRCDLOG" ] || ( touch "\$IRCDLOG" ; chown "\$USER:thumbwhere" "\$IRCDLOG" ; chmod 0640 "\$IRCDLOG" )
+	export LD_LIBRARY_PATH=/usr/lib/inspircd
+	start-stop-daemon --start --quiet --oknodo --chuid "\$USER" --pidfile "\$IRCDPID" --exec "\$IRCD" --  \$IRCDARGS
 }
 
 stop_ircd()
 {
-        start-stop-daemon --stop --quiet --pidfile "\$IRCDPID" 
-        rm -f "\$IRCDPID"
-        return 0
+	start-stop-daemon --stop --quiet --pidfile "\$IRCDPID" 
+	rm -f "\$IRCDPID"
+	return 0
 }
 
 reload_ircd()
 {
-        if [ ! -z "\$IRCDPIDN" ] && kill -0 \$IRCDPIDN 2> /dev/null; then
-                kill -HUP \$IRCDPIDN >/dev/null 2>&1 || return 1
-                return 0
-        else
-                echo "Error: IRCD is not running."
-                return 1
-        fi
+	if [ ! -z "\$IRCDPIDN" ] && kill -0 \$IRCDPIDN 2> /dev/null; then
+		kill -HUP \$IRCDPIDN >/dev/null 2>&1 || return 1
+		return 0
+	else
+		echo "Error: IRCD is not running."
+		return 1
+	fi
 }
 
 case "\$1" in
   start)
-        #if [ "\$INSPIRCD_ENABLED" != "1" ]; then
-        #        echo -n "Please configure inspircd first and edit /etc/default/inspircd, otherwise inspircd won't start"
-        #        exit 0
-        #fi
-        echo -n "Starting Inspircd... "
-        start_ircd && echo "done."
-        ;;
+	#if [ "\$INSPIRCD_ENABLED" != "1" ]; then
+	#	echo -n "Please configure inspircd first and edit /etc/default/inspircd, otherwise inspircd won't start"
+	#	exit 0
+	#fi
+	echo -n "Starting Inspircd... "
+	start_ircd && echo "done."
+	;;
   stop)
-        echo -n "Stopping Inspircd... "
-        stop_ircd && echo "done."
-        ;;
+	echo -n "Stopping Inspircd... "
+	stop_ircd && echo "done."
+	;;
   force-reload|reload)
-        echo -n "Reloading Inspircd... "
-        reload_ircd && echo "done."
-        ;;
+	echo -n "Reloading Inspircd... "
+	reload_ircd && echo "done."
+	;;
   restart)
-        \$0 stop
-        sleep 2s
-        \$0 start
-        ;;
+	\$0 stop
+	sleep 2s
+	\$0 start
+	;;
   cron)
-        start_ircd || echo "Inspircd not running, starting it"
-        ;;
+	start_ircd || echo "Inspircd not running, starting it"
+	;;
 
   *)
-        echo "Usage: \$0 {start|stop|restart|reload|force-reload|cron}"
-        exit 1
+	echo "Usage: \$0 {start|stop|restart|reload|force-reload|cron}"
+	exit 1
 esac
 EOF
 
@@ -368,13 +370,13 @@ then
 		if [ -f /etc/init.d/$REDISUSER-server ]
 		then
 		 	echo " - Stopping service"
-        		/etc/init.d/$REDISUSER-server stop
-                else
-                        echo " - Killing service (control script not found at /etc/init.d/$REDISUSER-server)"
-                        for i in `ps ax | grep redis-server | cut -d ' ' -f 1`
-                        do
-                                kill -2 $i
-                        done
+			/etc/init.d/$REDISUSER-server stop
+		else
+			echo " - Killing service (control script not found at /etc/init.d/$REDISUSER-server)"
+			for i in `ps ax | grep redis-server | cut -d ' ' -f 1`
+			do
+				kill -2 $i
+			done
 
 		fi
 	fi
@@ -404,15 +406,15 @@ then
 	cat > /etc/init.d/$REDISUSER-server << EOF
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides:             $REDISUSER-server
+# Provides:	     $REDISUSER-server
 # Required-Start:       $syslog $remote_fs
-# Required-Stop:        $syslog $remote_fs
-# Should-Start:         $local_fs
-# Should-Stop:          $local_fs
-# Default-Start:        2 3 4 5
-# Default-Stop:         0 1 6
+# Required-Stop:	$syslog $remote_fs
+# Should-Start:	 $local_fs
+# Should-Stop:	  $local_fs
+# Default-Start:	2 3 4 5
+# Default-Stop:	 0 1 6
 # Short-Description:    $REDISUSER-server - Persistent key-value db for ThumbWhere
-# Description:          $REDISUSER-server - Persistent key-value db for ThumbWhere
+# Description:	  $REDISUSER-server - Persistent key-value db for ThumbWhere
 ### END INIT INFO
 
 # Source function library
@@ -432,35 +434,35 @@ set -e
 
 case "\$1" in
   start)
-        echo -n "Starting \$DESC: "
-        touch \$PIDFILE
-        chown $REDISUSER:$GROUP \$PIDFILE
-        if start-stop-daemon --start --quiet --umask 007 --pidfile \$PIDFILE --chuid $REDISUSER:$GROUP --exec \$DAEMON -- \$DAEMON_ARGS
-        then
+	echo -n "Starting \$DESC: "
+	touch \$PIDFILE
+	chown $REDISUSER:$GROUP \$PIDFILE
+	if start-stop-daemon --start --quiet --umask 007 --pidfile \$PIDFILE --chuid $REDISUSER:$GROUP --exec \$DAEMON -- \$DAEMON_ARGS
+	then
 		 log_end_msg 0
-        else
+	else
 		 log_end_msg 1
-        fi
-        ;;
+	fi
+	;;
   stop)
-        echo -n "Stopping \$DESC: "
-        if start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE --exec \$DAEMON
-        then
+	echo -n "Stopping \$DESC: "
+	if start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE --exec \$DAEMON
+	then
 		log_end_msg 0
-        else
+	else
 		log_end_msg 1
-        fi
-        rm -f \$PIDFILE
-        ;;
+	fi
+	rm -f \$PIDFILE
+	;;
 
   restart|force-reload)
-        \${0} stop
-        \${0} start
-        ;;
+	\${0} stop
+	\${0} start
+	;;
   *)
-        echo "Usage: /etc/init.d/\$NAME {start|stop|restart|force-reload}" >&2
-        exit 1
-        ;;
+	echo "Usage: /etc/init.d/\$NAME {start|stop|restart|force-reload}" >&2
+	exit 1
+	;;
 esac
 
 exit 0
@@ -511,8 +513,8 @@ EOF
 
 	chown -R $REDISUSER.$GROUP $HOMEROOT/$REDISUSER/
 
-        echo " - Starting service"
-        /etc/init.d/$REDISUSER-server start
+	echo " - Starting service"
+	/etc/init.d/$REDISUSER-server start
 fi
 
 ###############################################################################
@@ -522,7 +524,7 @@ fi
 
 if [ $INSTALL_NODEJS == 'true' ]
 then
-        echo "*** Installing NODEJS ($NODEJSFOLDER)"
+	echo "*** Installing NODEJS ($NODEJSFOLDER)"
 
 	if [ `id -un $NODEJSUSER` != $NODEJSUSER ]
 	then
@@ -530,25 +532,25 @@ then
 		useradd $NODEJSUSER -m -g $GROUP
 	fi
 
-        cp $DOWNLOADS/$NODEJSFILE $HOMEROOT/$NODEJSUSER
-        chown $NODEJSUSER.$GROUP $HOMEROOT/$NODEJSUSER
-        cd  $HOMEROOT/$NODEJSUSER
-        echo " - Deleting old instance"
-        rm -rf $NODEJSFOLDER
-        echo " - Uncompressing"
-        tar -xzf $NODEJSFILE
-        echo " - Building"
-        cd $NODEJSFOLDER
-        ./configure --shared-zlib --shared-cares
-        make
+	cp $DOWNLOADS/$NODEJSFILE $HOMEROOT/$NODEJSUSER
+	chown $NODEJSUSER.$GROUP $HOMEROOT/$NODEJSUSER
+	cd  $HOMEROOT/$NODEJSUSER
+	echo " - Deleting old instance"
+	rm -rf $NODEJSFOLDER
+	echo " - Uncompressing"
+	tar -xzf $NODEJSFILE
+	echo " - Building"
+	cd $NODEJSFOLDER
+	./configure --shared-zlib --shared-cares
+	make
 	#echo " - Testing"
 	#make test
-        echo " - Installing"
-        make install
+	echo " - Installing"
+	make install
 	echo " - Configuring"
 
-        echo " - Setting permissions"
-        chown -R $NODEJSUSER.$GROUP $HOMEROOT/$NODEJSUSER/
+	echo " - Setting permissions"
+	chown -R $NODEJSUSER.$GROUP $HOMEROOT/$NODEJSUSER/
 
 fi
 
@@ -559,7 +561,7 @@ fi
 
 if [ $INSTALL_VARNISH == 'true' ]
 then
-        echo "*** Installing VARNISH ($VARNISHFOLDER)"
+	echo "*** Installing VARNISH ($VARNISHFOLDER)"
 
 	if [ `id -un $VARNISHUSER` != $VARNISHUSER ]
 	then
@@ -571,48 +573,48 @@ then
 		then
 			echo " - Starting service"
 			/etc/init.d/$VARNISHUSER-server stop
-                else
-                        echo " - Killing service (control script not found at /etc/init.d/$VARNISHUSER-server)"
-                        for i in `ps ax | grep varnishd | cut -d ' ' -f 1`
-                        do
-                                kill -2 $i
-                        done
+		else
+			echo " - Killing service (control script not found at /etc/init.d/$VARNISHUSER-server)"
+			for i in `ps ax | grep varnishd | cut -d ' ' -f 1`
+			do
+				kill -2 $i
+			done
 
 		fi
 	fi
 
-        cp $DOWNLOADS/$VARNISHFILE $HOMEROOT/$VARNISHUSER
-        chown $VARNISHUSER.$GROUP $HOMEROOT/$VARNISHUSER
-        cd  $HOMEROOT/$VARNISHUSER
-        echo " - Deleting old instance"
-        rm -rf $VARNISHFOLDER
-        echo " - Uncompressing"
-        tar -xzf $VARNISHFILE
-        echo " - Building"
-        cd $VARNISHFOLDER
-        ./configure 
-        make
-        echo " - Installing"
-        make install
+	cp $DOWNLOADS/$VARNISHFILE $HOMEROOT/$VARNISHUSER
+	chown $VARNISHUSER.$GROUP $HOMEROOT/$VARNISHUSER
+	cd  $HOMEROOT/$VARNISHUSER
+	echo " - Deleting old instance"
+	rm -rf $VARNISHFOLDER
+	echo " - Uncompressing"
+	tar -xzf $VARNISHFILE
+	echo " - Building"
+	cd $VARNISHFOLDER
+	./configure 
+	make
+	echo " - Installing"
+	make install
 
 	echo " - Configuring"
 
 # ---- VARNISH CONTROL SCRIPT -- START ----
 
-        cat > /etc/init.d/$VARNISHUSER-server << EOF
+	cat > /etc/init.d/$VARNISHUSER-server << EOF
 #! /bin/sh
 
 ### BEGIN INIT INFO
-# Provides:          $VARNISHUSER-server
+# Provides:	  $VARNISHUSER-server
 # Required-Start:    \$local_fs \$remote_fs \$network
 # Required-Stop:     \$local_fs \$remote_fs \$network
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Start HTTP accelerator
 # Description:       This script provides a server-side cache
-#                    to be run in front of a httpd and should
-#                    listen on port 80 on a properly configured
-#                    system
+#		    to be run in front of a httpd and should
+#		    listen on port 80 on a properly configured
+#		    system
 ### END INIT INFO
 
 # Source function library
@@ -641,11 +643,11 @@ start_varnishd() {
     log_daemon_msg "Starting \$DESC" "\$NAME"
     output=\$(/bin/tempfile -s.varnish)
     if start-stop-daemon --start --quiet --pidfile \${PIDFILE} --exec \${DAEMON} -- -P \${PIDFILE} \$DAEMON_OPTS > \${output} 2>&1; then
-        log_end_msg 0
+	log_end_msg 0
     else
-        log_end_msg 1
-        cat \$output
-        exit 1
+	log_end_msg 1
+	cat \$output
+	exit 1
     fi
     rm \$output
 }
@@ -659,20 +661,20 @@ disabled_varnishd() {
 stop_varnishd() {
     log_daemon_msg "Stopping \$DESC" "\$NAME"
     if start-stop-daemon \
-        --stop --quiet --pidfile \$PIDFILE --retry 10 \
-        --exec \$DAEMON; then
-        log_end_msg 0
+	--stop --quiet --pidfile \$PIDFILE --retry 10 \
+	--exec \$DAEMON; then
+	log_end_msg 0
     else
-        log_end_msg 1
+	log_end_msg 1
     fi
 }
 
 reload_varnishd() {
     log_daemon_msg "Reloading \$DESC" "\$NAME"
     if /usr/share/varnish/reload-vcl -q; then
-        log_end_msg 0
+	log_end_msg 0
     else
-        log_end_msg 1
+	log_end_msg 1
     fi
 }
 
@@ -682,25 +684,25 @@ status_varnishd() {
 
 case "\$1" in
     start)
-        start_varnishd
-        ;;
+	start_varnishd
+	;;
     stop)
-        stop_varnishd
-        ;;
+	stop_varnishd
+	;;
     reload)
-        reload_varnishd
-        ;;
+	reload_varnishd
+	;;
     status)
-        status_varnishd
-        ;;
+	status_varnishd
+	;;
     restart|force-reload)
-        \$0 stop
-        \$0 start
-        ;;
+	\$0 stop
+	\$0 start
+	;;
     *)
-        log_success_msg "Usage: \$0 {start|stop|restart|force-reload}"
-        exit 1
-        ;;
+	log_success_msg "Usage: \$0 {start|stop|restart|force-reload}"
+	exit 1
+	;;
 esac
 
 exit 0
@@ -726,11 +728,11 @@ insserv /etc/init.d/$VARNISHUSER-server
 
 # ---- VARNISH CONTROL SCRIPT -- END ----
 
-        echo " - Setting permissions"
-        chown -R $VARNISHUSER.$GROUP $HOMEROOT/$VARNISHUSER/
+	echo " - Setting permissions"
+	chown -R $VARNISHUSER.$GROUP $HOMEROOT/$VARNISHUSER/
 
-        echo " - Starting service"
-        /etc/init.d/$VARNISHUSER-server start
+	echo " - Starting service"
+	/etc/init.d/$VARNISHUSER-server start
 
 fi
 
@@ -741,17 +743,17 @@ fi
 
 if [ $INSTALL_HTTPD == 'true' ]
 then
-        echo "*** Installing HTTPD ($HTTPDFOLDER)"
+	echo "*** Installing HTTPD ($HTTPDFOLDER)"
 
 	if [ `id -un $HTTPDUSER` != $HTTPDUSER ]
 	then
 		 echo " - Adding user $HTTPDUSER"
-        	useradd $HTTPDUSER -m -g $GROUP
+		useradd $HTTPDUSER -m -g $GROUP
 	else
 		if [ -f /etc/init.d/$HTTPDUSER-server ]
 		then
 		 	echo " - Stopping service"
-        		/etc/init.d/$HTTPDUSER-server stop
+			/etc/init.d/$HTTPDUSER-server stop
 		else
 		 	echo " - Killing service (control script not found at /etc/init.d/$HTTPDUSER-server)"
 			#for i in `ps ax | grep httpd | cut -d ' ' -f 1`
@@ -761,27 +763,27 @@ then
 		fi
 	fi
 
-        cp $DOWNLOADS/$HTTPDFILE $HOMEROOT/$HTTPDUSER
-        chown $HTTPDUSER.$GROUP $HOMEROOT/$HTTPDUSER
-        cd  $HOMEROOT/$HTTPDUSER
-        echo " - Deleting old instance"
-        rm -rf $HTTPDFOLDER
-        echo " - Uncompressing"
-        tar -xzf $HTTPDFILE
-        echo " - Building"
-        cd $HTTPDFOLDER
-        ./configure  --prefix=$HTTPDROOT
-        make
-        echo " - Installing"
-        make install
-        echo " - Configuring"
+	cp $DOWNLOADS/$HTTPDFILE $HOMEROOT/$HTTPDUSER
+	chown $HTTPDUSER.$GROUP $HOMEROOT/$HTTPDUSER
+	cd  $HOMEROOT/$HTTPDUSER
+	echo " - Deleting old instance"
+	rm -rf $HTTPDFOLDER
+	echo " - Uncompressing"
+	tar -xzf $HTTPDFILE
+	echo " - Building"
+	cd $HTTPDFOLDER
+	./configure  --prefix=$HTTPDROOT
+	make
+	echo " - Installing"
+	make install
+	echo " - Configuring"
 
 	# ---- INSTALL CONTROL SCRIPTS -- START ----
 
 	cat > /etc/init.d/$HTTPDUSER-server << EOF
 #!/bin/sh
 ### BEGIN INIT INFO
-# Provides:          $HTTPDUSER-server
+# Provides:	  $HTTPDUSER-server
 # Required-Start:    \$network \$syslog \$time
 # Required-Stop:     \$syslog
 # Should-Start:      \$local_fs
@@ -812,52 +814,52 @@ fi
 
 start_httpd()
 {
-        start-stop-daemon --start --quiet --oknodo --chuid "\$USER" --pidfile "\$HTTPDPID" --exec "\$HTTPD" -- start
+	start-stop-daemon --start --quiet --oknodo --chuid "\$USER" --pidfile "\$HTTPDPID" --exec "\$HTTPD" -- start
 }
 
 stop_httpd()
 {
-        start-stop-daemon --stop --quiet --pidfile "\$HTTPDPID" --exec "\$HTTPD" -- stop
-        rm -f "\$HTTPDPID"
-        return 0
+	start-stop-daemon --stop --quiet --pidfile "\$HTTPDPID" --exec "\$HTTPD" -- stop
+	rm -f "\$HTTPDPID"
+	return 0
 }
 
 reload_http()
 {
-        if [ ! -z "\$HTTPDPIDN" ] && kill -0 \$HTTPDPIDN 2> /dev/null; then
-                kill -HUP \$HTTPDPIDN >/dev/null 2>&1 || return 1
-                return 0
-        else
-                echo "Error: Apache2 is not running."
-                return 1
-        fi
+	if [ ! -z "\$HTTPDPIDN" ] && kill -0 \$HTTPDPIDN 2> /dev/null; then
+		kill -HUP \$HTTPDPIDN >/dev/null 2>&1 || return 1
+		return 0
+	else
+		echo "Error: Apache2 is not running."
+		return 1
+	fi
 }
 
 case "\$1" in
   start)
-        echo -n "Starting Apache2... "
-        start_httpd && echo "done."
-        ;;
+	echo -n "Starting Apache2... "
+	start_httpd && echo "done."
+	;;
   stop)
-        echo -n "Stopping Apache2... "
-        stop_httpd && echo "done."
-        ;;
+	echo -n "Stopping Apache2... "
+	stop_httpd && echo "done."
+	;;
   force-reload|reload)
-        echo -n "Reloading Apache2 config "
-        reload_httpd && echo "done."
-        ;;
+	echo -n "Reloading Apache2 config "
+	reload_httpd && echo "done."
+	;;
   restart)
-        \$0 stop
-        sleep 2s
-        \$0 start
-        ;;
+	\$0 stop
+	sleep 2s
+	\$0 start
+	;;
   cron)
-        start_ircd || echo "Inspircd not running, starting it"
-        ;;
+	start_ircd || echo "Inspircd not running, starting it"
+	;;
 
   *)
-        echo "Usage: \$0 {start|stop|restart|reload|force-reload|cron}"
-        exit 1
+	echo "Usage: \$0 {start|stop|restart|reload|force-reload|cron}"
+	exit 1
 esac
 EOF
 
@@ -869,7 +871,7 @@ chown root.root /etc/init.d/$HTTPDUSER-server
 	# ---- INSTALL CONTROL SCRIPTS -- END ----
 
 	# ---- INSTALL CONFIG -- START --
-        cat > $HTTPDCONFIG << EOF
+	cat > $HTTPDCONFIG << EOF
 ServerRoot "$HTTPDROOT"
 Listen 127.0.0.1:81
 User $HTTPDUSER
@@ -930,8 +932,8 @@ EOF
 
 	# ---- INSTALL CONFIG -- END --
 
-        echo " - Setting permissions"
-        chown -R $HTTPDUSER.$GROUP $HOMEROOT/$HTTPDUSER/
+	echo " - Setting permissions"
+	chown -R $HTTPDUSER.$GROUP $HOMEROOT/$HTTPDUSER/
 
 fi
 
@@ -941,25 +943,157 @@ fi
 
 if [ $INSTALL_FTPD == 'true' ]
 then
-        echo "*** Installing FTPD ($FTPDFOLDER)"
+	echo "*** Installing FTPD ($FTPDFOLDER)"
 
-        cp $DOWNLOADS/$FTPDFILE $HOMEROOT/$FTPDUSER
-        chown $FTPDUSER.$GROUP $HOMEROOT/$FTPDUSER
-        cd  $HOMEROOT/$FTPDUSER
-        echo " - Deleting old instance"
-        rm -rf $FTPDFOLDER
-        echo " - Uncompressing"
-        tar -xzf $FTPDFILE
-        echo " - Building"
-        cd $FTPDFOLDER
-        ./configure  --prefix=$FTPDROOT
-        make
-        #echo " - Testing"
-        #make test
-        echo " - Installing"
-        make install
-        echo " - Configuring"
+	if [ `id -un $FTPDUSER` != $FTPDUSER ]
+	then
+		 echo " - Adding user $FTPDUSER"
+		useradd $FTPDUSER -m -g $GROUP
+	else
+		if [ -f /etc/init.d/$FTPDUSER-server ]
+		then
+		 	echo " - Stopping service"
+			/etc/init.d/$FTPDUSER-server stop
+		else
+		 	echo " - Killing service (control script not found at /etc/init.d/$FTPDUSER-server)"
+			#for i in `ps ax | grep ftpd | cut -d ' ' -f 1`
+			#do
+  			#	kill -2 $i
+			#done
+		fi
+	fi	
+	
+	cp $DOWNLOADS/$FTPDFILE $HOMEROOT/$FTPDUSER
+	chown $FTPDUSER.$GROUP $HOMEROOT/$FTPDUSER
+	cd  $HOMEROOT/$FTPDUSER
+	echo " - Deleting old instance"
+	rm -rf $FTPDFOLDER
+	echo " - Uncompressing"
+	tar -xzf $FTPDFILE
+	echo " - Building"
+	cd $FTPDFOLDER
+	./configure  --prefix=$FTPDROOT
+	make
+	#echo " - Testing"
+	#make test
+	echo " - Installing"
+	make install
+	echo " - Configuring"
 
-        echo " - Setting permissions"
-        chown -R $FTPDUSER.$GROUP $HOMEROOT/$FTPDUSER/
+	# ---- INSTALL CONTROL SCRIPTS -- START ----
+
+	cat > /etc/init.d/$FTPDUSER-server << EOF
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:	  $FTPDUSER-server
+# Required-Start:    \$network \$syslog \$time
+# Required-Stop:     \$syslog
+# Should-Start:      \$local_fs
+# Should-Stop:       \$local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Controls the ftpd server
+# Description:       Controls the ftpd server.
+### END INIT INFO
+# GPL Licensed
+
+# Source function library
+. /lib/lsb/init-functions
+
+FTPD="$FTPDROOT/bin/apache2ctrl"
+FTPDPID="$FTPDPID"
+FTPDLOG="/var/log/inspircd.log"
+FTPDCONFIG="$IRCCONFIG"
+USER="$FTPDUSER"
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+
+if [ ! -x "\$FTPD" ]; then exit 0; fi
+
+if [ -f "\$FTPDPID" ]; then
+	FTPDPIDN="\`cat \"\$FTPDPID\" 2> /dev/null\`"
+fi
+
+start_ftpd()
+{
+	start-stop-daemon --start --quiet --oknodo --chuid "\$USER" --pidfile "\$FTPDPID" --exec "\$FTPD" -- start
+}
+
+stop_ftpd()
+{
+	start-stop-daemon --stop --quiet --pidfile "\$FTPDPID" --exec "\$FTPD" -- stop
+	rm -f "\$FTPDPID"
+	return 0
+}
+
+reload_http()
+{
+	if [ ! -z "\$FTPDPIDN" ] && kill -0 \$FTPDPIDN 2> /dev/null; then
+		kill -HUP \$FTPDPIDN >/dev/null 2>&1 || return 1
+		return 0
+	else
+		echo "Error: Apache2 is not running."
+		return 1
+	fi
+}
+
+case "\$1" in
+  start)
+	echo -n "Starting Apache2... "
+	start_ftpd && echo "done."
+	;;
+  stop)
+	echo -n "Stopping Apache2... "
+	stop_ftpd && echo "done."
+	;;
+  force-reload|reload)
+	echo -n "Reloading Apache2 config "
+	reload_ftpd && echo "done."
+	;;
+  restart)
+	\$0 stop
+	sleep 2s
+	\$0 start
+	;;
+  cron)
+	start_ircd || echo "Inspircd not running, starting it"
+	;;
+
+  *)
+	echo "Usage: \$0 {start|stop|restart|reload|force-reload|cron}"
+	exit 1
+esac
+EOF
+
+chmod +x /etc/init.d/$FTPDUSER-server
+insserv /etc/init.d/$FTPDUSER-server
+chown root.root /etc/init.d/$FTPDUSER-server
+#ln -fs /etc/init.d/$FTPDUSER-server /etc/rc2.d/S19$FTPDUSER-server
+
+	# ---- INSTALL CONTROL SCRIPTS -- END ----
+
+	# ---- INSTALL CONFIG -- START --
+	cat > $FTPDCONFIG << EOF
+ServerName                      "ThumbWhere FTP"
+ServerType                      standalone
+DefaultServer                   on
+Port                            21
+UseIPv6                         off
+Umask                           022
+MaxInstances                    30
+User                            tw-ftpd
+Group                           thumbwhere
+DefaultRoot                     ~
+AllowOverwrite                  on
+<Limit SITE_CHMOD>
+  DenyAll
+</Limit>
+EOF
+
+	# ---- INSTALL CONFIG -- END --		
+		
+	echo " - Setting permissions"
+	chown -R $FTPDUSER.$GROUP $HOMEROOT/$FTPDUSER/
+		
+		
 fi
