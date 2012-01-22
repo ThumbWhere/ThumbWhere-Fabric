@@ -16,9 +16,9 @@ set -e
 INSTALL_IRC=false
 INSTALL_REDIS=false
 INSTALL_NODEJS=false
-INSTALL_VARNISH=true
+INSTALL_VARNISH=false
 INSTALL_HTTPD=false
-INSTALL_FTPD=false
+INSTALL_FTPD=true
 
 IRCURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
 REDISURL=http://redis.googlecode.com/files/redis-2.4.6.tar.gz
@@ -66,6 +66,13 @@ REDISPID=$HOMEROOT/$REDISUSER/redis.pid
 
 VARNISHCONFIG=$HOMEROOT/$VARNISHUSER/thumbwhere.vcl
 
+HTTPDROOT=$HOMEROOT/$HTTPDUSER/apache2
+HTTPDCONFIG=$HTTPDROOT/conf/httpd.conf
+HTTPDPID=$HOMEROOT/$HTTPDUSER/httpd.pid
+
+
+FTPDROOT=$HOMEROOT/$FTPDUSER/ftpd
+
 groupadd -f thumbwhere
 
 if [ `id -un $HTTPDUSER` != $HTTPDUSER ]
@@ -100,7 +107,6 @@ cd $DOWNLOADS
 [ -f $FTPDFILE ] && echo "$FTPDFILE exists" || wget $FTPDURL
 cd ..
 
-
 ###############################################################################
 #
 # Install IRC
@@ -115,8 +121,17 @@ then
 		 echo " - Adding user $IRCUSER"
         	useradd $IRCUSER -m -g $GROUP
 	else
-		 echo " - Stopping service"
-        	/etc/init.d/$IRCUSER-server stop
+		if [ -f /etc/init.d/$IRCUSER-server ]
+		then
+		 	echo " - Stopping service"
+        		/etc/init.d/$IRCUSER-server stop
+		else
+		 	echo " - Killing service (control script not found at /etc/init.d/$IRCUSER-server)"
+			for i in `ps ax | grep inspircd | cut -d ' ' -f 1`
+			do
+  				kill -2 $i
+			done
+		fi
 	fi
 
 	cp $DOWNLOADS/$IRCFILE $HOMEROOT/$IRCUSER
@@ -139,9 +154,8 @@ then
 	# Generate configure scripts
 	#
 
-	
 # ---- IRC CONFIG -- START ----	
-	
+
 	cat > $IRCCONFIG << EOF
 <config format="xml">
 <define name="bindip" value="0.0.0.0">
@@ -157,9 +171,7 @@ then
 <connect deny="3ffe::0/32" reason="The 6bone address space is deprecated">
 <connect name="main" allow="*" maxchans="30" timeout="10" pingfreq="120" hardsendq="1048576" softsendq="8192" recvq="8192" threshold="10" commandrate="1000" fakelag="on" localmax="3" globalmax="3" useident="no" limit="5000" modes="+x">
 # OPERS
-<class name="Shutdown" commands="DIE RESTART REHASH LOADMODULE UNLOADMODULE RELOAD GUNLOADMODULE GRELOADMODULE SAJOIN SAPART SANICK SAQUIT SATOPIC"  
-	    privs="users/auspex channels/auspex servers/auspex users/mass-message channels/high-join-limit channels/set-permanent users/flood/no-throttle users/flood/increased-buffers"     
-		usermodes="*" chanmodes="*">
+<class name="Shutdown" commands="DIE RESTART REHASH LOADMODULE UNLOADMODULE RELOAD GUNLOADMODULE GRELOADMODULE SAJOIN SAPART SANICK SAQUIT SATOPIC" privs="users/auspex channels/auspex servers/auspex users/mass-message channels/high-join-limit channels/set-permanent users/flood/no-throttle users/flood/increased-buffers" usermodes="*" chanmodes="*">
 <class name="ServerLink" commands="CONNECT SQUIT CONNECT MKPASSWD ALLTIME SWHOIS CLOSE JUMPSERVER LOCKSERV" usermodes="*" chanmodes="*" privs="servers/auspex">
 <class name="BanControl" commands="KILL GLINE KLINE ZLINE QLINE ELINE TLINE RLINE CHECK NICKLOCK SHUN CLONES CBAN" usermodes="*" chanmodes="*">
 <class name="OperChat" commands="WALLOPS GLOBOPS SETIDLE" usermodes="*" chanmodes="*" privs="users/mass-message">
@@ -353,7 +365,18 @@ then
 		 echo " - Adding user $REDISUSER"
 		useradd $REDISUSER -m -g $GROUP
 	else
-		/etc/init.d/$REDISUSER-server stop
+		if [ -f /etc/init.d/$REDISUSER-server ]
+		then
+		 	echo " - Stopping service"
+        		/etc/init.d/$REDISUSER-server stop
+                else
+                        echo " - Killing service (control script not found at /etc/init.d/$REDISUSER-server)"
+                        for i in `ps ax | grep redis-server | cut -d ' ' -f 1`
+                        do
+                                kill -2 $i
+                        done
+
+		fi
 	fi
 	cp $DOWNLOADS/$REDISFILE $HOMEROOT/$REDISUSER
 	chown $REDISUSER.$GROUP $HOMEROOT/$REDISUSER
@@ -538,30 +561,41 @@ if [ $INSTALL_VARNISH == 'true' ]
 then
         echo "*** Installing VARNISH ($VARNISHFOLDER)"
 
-	
 	if [ `id -un $VARNISHUSER` != $VARNISHUSER ]
 	then
 		echo " - Adding user $VARNISHUSER"
 		useradd $VARNISHUSER -m -g $GROUP
 	else
-		echo " - Starting service"
-		/etc/init.d/$VARNISHUSER-server stop
+
+		if [ -f /etc/init.d/$REDISUSER-server ]
+		then
+			echo " - Starting service"
+			/etc/init.d/$VARNISHUSER-server stop
+                else
+                        echo " - Killing service (control script not found at /etc/init.d/$VARNISHUSER-server)"
+                        for i in `ps ax | grep varnishd | cut -d ' ' -f 1`
+                        do
+                                kill -2 $i
+                        done
+
+		fi
 	fi
 
         cp $DOWNLOADS/$VARNISHFILE $HOMEROOT/$VARNISHUSER
         chown $VARNISHUSER.$GROUP $HOMEROOT/$VARNISHUSER
         cd  $HOMEROOT/$VARNISHUSER
         echo " - Deleting old instance"
-        #rm -rf $VARNISHFOLDER
+        rm -rf $VARNISHFOLDER
         echo " - Uncompressing"
-        #tar -xzf $VARNISHFILE
+        tar -xzf $VARNISHFILE
         echo " - Building"
         cd $VARNISHFOLDER
-        #./configure 
-        #make
+        ./configure 
+        make
         echo " - Installing"
         make install
-        echo " - Configuring"
+
+	echo " - Configuring"
 
 # ---- VARNISH CONTROL SCRIPT -- START ----
 
@@ -678,7 +712,7 @@ EOF
 
 cat > $VARNISHCONFIG << EOF
 backend default {
-	.host = "127.0.0.1";
+	.host = "0.0.0.0";
 	.port = "80";
 }
 EOF
@@ -709,6 +743,24 @@ if [ $INSTALL_HTTPD == 'true' ]
 then
         echo "*** Installing HTTPD ($HTTPDFOLDER)"
 
+	if [ `id -un $HTTPDUSER` != $HTTPDUSER ]
+	then
+		 echo " - Adding user $HTTPDUSER"
+        	useradd $HTTPDUSER -m -g $GROUP
+	else
+		if [ -f /etc/init.d/$HTTPDUSER-server ]
+		then
+		 	echo " - Stopping service"
+        		/etc/init.d/$HTTPDUSER-server stop
+		else
+		 	echo " - Killing service (control script not found at /etc/init.d/$HTTPDUSER-server)"
+			#for i in `ps ax | grep httpd | cut -d ' ' -f 1`
+			#do
+  			#	kill -2 $i
+			#done
+		fi
+	fi
+
         cp $DOWNLOADS/$HTTPDFILE $HOMEROOT/$HTTPDUSER
         chown $HTTPDUSER.$GROUP $HOMEROOT/$HTTPDUSER
         cd  $HOMEROOT/$HTTPDUSER
@@ -718,13 +770,165 @@ then
         tar -xzf $HTTPDFILE
         echo " - Building"
         cd $HTTPDFOLDER
-        ./configure  --sysconfdir=$HOMEROOT/$HTTPDUSER/
+        ./configure  --prefix=$HTTPDROOT
         make
-        #echo " - Testing"
-        #make test
         echo " - Installing"
         make install
         echo " - Configuring"
+
+	# ---- INSTALL CONTROL SCRIPTS -- START ----
+
+	cat > /etc/init.d/$HTTPDUSER-server << EOF
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          $HTTPDUSER-server
+# Required-Start:    \$network \$syslog \$time
+# Required-Stop:     \$syslog
+# Should-Start:      \$local_fs
+# Should-Stop:       \$local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Controls the httpd server
+# Description:       Controls the httpd server.
+### END INIT INFO
+# GPL Licensed
+
+# Source function library
+. /lib/lsb/init-functions
+
+HTTPD="$HTTPDROOT/bin/apache2ctrl"
+HTTPDPID="$HTTPDPID"
+HTTPDLOG="/var/log/inspircd.log"
+HTTPDCONFIG="$IRCCONFIG"
+USER="$HTTPDUSER"
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+
+if [ ! -x "\$HTTPD" ]; then exit 0; fi
+
+if [ -f "\$HTTPDPID" ]; then
+	HTTPDPIDN="\`cat \"\$HTTPDPID\" 2> /dev/null\`"
+fi
+
+start_httpd()
+{
+        start-stop-daemon --start --quiet --oknodo --chuid "\$USER" --pidfile "\$HTTPDPID" --exec "\$HTTPD" -- start
+}
+
+stop_httpd()
+{
+        start-stop-daemon --stop --quiet --pidfile "\$HTTPDPID" --exec "\$HTTPD" -- stop
+        rm -f "\$HTTPDPID"
+        return 0
+}
+
+reload_http()
+{
+        if [ ! -z "\$HTTPDPIDN" ] && kill -0 \$HTTPDPIDN 2> /dev/null; then
+                kill -HUP \$HTTPDPIDN >/dev/null 2>&1 || return 1
+                return 0
+        else
+                echo "Error: Apache2 is not running."
+                return 1
+        fi
+}
+
+case "\$1" in
+  start)
+        echo -n "Starting Apache2... "
+        start_httpd && echo "done."
+        ;;
+  stop)
+        echo -n "Stopping Apache2... "
+        stop_httpd && echo "done."
+        ;;
+  force-reload|reload)
+        echo -n "Reloading Apache2 config "
+        reload_httpd && echo "done."
+        ;;
+  restart)
+        \$0 stop
+        sleep 2s
+        \$0 start
+        ;;
+  cron)
+        start_ircd || echo "Inspircd not running, starting it"
+        ;;
+
+  *)
+        echo "Usage: \$0 {start|stop|restart|reload|force-reload|cron}"
+        exit 1
+esac
+EOF
+
+chmod +x /etc/init.d/$HTTPDUSER-server
+insserv /etc/init.d/$HTTPDUSER-server
+chown root.root /etc/init.d/$HTTPDUSER-server
+#ln -fs /etc/init.d/$HTTPDUSER-server /etc/rc2.d/S19$HTTPDUSER-server
+
+	# ---- INSTALL CONTROL SCRIPTS -- END ----
+
+	# ---- INSTALL CONFIG -- START --
+        cat > $HTTPDCONFIG << EOF
+ServerRoot "$HTTPDROOT"
+Listen 127.0.0.1:81
+User $HTTPDUSER
+Group thumbwhere
+ServerAdmin james@thumbwhere.com
+ServerName apache.thumbwhere.com:80
+DocumentRoot "$HTTPDROOT/htdocs"
+<Directory />
+    Options FollowSymLinks
+    AllowOverride None
+    Order deny,allow
+    Deny from all
+</Directory>
+<Directory "$HTTPDROOT/htdocs">
+    Options Indexes FollowSymLinks
+    AllowOverride None
+    Order allow,deny
+    Allow from all
+</Directory>
+<IfModule dir_module>
+    DirectoryIndex index.html
+</IfModule>
+<FilesMatch "^\.ht">
+    Order allow,deny
+    Deny from all
+    Satisfy All
+</FilesMatch>
+ErrorLog "logs/error_log"
+LogLevel warn
+<IfModule log_config_module>
+    LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
+    LogFormat "%h %l %u %t \"%r\" %>s %b" common
+    <IfModule logio_module>
+      LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" combinedio
+    </IfModule>
+    CustomLog "logs/access_log" common
+</IfModule>
+<IfModule alias_module>
+    ScriptAlias /cgi-bin/ "$HTTPDROOT/cgi-bin/"
+</IfModule>
+<Directory "$HTTPDROOT/cgi-bin">
+    AllowOverride None
+    Options None
+    Order allow,deny
+    Allow from all
+</Directory>
+DefaultType text/plain
+<IfModule mime_module>
+    TypesConfig conf/mime.types
+    AddType application/x-compress .Z
+    AddType application/x-gzip .gz .tgz
+</IfModule>
+<IfModule ssl_module>
+SSLRandomSeed startup builtin
+SSLRandomSeed connect builtin
+</IfModule>
+EOF
+
+	# ---- INSTALL CONFIG -- END --
 
         echo " - Setting permissions"
         chown -R $HTTPDUSER.$GROUP $HOMEROOT/$HTTPDUSER/
@@ -748,7 +952,7 @@ then
         tar -xzf $FTPDFILE
         echo " - Building"
         cd $FTPDFOLDER
-        ./configure  --sysconfdir=$HOMEROOT/$FTPDUSER/
+        ./configure  --prefix=$FTPDROOT
         make
         #echo " - Testing"
         #make test
