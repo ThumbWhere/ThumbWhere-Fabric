@@ -1,4 +1,4 @@
-#######################################################
+###############################################################################
 #
 # This will setup ThumbWhere Fabric node on a Linux Box
 #
@@ -77,21 +77,12 @@ FTPDPID=$FTPDROOT/var/proftpd.pid
 
 groupadd -f thumbwhere
 
-if [ `id -un $HTTPDUSER` != $HTTPDUSER ]
-then
-	useradd $HTTPDUSER -m -g $GROUP
-fi
-
-if [ `id -un $FTPDUSER` != $FTPDUSER ]
-then
-	useradd $FTPDUSER -m -g $GROUP
-fi
 
 #
 # Install the tools we will need
 #
 
-sudo apt-get -y install wget bzip2 binutils g++ make tcl8.5 libv8-dev curl build-essential openssl libssl-dev libssh-dev pkg-config libpcre3 libpcre3-dev libpcre++0 xsltproc libncurses5-dev
+apt-get -y install wget bzip2 binutils g++ make tcl8.5 libv8-dev curl build-essential openssl libssl-dev libssh-dev pkg-config libpcre3 libpcre3-dev libpcre++0 xsltproc libncurses5-dev
 
 #
 # Install the source packages...
@@ -118,7 +109,7 @@ if [ $INSTALL_IRC == 'true' ]
 then
 	echo "*** Installing IRC ($IRCFOLDER)"
 
-	if [ `id -un $IRCUSER` != $IRCUSER ]
+	if [ "`id -un $IRCUSER`" != "$IRCUSER" ]
 	then
 		 echo " - Adding user $IRCUSER"
 		useradd $IRCUSER -m -g $GROUP
@@ -136,7 +127,7 @@ then
 		fi
 	fi
 
-	cp $DOWNLOADS/$IRCFILE $HOMEROOT/$IRCUSER
+	cp $DOWNLOADS/$IRCFILE $HOMEROOT/$IRCUSER/
 	chown $IRCUSER.$GROUP $HOMEROOT/$IRCUSER
 	cd  $HOMEROOT/$IRCUSER
 	echo " - Deleting old instance"
@@ -362,7 +353,7 @@ fi
 if [ $INSTALL_REDIS == 'true' ]
 then
 	echo "*** Installing REDIS ($REDISFILE)"
-	if [ `id -un $REDISUSER` != $REDISUSER ]
+	if [ "`id -un $REDISUSER`" != "$REDISUSER" ]
 	then
 		 echo " - Adding user $REDISUSER"
 		useradd $REDISUSER -m -g $GROUP
@@ -380,7 +371,7 @@ then
 
 		fi
 	fi
-	cp $DOWNLOADS/$REDISFILE $HOMEROOT/$REDISUSER
+	cp $DOWNLOADS/$REDISFILE $HOMEROOT/$REDISUSER/
 	chown $REDISUSER.$GROUP $HOMEROOT/$REDISUSER
 	cd  $HOMEROOT/$REDISUSER
 	echo " - Deleting old instance"
@@ -526,13 +517,13 @@ if [ $INSTALL_NODEJS == 'true' ]
 then
 	echo "*** Installing NODEJS ($NODEJSFOLDER)"
 
-	if [ `id -un $NODEJSUSER` != $NODEJSUSER ]
+	if [ "`id -un $NODEJSUSER`" != "$NODEJSUSER" ]
 	then
 		echo " - Adding user $NODEJSUSER"
 		useradd $NODEJSUSER -m -g $GROUP
 	fi
 
-	cp $DOWNLOADS/$NODEJSFILE $HOMEROOT/$NODEJSUSER
+	cp $DOWNLOADS/$NODEJSFILE $HOMEROOT/$NODEJSUSER/
 	chown $NODEJSUSER.$GROUP $HOMEROOT/$NODEJSUSER
 	cd  $HOMEROOT/$NODEJSUSER
 	echo " - Deleting old instance"
@@ -563,7 +554,7 @@ if [ $INSTALL_VARNISH == 'true' ]
 then
 	echo "*** Installing VARNISH ($VARNISHFOLDER)"
 
-	if [ `id -un $VARNISHUSER` != $VARNISHUSER ]
+	if [ "`id -un $VARNISHUSER`" != "$VARNISHUSER" ]
 	then
 		echo " - Adding user $VARNISHUSER"
 		useradd $VARNISHUSER -m -g $GROUP
@@ -583,7 +574,7 @@ then
 		fi
 	fi
 
-	cp $DOWNLOADS/$VARNISHFILE $HOMEROOT/$VARNISHUSER
+	cp $DOWNLOADS/$VARNISHFILE $HOMEROOT/$VARNISHUSER/
 	chown $VARNISHUSER.$GROUP $HOMEROOT/$VARNISHUSER
 	cd  $HOMEROOT/$VARNISHUSER
 	echo " - Deleting old instance"
@@ -745,7 +736,7 @@ if [ $INSTALL_HTTPD == 'true' ]
 then
 	echo "*** Installing HTTPD ($HTTPDFOLDER)"
 
-	if [ `id -un $HTTPDUSER` != $HTTPDUSER ]
+	if [ "`id -un $HTTPDUSER`" != "$HTTPDUSER" ]
 	then
 		 echo " - Adding user $HTTPDUSER"
 		useradd $HTTPDUSER -m -g $GROUP
@@ -763,8 +754,8 @@ then
 		fi
 	fi
 
-	cp $DOWNLOADS/$HTTPDFILE $HOMEROOT/$HTTPDUSER
-	chown $HTTPDUSER.$GROUP $HOMEROOT/$HTTPDUSER
+	cp $DOWNLOADS/$HTTPDFILE $HOMEROOT/$HTTPDUSER/
+	chown $HTTPDUSER.$GROUP $HOMEROOT/$HTTPDUSER/
 	cd  $HOMEROOT/$HTTPDUSER
 	echo " - Deleting old instance"
 	rm -rf $HTTPDFOLDER
@@ -936,7 +927,7 @@ EOF
 	chown -R $HTTPDUSER.$GROUP $HOMEROOT/$HTTPDUSER/
 
         echo " - Starting service"
-        /etc/init.d/$FTPDUSER-server start
+        /etc/init.d/$HTTPDUSER-server start
 
 fi
 
@@ -948,7 +939,7 @@ if [ $INSTALL_FTPD == 'true' ]
 then
 	echo "*** Installing FTPD ($FTPDFOLDER)"
 
-	if [ `id -un $FTPDUSER` != $FTPDUSER ]
+	if [ "`id -un $FTPDUSER`" != "$FTPDUSER" ]
 	then
 		 echo " - Adding user $FTPDUSER"
 		useradd $FTPDUSER -m -g $GROUP
@@ -966,7 +957,7 @@ then
 		fi
 	fi
 
-	cp $DOWNLOADS/$FTPDFILE $HOMEROOT/$FTPDUSER
+	cp $DOWNLOADS/$FTPDFILE $HOMEROOT/$FTPDUSER/
 	chown $FTPDUSER.$GROUP $HOMEROOT/$FTPDUSER
 	cd  $HOMEROOT/$FTPDUSER
 	echo " - Deleting old instance"
