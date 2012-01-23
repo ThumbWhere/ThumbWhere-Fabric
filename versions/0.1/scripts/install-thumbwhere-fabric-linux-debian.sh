@@ -74,7 +74,7 @@ FTPDROOT=$HOMEROOT/$FTPDUSER/ftpd
 FTPDCONFIG=$FTPDROOT/etc/proftpd.conf
 FTPDPID=$FTPDROOT/var/proftpd.pid
 
-
+echo "adding group"
 groupadd -f thumbwhere
 
 
@@ -82,7 +82,38 @@ groupadd -f thumbwhere
 # Install the tools we will need
 #
 
-apt-get -y install wget bzip2 binutils g++ make tcl8.5 libv8-dev curl build-essential openssl libssl-dev libssh-dev pkg-config libpcre3 libpcre3-dev libpcre++0 xsltproc libncurses5-dev
+os=""
+
+echo "`grep centos /proc/version -c`"
+
+if [ "`grep centos /proc/version -c`" != "0" ] 
+then
+	os="centos"
+fi
+
+echo  "`grep debian /proc/version -c`"
+
+if [ "`grep debian /proc/version -c`" != "0" ] 
+then
+	os="debian"
+fi
+
+echo "os = $os"
+
+if [ $os = "" ] 
+then
+	echo "not a valid system os"
+	exit 1
+fi
+
+if [ $os == 'debian' ]
+then
+	apt-get -y install wget bzip2 binutils g++ make tcl8.5 curl build-essential openssl libssl-dev libssh-dev pkg-config libpcre3 libpcre3-dev libpcre++0 xsltproc libncurses5-dev
+elif [ $os == 'centos' ]
+then
+
+        yum -y install wget     bzip2 binutils gcc-c++ make gcc tcl curl openssl pcre gnutls openssh openssl ncurses pcre-devel gnutls-devel openssh-devel openssl-devel ncurses-devel libxslt redhat-lsb
+fi
 
 #
 # Install the source packages...
@@ -330,9 +361,16 @@ esac
 EOF
 
 chmod +x /etc/init.d/$IRCUSER-server
-insserv /etc/init.d/$IRCUSER-server
 chown root.root /etc/init.d/$IRCUSER-server
-#ln -fs /etc/init.d/$IRCUSER-server /etc/rc2.d/S19$IRCUSER-server
+if [ $os == "debian" ]
+then
+	insserv /etc/init.d/$IRCUSER-server
+elif [ $os == "centos" ]
+then
+        chkconfig $IRCUSER-server on
+else
+	ln -fs /etc/init.d/$IRCUSER-server /etc/rc2.d/S19$IRCUSER-server
+fi
 
 # ---- IRC CONTROL SCRIPT --- END ---
 
@@ -461,8 +499,15 @@ EOF
 
 chmod +x /etc/init.d/$REDISUSER-server
 chown root.root /etc/init.d/$REDISUSER-server
-insserv /etc/init.d/$REDISUSER-server
-#ln -fs /etc/init.d/$REDISUSER-server /etc/rc2.d/S19$REDISUSER-server 
+if [ $os == "debian" ]
+then
+	insserv /etc/init.d/$REDISUSER-server
+elif [ $os == "centos" ]
+then
+        chkconfig $REDISUSER-server on
+else
+	ln -fs /etc/init.d/$REDISUSER-server /etc/rc2.d/S19$REDISUSER-server 
+fi
 
 # ---- REDIS CONTROL SCRIPT -- END ----
 
@@ -714,8 +759,16 @@ EOF
 
 chmod +x /etc/init.d/$VARNISHUSER-server
 chown root.root /etc/init.d/$VARNISHUSER-server
-insserv /etc/init.d/$VARNISHUSER-server
-#ln -fs /etc/init.d/$VARNISHUSER-server /etc/rc2.d/S19$VARNISHUSER-server
+
+if [ $os == "debian" ]
+then
+	insserv /etc/init.d/$VARNISHUSER-server
+elif [ $os == "centos" ]
+then
+        chkconfig $VARNISHUSER-server on
+else
+	ln -fs /etc/init.d/$VARNISHUSER-server /etc/rc2.d/S19$VARNISHUSER-server
+fi
 
 # ---- VARNISH CONTROL SCRIPT -- END ----
 
@@ -855,9 +908,17 @@ esac
 EOF
 
 chmod +x /etc/init.d/$HTTPDUSER-server
-insserv /etc/init.d/$HTTPDUSER-server
 chown root.root /etc/init.d/$HTTPDUSER-server
-#ln -fs /etc/init.d/$HTTPDUSER-server /etc/rc2.d/S19$HTTPDUSER-server
+
+if [ $os == "debian" ]
+then
+	insserv /etc/init.d/$HTTPDUSER-server
+elif [ $os == "centos" ]
+then
+        chkconfig $HTTPDUSER-server on
+else
+	ln -fs /etc/init.d/$HTTPDUSER-server /etc/rc2.d/S19$HTTPDUSER-server
+fi
 
 	# ---- INSTALL CONTROL SCRIPTS -- END ----
 
@@ -1058,10 +1119,16 @@ esac
 EOF
 
 chmod +x /etc/init.d/$FTPDUSER-server
-insserv /etc/init.d/$FTPDUSER-server
 chown root.root /etc/init.d/$FTPDUSER-server
-#ln -fs /etc/init.d/$FTPDUSER-server /etc/rc2.d/S19$FTPDUSER-server
-
+if [ $os == "debian" ]
+then
+	insserv /etc/init.d/$FTPDUSER-server
+elif [ $os == "centos" ]
+then
+        chkconfig $FTPDUSER-server on
+else
+	ln -fs /etc/init.d/$FTPDUSER-server /etc/rc2.d/S19$FTPDUSER-server
+fi
 	# ---- INSTALL CONTROL SCRIPTS -- END ----
 
 	# ---- INSTALL CONFIG -- START --
