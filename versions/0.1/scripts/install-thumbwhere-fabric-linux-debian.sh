@@ -13,8 +13,8 @@ set -e
 # Config variables
 #
 
-IRCD_TASK="configure"
-REDIS_TASK=""
+IRCD_TASK=""
+REDIS_TASK="download,compile,install,configure"
 NODEJS_TASK=""
 VARNISH_TASK=""
 HTTPD_TASK=""
@@ -317,6 +317,12 @@ EOF
 # Source function library
 . /lib/lsb/init-functions
 
+if [ "\$os" == "centos" ]
+then
+# source function library
+. /etc/rc.d/init.d/functions
+fi
+
 
 os=""
 if [ "\`grep centos /proc/version -c\`" != "0" ]
@@ -333,7 +339,6 @@ then
         exit 1
 fi
 
-# This logic is generated at script built time (if you are wondering about this comparison)
 if [ "\$os" == "centos" ]
 then
 # source function library
@@ -368,7 +373,7 @@ start_ircd()
 	[ -f "\$IRCDLOG" ] || ( touch "\$IRCDLOG" ; chown "\$USER:thumbwhere" "\$IRCDLOG" ; chmod 0640 "\$IRCDLOG" )
 	export LD_LIBRARY_PATH=/usr/lib/inspircd
 	
-	# This logic is generated at script built time (if you are wondering about this comparison)
+	# Start based on OS type
 	if [ "\$os" == "centos" ]
 	then 	
 		exec su - \$USER -c "\$IRCD \$IRCDARGS"
@@ -533,16 +538,17 @@ then
 # Source function library
 . /lib/lsb/init-functions
 
-# This logic is generated at script built time (if you are wondering about this comparison)
-if ("$os" == "centos") 
+if [ "\$os" == "centos" ]
 then
 # source function library
 . /etc/rc.d/init.d/functions
+fi
 
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/local/bin/redis-server
 DAEMON_ARGS=$REDISCONFIG
+USER=\$REDISUSER
 NAME=redis-server
 DESC=redis-server
 PIDFILE=$REDISPID
@@ -557,20 +563,26 @@ case "\$1" in
 	echo "Starting \$DESC: "
 	touch \$PIDFILE
 	chown $REDISUSER:$GROUP \$PIDFILE
-	if start-stop-daemon --start --quiet --umask 007 --pidfile \$PIDFILE --chuid $REDISUSER:$GROUP --exec \$DAEMON -- \$DAEMON_ARGS
-	then
-		 log_end_msg 0
-	else
-		 log_end_msg 1
+	
+	
+	# Start based on OS type
+	if [ "\$os" == "centos" ]
+	then 	
+		exec su - \$USER -c "\$DAEMON \$DAEMON_ARGS"
+	elif [ "\$os" == "debian" ]
+	then	
+		start-stop-daemon --start --quiet --umask 007 --pidfile \$PIDFILE --chuid $REDISUSER:$GROUP --exec \$DAEMON -- \$DAEMON_ARGS
 	fi
 	;;
   stop)
 	echo "Stopping \$DESC: "
-	if start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE --exec \$DAEMON
+	
+	if [ "\$os" == "centos" ]
+	then 	
+		killproc \$DAEMON -TERM
+	elif [ "\$os" == "debian" ]
 	then
-		log_end_msg 0
-	else
-		log_end_msg 1
+		start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE --exec \$DAEMON
 	fi
 	rm -f \$PIDFILE
 	;;
@@ -747,11 +759,11 @@ then
 # Source function library
 . /lib/lsb/init-functions
 
-# This logic is generated at script built time (if you are wondering about this comparison)
-if ("$os" == "centos") 
+if [ "\$os" == "centos" ]
 then
 # source function library
 . /etc/rc.d/init.d/functions
+fi
 
 NAME=varnishd
 DESC="ThumbWhere HTTP accelerator (Varnish)"
@@ -939,11 +951,11 @@ then
 # Source function library
 . /lib/lsb/init-functions
 
-# This logic is generated at script built time (if you are wondering about this comparison)
-if ("$os" == "centos") 
+if [ "\$os" == "centos" ]
 then
 # source function library
 . /etc/rc.d/init.d/functions
+fi
 
 
 HTTPD="$HTTPDROOT/bin/apache2ctrl"
@@ -1157,11 +1169,11 @@ then
 # Source function library
 . /lib/lsb/init-functions
 
-# This logic is generated at script built time (if you are wondering about this comparison)
-if ("$os" == "centos") 
+if [ "\$os" == "centos" ]
 then
 # source function library
 . /etc/rc.d/init.d/functions
+fi
 
 FTPD="$FTPDROOT/sbin/proftpd"
 FTPDPID="$FTPDPID"
