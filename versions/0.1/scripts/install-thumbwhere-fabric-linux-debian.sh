@@ -82,6 +82,21 @@ FTPDPROCESS=proftpd
 groupadd -f thumbwhere
 
 #
+# Some handy constants
+#
+
+# Escape code
+esc=`echo -en "\033"`
+
+# Set colors
+cc_red="${esc}[0;31m"
+cc_green="${esc}[0;32m"
+cc_yellow="${esc}[0;33m"
+cc_blue="${esc}[0;34m"
+cc_normal=`echo -en "${esc}[m\017"`
+
+
+#
 # Install the tools we will need
 #
 
@@ -115,39 +130,51 @@ fi
 # Install the source packages...
 #
 
-echo "*** Downloading source packages"
+echo "*** ${cc_blue}Downloading source packages${cc_normal}"
 
 mkdir -p $DOWNLOADS
 cd $DOWNLOADS
 
 if [[ $IRCD_TASK == *download* ]] 
 then
-	[ -f $IRCDFILE ] && echo "$IRCDFILE exists" || wget $IRCDURL
+	[ -f $IRCDFILE ] && echo " - $IRCDFILE exists" || wget $IRCDURL
+else
+	echo " - ${cc_yellow}Skipping $IRCDFILE${cc_normal}"
 fi
 
 if [[ $REDIS_TASK == *download* ]] 
 then
-	[ -f $REDISFILE ] && echo "$REDISFILE exists" || wget $REDISURL
+	[ -f $REDISFILE ] && echo " - $REDISFILE exists" || wget $REDISURL
+else
+        echo " - ${cc_yellow}Skipping $REDISFILE${cc_normal}"
 fi
 
 if [[ $NODEJS_TASK == *download* ]] 
 then
-	[ -f $NODEJSFILE ] && echo "$NODEJSFILE exists" || wget $NODEJSURL
+	[ -f $NODEJSFILE ] && echo " - $NODEJSFILE exists" || wget $NODEJSURL
+else
+        echo " - ${cc_yellow}Skipping $NODEJSFILE${cc_normal}"
 fi
 
 if [[ $VARNISH_TASK == *download* ]] 
 then
-	[ -f $VARNISHFILE ] && echo "$VARNISHFILE exists" || wget $VARNISHURL
+	[ -f $VARNISHFILE ] && echo " - $VARNISHFILE exists" || wget $VARNISHURL
+else
+        echo " - ${cc_yellow}Skipping $VARNISHFILE${cc_normal}"
 fi
 
 if [[ $HTTPD_TASK == *download* ]] 
 then
-	[ -f $HTTPDFILE ] && echo "$HTTPDFILE exists" || wget $HTTPDURL
+	[ -f $HTTPDFILE ] && echo " - $HTTPDFILE exists" || wget $HTTPDURL
+else
+        echo " - ${cc_yellow}Skipping $HTTPDFILE${cc_normal}"
 fi
 
 if [[ $FTPD_TASK == *download* ]] 
 then
-	[ -f $FTPDFILE ] && echo "$FTPDFILE exists" || wget $FTPDURL
+	[ -f $FTPDFILE ] && echo " - $FTPDFILE exists" || wget $FTPDURL
+else
+        echo " - ${cc_yellow}Skipping $IRCDFILE${cc_normal}"fi
 fi
 
 cd ..
@@ -159,7 +186,7 @@ cd ..
 
 if [ "$IRCD_TASK" != "" ]
 then
-	echo "*** Installing IRCD ($IRCDFOLDER)"
+	echo "$*** ${cc_blue}Installing IRCD ($IRCDFOLDER)${cc_normal}"
 
 	if [ "`id -un $IRCDUSER`" != "$IRCDUSER" ]
 	then
@@ -469,7 +496,7 @@ fi
 
 if [ "$REDIS_TASK" != "" ]
 then
-	echo "*** Installing REDIS ($REDISFILE)"
+	echo "*** ${cc_blue}Installing REDIS ($REDISFILE)${cc_normal}"
 	if [ "`id -un $REDISUSER`" != "$REDISUSER" ]
 	then
 		 echo " - Adding user $REDISUSER"
@@ -592,9 +619,9 @@ case "\$1" in
 	then 	
 		if su - \$USER -c "\$DAEMON \$DAEMON_ARGS" 2> /dev/null
 		then
-                        echo "OK"
+                        echo "${cc_green}OK${cc_normal}"
                 else
-			echo "FAIL"
+			echo "${cc_red}FAIL${cc_normal}"
                         exit 1
                 fi
 
@@ -616,9 +643,9 @@ case "\$1" in
 	then 	
 		if redis-cli shutdown  2> /dev/null
 		then
-			echo "OK"
+			echo "${cc_green}OK${cc_normal}"
     		else
-			echo "FAIL"
+			echo "${cc_green}FAIL${cc_normal}"
 			exit 1
     		fi
 	elif [ "\$os" == "debian" ]
@@ -717,7 +744,7 @@ fi
 
 if [ "$NODEJS_TASK" != '' ]
 then
-	echo "*** Installing NODEJS ($NODEJSFOLDER)"
+	echo "*** ${cc_blue}Installing NODEJS ($NODEJSFOLDER)${cc_normal}"
 
 	if [ "`id -un $NODEJSUSER`" != "$NODEJSUSER" ]
 	then
@@ -754,7 +781,7 @@ fi
 
 if [ "$VARNISH_TASK" != "" ]
 then
-	echo "*** Installing VARNISH ($VARNISHFOLDER)"
+	echo "*** ${cc_blue}Installing VARNISH ($VARNISHFOLDER)${cc_normal}"
 
 	if [ "`id -un $VARNISHUSER`" != "$VARNISHUSER" ]
 	then
@@ -966,7 +993,7 @@ fi
 
 if [ "$HTTPD_TASK" != "" ]
 then
-	echo "*** Installing HTTPD ($HTTPDFOLDER)"
+	echo "*** ${cc_blue}Installing HTTPD ($HTTPDFOLDER)${cc_normal}"
 
 	if [ "`id -un $HTTPDUSER`" != "$HTTPDUSER" ]
 	then
@@ -1200,7 +1227,7 @@ fi
 
 if [ "$FTPD_TASK" != "" ]
 then
-	echo "*** Installing FTPD ($FTPDFOLDER)"
+	echo "*** ${cc_blue}Installing FTPD ($FTPDFOLDER)${cc_normal}"
 
 	if [ "`id -un $FTPDUSER`" != "$FTPDUSER" ]
 	then
@@ -1381,4 +1408,4 @@ EOF
         /etc/init.d/$FTPDUSER-server start
 fi
 
-echo " *** Completed"
+echo " *** ${cc_blue}Completed${cc_normal}"
