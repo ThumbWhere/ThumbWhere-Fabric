@@ -583,14 +583,14 @@ fi
 case "\$1" in
   start)
 	echo -n "Starting \$DESC: "
-	touch \$PIDFILE
-	chown $REDISUSER:$GROUP \$PIDFILE
+	#touch \$PIDFILE
+	#chown $REDISUSER:$GROUP \$PIDFILE
 	
 	
 	# Start based on OS type
 	if [ "\$os" == "centos" ]
 	then 	
-		if exec su - \$USER -c "\$DAEMON \$DAEMON_ARGS"
+		if su - \$USER -c "\$DAEMON \$DAEMON_ARGS" 2> /dev/null
 		then
                         echo "OK"
                 else
@@ -600,7 +600,7 @@ case "\$1" in
 
 	elif [ "\$os" == "debian" ]
 	then	
-		if start-stop-daemon --start --quiet --umask 007 --pidfile \$PIDFILE --chuid $REDISUSER:$GROUP --exec \$DAEMON -- \$DAEMON_ARGS
+		if start-stop-daemon --start --quiet --umask 007 --pidfile \$PIDFILE --chuid $REDISUSER:$GROUP --exec \$DAEMON -- \$DAEMON_ARGS  2> /dev/null
 		then
                         log_end_msg 0
                 else
@@ -614,7 +614,7 @@ case "\$1" in
 
 	if [ "\$os" == "centos" ]
 	then 	
-		if redis-cli shutdown
+		if redis-cli shutdown  2> /dev/null
 		then
 			echo "OK"
     		else
@@ -623,14 +623,14 @@ case "\$1" in
     		fi
 	elif [ "\$os" == "debian" ]
 	then
-		if redis-cli shutdown
+		if redis-cli shutdown  2> /dev/null
 		then		
 			log_end_msg 0
     		else
 			log_end_msg 1
 			exit 1
     		fi
-		#start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE --exec \$DAEMON
+		#start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE --exec \$DAEMON  2> /dev/null
 	fi
 	rm -f \$PIDFILE
 	;;
@@ -1380,3 +1380,5 @@ EOF
         echo " - Starting service"
         /etc/init.d/$FTPDUSER-server start
 fi
+
+echo " *** Completed"
