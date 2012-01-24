@@ -13,14 +13,14 @@ set -e
 # Config variables
 #
 
-INSTALL_IRC=true
-INSTALL_REDIS=true
-INSTALL_NODEJS=true
-INSTALL_VARNISH=true
-INSTALL_HTTPD=true
-INSTALL_FTPD=true
+IRCD_TASK="download-compile-configure"
+REDIS_TASK=""
+NODEJS_TASK=""
+VARNISH_TASK=""
+HTTPD_TASK=""
+FTPD_TASK=""
 
-IRCURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
+IRCDURL=http://downloads.sourceforge.net/project/inspircd/InspIRCDd-2.0/2.0.2/InspIRCDd-2.0.2.tar.bz2
 REDISURL=http://redis.googlecode.com/files/redis-2.4.6.tar.gz
 NODEJSURL=http://nodejs.org/dist/v0.6.8/node-v0.6.8.tar.gz
 VARNISHURL=http://repo.varnish-cache.org/source/varnish-3.0.2.tar.gz
@@ -36,47 +36,51 @@ DOWNLOADS=~/tw-downloads
 HOMEROOT=/home
 
 GROUP=thumbwhere
-IRCUSER=tw-irc
+IRCDUSER=tw-ircd
 REDISUSER=tw-redis
 NODEJSUSER=tw-nodejs
 VARNISHUSER=tw-varnish
 HTTPDUSER=tw-httpd
 FTPDUSER=tw-ftpd
 
-IRCFILE=`echo $IRCURL | rev | cut -d\/ -f1 | rev`
+IRCDFILE=`echo $IRCDURL | rev | cut -d\/ -f1 | rev`
 REDISFILE=`echo $REDISURL | rev | cut -d\/ -f1 | rev`
 NODEJSFILE=`echo $NODEJSURL | rev | cut -d\/ -f1 | rev`
 VARNISHFILE=`echo $VARNISHURL | rev | cut -d\/ -f1 | rev`
 HTTPDFILE=`echo $HTTPDURL | rev | cut -d\/ -f1 | rev`
 FTPDFILE=`echo $FTPDURL | rev | cut -d\/ -f1 | rev`
 
-IRCFOLDER=`echo $IRCFILE | rev | cut -d\. -f3- | rev`
+IRCDFOLDER=`echo $IRCDFILE | rev | cut -d\. -f3- | rev`
 REDISFOLDER=`echo $REDISFILE | rev | cut -d\. -f3- | rev`
 NODEJSFOLDER=`echo $NODEJSFILE | rev | cut -d\. -f3- | rev`
 VARNISHFOLDER=`echo $VARNISHFILE | rev | cut -d\. -f3- | rev`
 HTTPDFOLDER=`echo $HTTPDFILE | rev | cut -d\. -f3- | rev`
 FTPDFOLDER=`echo $FTPDFILE | rev | cut -d\. -f3- | rev`
 
-IRCCONFIG=/etc/inspircd/inspircd.conf
-IRCPID=$HOMEROOT/$IRCUSER/inspircd.pid
+IRCDPROCESS=inspircd
+IRCDCONFIG=/etc/inspircd/inspircd.conf
+IRCDPID=$HOMEROOT/$IRCDUSER/inspircd.pid
 
 REDISCONFIG=$HOMEROOT/$REDISUSER/redis.conf
 REDISLOGS=$HOMEROOT/$REDISUSER
 REDISPID=$HOMEROOT/$REDISUSER/redis.pid
+REDISPROCESS=redis
 
 VARNISHCONFIG=$HOMEROOT/$VARNISHUSER/thumbwhere.vcl
+VARNISHPROCESS=varnishd
 
 HTTPDROOT=$HOMEROOT/$HTTPDUSER/apache2
 HTTPDCONFIG=$HTTPDROOT/conf/httpd.conf
 HTTPDPID=$HOMEROOT/$HTTPDUSER/httpd.pid
+HTTPDPROCESS=httpd
 
 FTPDROOT=$HOMEROOT/$FTPDUSER/ftpd
 FTPDCONFIG=$FTPDROOT/etc/proftpd.conf
 FTPDPID=$FTPDROOT/var/proftpd.pid
+FTPDPROCESS=proftpd
 
 echo "adding group"
 groupadd -f thumbwhere
-
 
 #
 # Install the tools we will need
@@ -123,34 +127,35 @@ echo "*** Downloading source packages"
 
 mkdir -p $DOWNLOADS
 cd $DOWNLOADS
-[ -f $IRCFILE ] && echo "$IRCFILE exists" || wget $IRCURL
-[ -f $REDISFILE ] && echo "$REDISFILE exists" || wget $REDISURL
-[ -f $NODEJSFILE ] && echo "$NODEJSFILE exists" || wget $NODEJSURL
-[ -f $VARNISHFILE ] && echo "$VARNISHFILE exists" || wget $VARNISHURL
-[ -f $HTTPDFILE ] && echo "$HTTPDFILE exists" || wget $HTTPDURL
-[ -f $FTPDFILE ] && echo "$FTPDFILE exists" || wget $FTPDURL
+
+if [[ $IRCD_TASK == *download* ]] [ -f $IRCDFILE ] && echo "$IRCDFILE exists" || wget $IRCDURL
+if [[ $REDIS_TASK == *download* ]] [ -f $REDISFILE ] && echo "$REDISFILE exists" || wget $REDISURL
+if [[ $NODEJS_TASK == *download* ]] [ -f $NODEJSFILE ] && echo "$NODEJSFILE exists" || wget $NODEJSURL
+if [[ $VARNISH_TASK == *download* ]] [ -f $VARNISHFILE ] && echo "$VARNISHFILE exists" || wget $VARNISHURL
+if [[ $HTTPD_TASK == *download* ]] [ -f $HTTPDFILE ] && echo "$HTTPDFILE exists" || wget $HTTPDURL
+if [[ $FTPD_TASK == *download* ]] [ -f $FTPDFILE ] && echo "$FTPDFILE exists" || wget $FTPDURL
 cd ..
 
 ###############################################################################
 #
-# Install IRC
+# Install IRCD
 # 
 
-if [ $INSTALL_IRC == 'true' ]
+if [ "$IRCD_TASK" != "" ]
 then
-	echo "*** Installing IRC ($IRCFOLDER)"
+	echo "*** Installing IRCD ($IRCDFOLDER)"
 
-	if [ "`id -un $IRCUSER`" != "$IRCUSER" ]
+	if [ "`id -un $IRCDUSER`" != "$IRCDUSER" ]
 	then
-		 echo " - Adding user $IRCUSER"
-		useradd $IRCUSER -m -g $GROUP
+		 echo " - Adding user $IRCDUSER"
+		useradd $IRCDUSER -m -g $GROUP
 	else
-		if [ -f /etc/init.d/$IRCUSER-server ]
+		if [ -f /etc/init.d/$IRCDUSER-server ]
 		then
 		 	echo " - Stopping service"
-			/etc/init.d/$IRCUSER-server stop
+			/etc/init.d/$IRCDUSER-server stop
 		else
-		 	echo " - Killing service (control script not found at /etc/init.d/$IRCUSER-server)"
+		 	echo " - Killing service (control script not found at /etc/init.d/$IRCDUSER-server)"
 			for i in `ps ax | grep inspircd | cut -d ' ' -f 1`
 			do
   				kill -2 $i
@@ -158,33 +163,40 @@ then
 		fi
 	fi
 
-	cp $DOWNLOADS/$IRCFILE $HOMEROOT/$IRCUSER/
-	chown $IRCUSER.$GROUP $HOMEROOT/$IRCUSER
-	cd  $HOMEROOT/$IRCUSER
-	echo " - Deleting old instance"
-	rm -rf $IRCFOLDER
-	rm -rf inspircd
-	echo " - Uncompressing"
-	tar -xjf $IRCFILE
-	mv inspircd $IRCFOLDER # For some reason this package unzips in 'inspircd' so we tweak that..
-	echo " - Building"
-	cd $IRCFOLDER
-	./configure  --uid=$IRCUSER --disable-interactive
-	make
-	echo " - Installing"
-	make install
+	if [[ $IRCD_TASK == *compile* ]]
+	then
+		cp $DOWNLOADS/$IRCDFILE $HOMEROOT/$IRCDUSER/
+		chown $IRCDUSER.$GROUP $HOMEROOT/$IRCDUSER
+		cd  $HOMEROOT/$IRCDUSER
+		echo " - Deleting old instance"
+		rm -rf $IRCDFOLDER
+		rm -rf inspircd
+		echo " - Uncompressing"
+		tar -xjf $IRCDFILE
+		mv inspircd $IRCDFOLDER # For some reason this package unzips in 'inspircd' so we tweak that..
+		echo " - Building"
+		cd $IRCDFOLDER
+		./configure  --uid=$IRCDUSER --disable-interactive
+		make
+		echo " - Installing"
+		make install
+	fi
 
 	#
 	# Generate configure scripts
 	#
+	
+	if [[ $IRCD_TASK == *configure* ]]
+	then
+	
 
-# ---- IRC CONFIG -- START ----	
+# ---- IRCD CONFIG -- START ----	
 
-	cat > $IRCCONFIG << EOF
+		cat > $IRCDCONFIG << EOF
 <config format="xml">
 <define name="bindip" value="0.0.0.0">
 <define name="localips" value="&bindip;/24">
-<server name="irc.thumbwhere.com" description="ThumbWhere IRC Server" network="ThumbWhere">
+<server name="ircd.thumbwhere.com" description="ThumbWhere IRCD Server" network="ThumbWhere">
 <admin name="ThumbWhere" nick="ThumbWhere" email="thumbwhere@thumbwhere.com">
 <bind address="&bindip;" port="6697" type="clients" ssl="openssl" >
 <bind address="&bindip;" port="6660-6669" type="clients">
@@ -200,25 +212,25 @@ then
 <class name="BanControl" commands="KILL GLINE KLINE ZLINE QLINE ELINE TLINE RLINE CHECK NICKLOCK SHUN CLONES CBAN" usermodes="*" chanmodes="*">
 <class name="OperChat" commands="WALLOPS GLOBOPS SETIDLE" usermodes="*" chanmodes="*" privs="users/mass-message">
 <class name="HostCloak" commands="SETHOST SETIDENT SETNAME CHGHOST CHGIDENT TAXONOMY" usermodes="*" chanmodes="*" privs="users/auspex">
-<type name="NetAdmin" classes="OperChat BanControl HostCloak Shutdown ServerLink" vhost="netadmin.irc.thumbwhere.com" modes="+s +cCqQ">
-<type name="GlobalOp" classes="OperChat BanControl HostCloak ServerLink" vhost="ircop.irc.thumbwhere.com">
-<type name="Helper" classes="HostCloak" vhost="helper.irc.thumbwhere.com">
+<type name="NetAdmin" classes="OperChat BanControl HostCloak Shutdown ServerLink" vhost="netadmin.ircd.thumbwhere.com" modes="+s +cCqQ">
+<type name="GlobalOp" classes="OperChat BanControl HostCloak ServerLink" vhost="ircdop.ircd.thumbwhere.com">
+<type name="Helper" classes="HostCloak" vhost="helper.ircd.thumbwhere.com">
 <oper name="ThumbWhere" hash="sha256" password="accff88f4b5fa17ac2bdf6fb7428119f999cf9bed698663a65a5681a4023d4fe" host="*@*" type="NetAdmin">
 # LINKS
-#<link name="hub.irc.thumbwhere.com" ipaddr="hub.irc.thumbwhere.com" port="7000" allowmask="*/24"  timeout="300"  ssl="openssl"  bind="&bindip;" statshidden="no" hidden="no" sendpass="outgoing!password" recvpass="incoming!password">
-#<link name="services.irc.thumbwhere.com" ipaddr="localhost" port="7000" allowmask="127.0.0.0/8" sendpass="password" recvpass="password">
-#<autoconnect period="300" server="hub.irc.thumbwhere.com">
-#<autoconnect period="120" server="hub-backup.irc.thumbwhere.com ">
-<uline server="services.irc.thumbwhere.com" silent="yes">
-<files motd="$IRCCONFIG.motd" rules="$IRCCONFIG.rules">
+#<link name="hub.ircd.thumbwhere.com" ipaddr="hub.ircd.thumbwhere.com" port="7000" allowmask="*/24"  timeout="300"  ssl="openssl"  bind="&bindip;" statshidden="no" hidden="no" sendpass="outgoing!password" recvpass="incoming!password">
+#<link name="services.ircd.thumbwhere.com" ipaddr="localhost" port="7000" allowmask="127.0.0.0/8" sendpass="password" recvpass="password">
+#<autoconnect period="300" server="hub.ircd.thumbwhere.com">
+#<autoconnect period="120" server="hub-backup.ircd.thumbwhere.com ">
+<uline server="services.ircd.thumbwhere.com" silent="yes">
+<files motd="$IRCDCONFIG.motd" rules="$IRCDCONFIG.rules">
 #<execfiles rules="wget -O - http://www.example.com/rules.txt">
 <channels users="20" opers="60">
-<pid file="$IRCPID">
+<pid file="$IRCDPID">
 <banlist chan="*" limit="69">
 #<disabled commands="TOPIC MODE" usermodes="" chanmodes="" fakenonexistant="yes">
-<options prefixquit="Quit: " suffixquit="" prefixpart="&quot;" suffixpart="&quot;" syntaxhints="yes" cyclehosts="yes" cyclehostsfromuser="no" ircumsgprefix="no" announcets="yes" allowmismatched="no" defaultbind="auto" hostintopic="yes" pingwarning="15" serverpingfreq="60" defaultmodes="nt" moronbanner="You're banned! Email abuse@thumbwhere.com with the ERROR line below for help." exemptchanops="nonick:v flood:o" invitebypassmodes="yes">
+<options prefixquit="Quit: " suffixquit="" prefixpart="&quot;" suffixpart="&quot;" syntaxhints="yes" cyclehosts="yes" cyclehostsfromuser="no" ircdumsgprefix="no" announcets="yes" allowmismatched="no" defaultbind="auto" hostintopic="yes" pingwarning="15" serverpingfreq="60" defaultmodes="nt" moronbanner="You're banned! Email abuse@thumbwhere.com with the ERROR line below for help." exemptchanops="nonick:v flood:o" invitebypassmodes="yes">
 <performance netbuffersize="10240" maxwho="4096" somaxconn="128" softlimit="12800" quietbursts="yes" nouserdns="no">
-<security announceinvites="dynamic" hidemodes="eI" hideulines="no" flatlinks="no" hidewhois="" hidebans="no" hidekills="" hidesplits="no" maxtargets="20" customversion="" operspywhois="no" runasuser="$IRCUSER" restrictbannedusers="yes" genericoper="no" userstats="Pu">
+<security announceinvites="dynamic" hidemodes="eI" hideulines="no" flatlinks="no" hidewhois="" hidebans="no" hidekills="" hidesplits="no" maxtargets="20" customversion="" operspywhois="no" runasuser="$IRCDUSER" restrictbannedusers="yes" genericoper="no" userstats="Pu">
 <limits maxnick="31" maxchan="64" maxmodes="20" maxident="11" maxquit="255" maxtopic="307" maxkick="255" maxgecos="128" maxaway="200">
 <log method="file" type="* -USERINPUT -USEROUTPUT" level="default" target="ircd.log">
 <whowas groupsize="10" maxgroups="100000" maxkeep="3d">
@@ -226,9 +238,9 @@ then
 <badnick nick="NickServ" reason="Reserved For Services">
 <badnick nick="OperServ" reason="Reserved For Services">
 <badnick nick="MemoServ" reason="Reserved For Services">
-<badhost host="root@*" reason="Don't irc as root!">
+<badhost host="root@*" reason="Don't ircd as root!">
 <badhost host="*@172.32.0.0/16" reason="This subnet is bad.">
-<exception host="*@ircop.host.com" reason="Opers hostname">
+<exception host="*@ircdop.host.com" reason="Opers hostname">
 <insane hostmasks="no" ipmasks="no" nickmasks="no" trigger="95.5">
 # MODULES
 <module name="m_md5.so">
@@ -253,44 +265,54 @@ then
 <module name="m_spanningtree.so">
 EOF
 
-cat > $IRCCONFIG.rules << EOF
+		cat > $IRCDCONFIG.rules << EOF
 These are the rules.
 EOF
 
-cat > $IRCCONFIG.motd << EOF
+		cat > $IRCDCONFIG.motd << EOF
 This is the MOTD
 EOF
 
-# ---- IRC CONFIG -- END ----
+# ---- IRCD CONFIG -- END ----
 
 
-# ---- IRC CONTROL SCRIPT -- START --
+# ---- IRCD CONTROL SCRIPT -- START --
 
-	cat > /etc/init.d/$IRCUSER-server << EOF
+		cat > /etc/init.d/$IRCDUSER-server << EOF
 #!/bin/sh
 ### BEGIN INIT INFO
-# Provides:	  $IRCUSER-server
+# Provides:	  $IRCDUSER-server
 # Required-Start:    \$network \$syslog \$time
 # Required-Stop:     \$syslog
 # Should-Start:      \$local_fs
 # Should-Stop:       \$local_fs
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Controls the irc server
-# Description:       Controls the irc server.
+# Short-Description: Controls the ircd server
+# Description:       Controls the ircd server.
 ### END INIT INFO
 # GPL Licensed
 
 # Source function library
 . /lib/lsb/init-functions
 
+# This logic is generated at script built time (if you are wondering about this comparison)
+if ("$os" == "centos") 
+then
+# source function library
+. /etc/rc.d/init.d/functions
+fi
+
+
 IRCD="/usr/sbin/inspircd"
-IRCDPID="$IRCPID"
+IRCDPID="$IRCDPID"
 IRCDLOG="/var/log/inspircd.log"
-IRCDCONFIG="$IRCCONFIG"
+IRCDCONFIG="$IRCDCONFIG"
 IRCDARGS="--logfile \$IRCDLOG --config \$IRCDCONFIG"
-USER="$IRCUSER"
+USER="$IRCDUSER"
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+SERVICENAME=$IRCDUSER-service
+PROCESSNAME=$IRCDPROCESS
 
 #if [ -f "/var/lib/inspircd/inspircd" ]; then
 #	. /var/lib/inspircd/inspircd
@@ -307,12 +329,27 @@ start_ircd()
 	[ -f "\$IRCDPID" ] || ( touch "\$IRCDPID" ; chown "\$USER" "\$IRCDPID" )
 	[ -f "\$IRCDLOG" ] || ( touch "\$IRCDLOG" ; chown "\$USER:thumbwhere" "\$IRCDLOG" ; chmod 0640 "\$IRCDLOG" )
 	export LD_LIBRARY_PATH=/usr/lib/inspircd
-	start-stop-daemon --start --quiet --oknodo --chuid "\$USER" --pidfile "\$IRCDPID" --exec "\$IRCD" --  \$IRCDARGS
+	
+	# This logic is generated at script built time (if you are wondering about this comparison)
+	if ("$os" == "centos") 	
+		daemon --check $SERVICENAME $PROCESSNAME --system
+	then	
+	elif ("$os" == "debian
+		start-stop-daemon --start --quiet --oknodo --chuid "\$USER" --pidfile "\$IRCDPID" --exec "\$IRCD" --  \$IRCDARGS
+	fi
 }
 
 stop_ircd()
 {
-	start-stop-daemon --stop --quiet --pidfile "\$IRCDPID" 
+
+	# This logic is generated at script built time (if you are wondering about this comparison)
+	if ("$os" == "centos") 	
+		killproc $SERVICENAME -TERM
+	then	
+	elif ("$os" == "debian
+		start-stop-daemon --stop --quiet --pidfile "\$IRCDPID" 
+	fi
+	
 	rm -f "\$IRCDPID"
 	return 0
 }
@@ -360,25 +397,32 @@ case "\$1" in
 esac
 EOF
 
-chmod +x /etc/init.d/$IRCUSER-server
-chown root.root /etc/init.d/$IRCUSER-server
-if [ $os == "debian" ]
-then
-	insserv /etc/init.d/$IRCUSER-server
-elif [ $os == "centos" ]
-then
-        chkconfig $IRCUSER-server on
-else
-	ln -fs /etc/init.d/$IRCUSER-server /etc/rc2.d/S19$IRCUSER-server
-fi
+		#
+		# .. the rest of the configure scripts
+		#
+		
 
-# ---- IRC CONTROL SCRIPT --- END ---
+		chmod +x /etc/init.d/$IRCDUSER-server
+		chown root.root /etc/init.d/$IRCDUSER-server
+		if [ $os == "debian" ]
+		then
+			insserv /etc/init.d/$IRCDUSER-server
+		elif [ $os == "centos" ]
+		then
+				chkconfig $IRCDUSER-server on
+		else
+			ln -fs /etc/init.d/$IRCDUSER-server /etc/rc2.d/S19$IRCDUSER-server
+		fi
+	
+	fi
+
+# ---- IRCD CONTROL SCRIPT --- END ---
 
 	echo " - Setting permissions"
-	chown -R $IRCUSER.$GROUP $HOMEROOT/$IRCUSER/
+	chown -R $IRCDUSER.$GROUP $HOMEROOT/$IRCDUSER/
 
 	echo " - Starting service"
-	/etc/init.d/$IRCUSER-server start
+	/etc/init.d/$IRCDUSER-server start
 
 fi
 
@@ -388,7 +432,7 @@ fi
 # Install Redis
 #
 
-if [ $INSTALL_REDIS == 'true' ]
+if [ $REDIS_TASK == 'true' ]
 then
 	echo "*** Installing REDIS ($REDISFILE)"
 	if [ "`id -un $REDISUSER`" != "$REDISUSER" ]
@@ -448,6 +492,13 @@ then
 
 # Source function library
 . /lib/lsb/init-functions
+
+# This logic is generated at script built time (if you are wondering about this comparison)
+if ("$os" == "centos") 
+then
+# source function library
+. /etc/rc.d/init.d/functions
+
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/local/bin/redis-server
@@ -558,7 +609,7 @@ fi
 # Install NODEJS
 #
 
-if [ $INSTALL_NODEJS == 'true' ]
+if [ $NODEJS_TASK == 'true' ]
 then
 	echo "*** Installing NODEJS ($NODEJSFOLDER)"
 
@@ -595,7 +646,7 @@ fi
 # Install VARNISH
 #
 
-if [ $INSTALL_VARNISH == 'true' ]
+if [ $VARNISH_TASK == 'true' ]
 then
 	echo "*** Installing VARNISH ($VARNISHFOLDER)"
 
@@ -655,6 +706,12 @@ then
 
 # Source function library
 . /lib/lsb/init-functions
+
+# This logic is generated at script built time (if you are wondering about this comparison)
+if ("$os" == "centos") 
+then
+# source function library
+. /etc/rc.d/init.d/functions
 
 NAME=varnishd
 DESC="ThumbWhere HTTP accelerator (Varnish)"
@@ -785,7 +842,7 @@ fi
 # Install HTTPD
 #
 
-if [ $INSTALL_HTTPD == 'true' ]
+if [ $HTTPD_TASK == 'true' ]
 then
 	echo "*** Installing HTTPD ($HTTPDFOLDER)"
 
@@ -842,10 +899,17 @@ then
 # Source function library
 . /lib/lsb/init-functions
 
+# This logic is generated at script built time (if you are wondering about this comparison)
+if ("$os" == "centos") 
+then
+# source function library
+. /etc/rc.d/init.d/functions
+
+
 HTTPD="$HTTPDROOT/bin/apache2ctrl"
 HTTPDPID="$HTTPDPID"
 HTTPDLOG="/var/log/inspircd.log"
-HTTPDCONFIG="$IRCCONFIG"
+HTTPDCONFIG="$IRCDCONFIG"
 USER="$HTTPDUSER"
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
@@ -996,7 +1060,7 @@ fi
 # Install FTPD
 #
 
-if [ $INSTALL_FTPD == 'true' ]
+if [ $FTPD_TASK == 'true' ]
 then
 	echo "*** Installing FTPD ($FTPDFOLDER)"
 
@@ -1053,10 +1117,16 @@ then
 # Source function library
 . /lib/lsb/init-functions
 
+# This logic is generated at script built time (if you are wondering about this comparison)
+if ("$os" == "centos") 
+then
+# source function library
+. /etc/rc.d/init.d/functions
+
 FTPD="$FTPDROOT/sbin/proftpd"
 FTPDPID="$FTPDPID"
 FTPDLOG="/var/log/ftpd.log"
-FTPDCONFIG="$IRCCONFIG"
+FTPDCONFIG="$IRCDCONFIG"
 USER="$FTPDUSER"
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
