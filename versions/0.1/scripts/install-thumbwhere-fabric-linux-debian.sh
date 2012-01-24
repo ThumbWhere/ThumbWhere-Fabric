@@ -13,14 +13,14 @@ set -e
 # Config variables
 #
 
-IRCD_TASK="download-compile-configure"
+IRCD_TASK="configure"
 REDIS_TASK=""
 NODEJS_TASK=""
 VARNISH_TASK=""
 HTTPD_TASK=""
 FTPD_TASK=""
 
-IRCDURL=http://downloads.sourceforge.net/project/inspircd/InspIRCDd-2.0/2.0.2/InspIRCDd-2.0.2.tar.bz2
+IRCDURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
 REDISURL=http://redis.googlecode.com/files/redis-2.4.6.tar.gz
 NODEJSURL=http://nodejs.org/dist/v0.6.8/node-v0.6.8.tar.gz
 VARNISHURL=http://repo.varnish-cache.org/source/varnish-3.0.2.tar.gz
@@ -102,21 +102,18 @@ then
 	os="debian"
 fi
 
-echo "os = $os"
-
 if [ $os = "" ] 
 then
 	echo "not a valid system os"
 	exit 1
 fi
 
-if [ $os == 'debian' ]
+if [ $os == "debian" ]
 then
 	apt-get -y install wget bzip2 binutils g++ make tcl8.5 curl build-essential openssl libssl-dev libssh-dev pkg-config libpcre3 libpcre3-dev libpcre++0 xsltproc libncurses5-dev
-elif [ $os == 'centos' ]
+elif [ $os == "centos" ]
 then
-
-        yum -y install wget     bzip2 binutils gcc-c++ make gcc tcl curl openssl pcre gnutls openssh openssl ncurses pcre-devel gnutls-devel openssh-devel openssl-devel ncurses-devel libxslt redhat-lsb
+        yum -y install wget bzip2 binutils gcc-c++ make gcc tcl curl openssl pcre gnutls openssh openssl ncurses pcre-devel gnutls-devel openssl-devel ncurses-devel libxslt redhat-lsb
 fi
 
 #
@@ -128,12 +125,36 @@ echo "*** Downloading source packages"
 mkdir -p $DOWNLOADS
 cd $DOWNLOADS
 
-if [[ $IRCD_TASK == *download* ]] [ -f $IRCDFILE ] && echo "$IRCDFILE exists" || wget $IRCDURL
-if [[ $REDIS_TASK == *download* ]] [ -f $REDISFILE ] && echo "$REDISFILE exists" || wget $REDISURL
-if [[ $NODEJS_TASK == *download* ]] [ -f $NODEJSFILE ] && echo "$NODEJSFILE exists" || wget $NODEJSURL
-if [[ $VARNISH_TASK == *download* ]] [ -f $VARNISHFILE ] && echo "$VARNISHFILE exists" || wget $VARNISHURL
-if [[ $HTTPD_TASK == *download* ]] [ -f $HTTPDFILE ] && echo "$HTTPDFILE exists" || wget $HTTPDURL
-if [[ $FTPD_TASK == *download* ]] [ -f $FTPDFILE ] && echo "$FTPDFILE exists" || wget $FTPDURL
+if [[ $IRCD_TASK == *download* ]] 
+then
+	[ -f $IRCDFILE ] && echo "$IRCDFILE exists" || wget $IRCDURL
+fi
+
+if [[ $REDIS_TASK == *download* ]] 
+then
+	[ -f $REDISFILE ] && echo "$REDISFILE exists" || wget $REDISURL
+fi
+
+if [[ $NODEJS_TASK == *download* ]] 
+then
+	[ -f $NODEJSFILE ] && echo "$NODEJSFILE exists" || wget $NODEJSURL
+fi
+
+if [[ $VARNISH_TASK == *download* ]] 
+then
+	[ -f $VARNISHFILE ] && echo "$VARNISHFILE exists" || wget $VARNISHURL
+fi
+
+if [[ $HTTPD_TASK == *download* ]] 
+then
+	[ -f $HTTPDFILE ] && echo "$HTTPDFILE exists" || wget $HTTPDURL
+fi
+
+if [[ $FTPD_TASK == *download* ]] 
+then
+	[ -f $FTPDFILE ] && echo "$FTPDFILE exists" || wget $FTPDURL
+fi
+
 cd ..
 
 ###############################################################################
@@ -156,7 +177,7 @@ then
 			/etc/init.d/$IRCDUSER-server stop
 		else
 		 	echo " - Killing service (control script not found at /etc/init.d/$IRCDUSER-server)"
-			for i in `ps ax | grep inspircd | cut -d ' ' -f 1`
+			for i in `ps ax | grep inspircd | grep -v grep | cut -d ' ' -f 1`
 			do
   				kill -2 $i
 			done
@@ -296,12 +317,29 @@ EOF
 # Source function library
 . /lib/lsb/init-functions
 
+
+os=""
+if [ "\`grep centos /proc/version -c\`" != "0" ]
+then
+        os="centos"
+fi
+if [ "\`grep debian /proc/version -c\`" != "0" ]
+then
+        os="debian"
+fi
+if [ "\$os" == "" ]
+then
+        echo "not a valid system os"
+        exit 1
+fi
+
 # This logic is generated at script built time (if you are wondering about this comparison)
-if ("$os" == "centos") 
+if [ "\$os" == "centos" ]
 then
 # source function library
 . /etc/rc.d/init.d/functions
 fi
+
 
 
 IRCD="/usr/sbin/inspircd"
@@ -331,10 +369,11 @@ start_ircd()
 	export LD_LIBRARY_PATH=/usr/lib/inspircd
 	
 	# This logic is generated at script built time (if you are wondering about this comparison)
-	if ("$os" == "centos") 	
-		daemon --check $SERVICENAME $PROCESSNAME --system
-	then	
-	elif ("$os" == "debian
+	if [ "\$os" == "centos" ]
+	then 	
+		exec su - \$USER -c "\$IRCD \$IRCDARGS"
+	elif [ "\$os" == "debian" ]
+	then
 		start-stop-daemon --start --quiet --oknodo --chuid "\$USER" --pidfile "\$IRCDPID" --exec "\$IRCD" --  \$IRCDARGS
 	fi
 }
@@ -343,10 +382,11 @@ stop_ircd()
 {
 
 	# This logic is generated at script built time (if you are wondering about this comparison)
-	if ("$os" == "centos") 	
-		killproc $SERVICENAME -TERM
-	then	
-	elif ("$os" == "debian
+	if [ "\$os" == "centos" ]
+	then 	
+		killproc \$PROCESSNAME -TERM
+	elif [ "\$os" == "debian" ]
+	then
 		start-stop-daemon --stop --quiet --pidfile "\$IRCDPID" 
 	fi
 	
@@ -368,19 +408,19 @@ reload_ircd()
 case "\$1" in
   start)
 	#if [ "\$INSPIRCD_ENABLED" != "1" ]; then
-	#	echo -n "Please configure inspircd first and edit /etc/default/inspircd, otherwise inspircd won't start"
+	#	echo "Please configure inspircd first and edit /etc/default/inspircd, otherwise inspircd won't start"
 	#	exit 0
 	#fi
-	echo -n "Starting Inspircd... "
-	start_ircd && echo "done."
+	echo "Starting Inspircd... "
+	start_ircd && echo "... done."
 	;;
   stop)
-	echo -n "Stopping Inspircd... "
-	stop_ircd && echo "done."
+	echo "Stopping Inspircd... "
+	stop_ircd && echo "... done."
 	;;
   force-reload|reload)
-	echo -n "Reloading Inspircd... "
-	reload_ircd && echo "done."
+	echo "Reloading Inspircd... "
+	reload_ircd && echo "... done."
 	;;
   restart)
 	\$0 stop
@@ -409,7 +449,7 @@ EOF
 			insserv /etc/init.d/$IRCDUSER-server
 		elif [ $os == "centos" ]
 		then
-				chkconfig $IRCDUSER-server on
+			chkconfig $IRCDUSER-server on
 		else
 			ln -fs /etc/init.d/$IRCDUSER-server /etc/rc2.d/S19$IRCDUSER-server
 		fi
@@ -446,7 +486,7 @@ then
 			/etc/init.d/$REDISUSER-server stop
 		else
 			echo " - Killing service (control script not found at /etc/init.d/$REDISUSER-server)"
-			for i in `ps ax | grep redis-server | cut -d ' ' -f 1`
+			for i in `ps ax | grep redis-server | grep -v grep | cut -d ' ' -f 1`
 			do
 				kill -2 $i
 			done
@@ -514,7 +554,7 @@ set -e
 
 case "\$1" in
   start)
-	echo -n "Starting \$DESC: "
+	echo "Starting \$DESC: "
 	touch \$PIDFILE
 	chown $REDISUSER:$GROUP \$PIDFILE
 	if start-stop-daemon --start --quiet --umask 007 --pidfile \$PIDFILE --chuid $REDISUSER:$GROUP --exec \$DAEMON -- \$DAEMON_ARGS
@@ -525,7 +565,7 @@ case "\$1" in
 	fi
 	;;
   stop)
-	echo -n "Stopping \$DESC: "
+	echo "Stopping \$DESC: "
 	if start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE --exec \$DAEMON
 	then
 		log_end_msg 0
@@ -662,7 +702,7 @@ then
 			/etc/init.d/$VARNISHUSER-server stop
 		else
 			echo " - Killing service (control script not found at /etc/init.d/$VARNISHUSER-server)"
-			for i in `ps ax | grep varnishd | cut -d ' ' -f 1`
+			for i in `ps ax | grep varnishd | grep -v grep | cut -d ' ' -f 1`
 			do
 				kill -2 $i
 			done
@@ -857,7 +897,7 @@ then
 			/etc/init.d/$HTTPDUSER-server stop
 		else
 		 	echo " - Killing service (control script not found at /etc/init.d/$HTTPDUSER-server)"
-			#for i in `ps ax | grep httpd | cut -d ' ' -f 1`
+			#for i in `ps ax | grep httpd | grep -v grep | cut -d ' ' -f 1`
 			#do
   			#	kill -2 $i
 			#done
@@ -1075,7 +1115,7 @@ then
 			/etc/init.d/$FTPDUSER-server stop
 		else
 		 	echo " - Killing service (control script not found at /etc/init.d/$FTPDUSER-server)"
-			#for i in `ps ax | grep ftpd | cut -d ' ' -f 1`
+			#for i in `ps ax | grep ftpd | grep -v grep | cut -d ' ' -f 1`
 			#do
   			#	kill -2 $i
 			#done
