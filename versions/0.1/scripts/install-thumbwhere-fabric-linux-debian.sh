@@ -14,7 +14,7 @@ set -e
 #
 
 IRCD_TASK=""
-REDIS_TASK="download,compile,install,configure"
+REDIS_TASK="configure"
 NODEJS_TASK=""
 VARNISH_TASK=""
 HTTPD_TASK=""
@@ -79,7 +79,6 @@ FTPDCONFIG=$FTPDROOT/etc/proftpd.conf
 FTPDPID=$FTPDROOT/var/proftpd.pid
 FTPDPROCESS=proftpd
 
-echo "adding group"
 groupadd -f thumbwhere
 
 #
@@ -88,14 +87,10 @@ groupadd -f thumbwhere
 
 os=""
 
-echo "`grep centos /proc/version -c`"
-
 if [ "`grep centos /proc/version -c`" != "0" ] 
 then
 	os="centos"
 fi
-
-echo  "`grep debian /proc/version -c`"
 
 if [ "`grep debian /proc/version -c`" != "0" ] 
 then
@@ -199,8 +194,11 @@ then
 		cd $IRCDFOLDER
 		./configure  --uid=$IRCDUSER --disable-interactive
 		make
-		echo " - Installing"
-		make install
+		if [[ $IRCD_TASK == *install* ]]
+		then
+			echo " - Installing"
+			make install
+		fi
 	fi
 
 	#
@@ -317,13 +315,6 @@ EOF
 # Source function library
 . /lib/lsb/init-functions
 
-if [ "\$os" == "centos" ]
-then
-# source function library
-. /etc/rc.d/init.d/functions
-fi
-
-
 os=""
 if [ "\`grep centos /proc/version -c\`" != "0" ]
 then
@@ -339,12 +330,11 @@ then
         exit 1
 fi
 
-if [ "\$os" == "centos" ]
-then
-# source function library
-. /etc/rc.d/init.d/functions
-fi
-
+#if [ "\$os" == "centos" ]
+#then
+	# source function library
+	. /etc/rc.d/init.d/functions
+#fi
 
 
 IRCD="/usr/sbin/inspircd"
@@ -477,7 +467,7 @@ fi
 # Install Redis
 #
 
-if [ $REDIS_TASK == 'true' ]
+if [ "$REDIS_TASK" != "" ]
 then
 	echo "*** Installing REDIS ($REDISFILE)"
 	if [ "`id -un $REDISUSER`" != "$REDISUSER" ]
@@ -498,20 +488,33 @@ then
 
 		fi
 	fi
-	cp $DOWNLOADS/$REDISFILE $HOMEROOT/$REDISUSER/
-	chown $REDISUSER.$GROUP $HOMEROOT/$REDISUSER
-	cd  $HOMEROOT/$REDISUSER
-	echo " - Deleting old instance"
-	rm -rf $REDISFOLDER
-	echo " - Uncompressing"
-	tar -xvf $REDISFILE
-	echo " - Building"
-	cd $REDISFOLDER
-	make
-	echo " - Testing"
-	make test
-	echo " - Installing"
-	make install
+
+	if [[ $REDIS_TASK == *compile* ]]
+	then
+
+		cp $DOWNLOADS/$REDISFILE $HOMEROOT/$REDISUSER/
+		chown $REDISUSER.$GROUP $HOMEROOT/$REDISUSER
+		cd  $HOMEROOT/$REDISUSER
+		echo " - Deleting old instance"
+		rm -rf $REDISFOLDER
+		echo " - Uncompressing"
+		tar -xvf $REDISFILE
+		echo " - Building"
+		cd $REDISFOLDER
+		make
+		echo " - Testing"
+		make test
+		if [[ $REDIS_TASK == *install* ]]
+		then		
+			echo " - Installing"
+			make install
+		fi
+	fi
+
+
+
+	if [[ $REDIS_TASK == *configure* ]]
+	then
 
 	# 
 	# Generate configure scripts
@@ -538,10 +541,26 @@ then
 # Source function library
 . /lib/lsb/init-functions
 
+os=""
+if [ "\`grep centos /proc/version -c\`" != "0" ]
+then
+        os="centos"
+fi
+if [ "\`grep debian /proc/version -c\`" != "0" ]
+then
+        os="debian"
+fi
+if [ "\$os" == "" ]
+then
+        echo "not a valid system os"
+        exit 1
+fi
+
+
 if [ "\$os" == "centos" ]
 then
-# source function library
-. /etc/rc.d/init.d/functions
+	# source function library
+	. /etc/rc.d/init.d/functions
 fi
 
 
@@ -554,13 +573,16 @@ DESC=redis-server
 PIDFILE=$REDISPID
 
 test -x \$DAEMON || exit 0
-test -x \$DAEMONBOOTSTRAP || exit 0
 
 set -e
 
+if [ -f "\$PIDFILE" ]; then
+	REDISPIDN="\`cat \"\$PIDFILE\" 2> /dev/null\`"
+fi
+
 case "\$1" in
   start)
-	echo "Starting \$DESC: "
+	echo -n "Starting \$DESC: "
 	touch \$PIDFILE
 	chown $REDISUSER:$GROUP \$PIDFILE
 	
@@ -568,21 +590,47 @@ case "\$1" in
 	# Start based on OS type
 	if [ "\$os" == "centos" ]
 	then 	
-		exec su - \$USER -c "\$DAEMON \$DAEMON_ARGS"
+		if exec su - \$USER -c "\$DAEMON \$DAEMON_ARGS"
+		then
+                        echo "OK"
+                else
+			echo "FAIL"
+                        exit 1
+                fi
+
 	elif [ "\$os" == "debian" ]
 	then	
-		start-stop-daemon --start --quiet --umask 007 --pidfile \$PIDFILE --chuid $REDISUSER:$GROUP --exec \$DAEMON -- \$DAEMON_ARGS
+		if start-stop-daemon --start --quiet --umask 007 --pidfile \$PIDFILE --chuid $REDISUSER:$GROUP --exec \$DAEMON -- \$DAEMON_ARGS
+		then
+                        log_end_msg 0
+                else
+                        log_end_msg 1
+                        exit 1
+                fi
 	fi
 	;;
   stop)
-	echo "Stopping \$DESC: "
-	
+	echo -n "Stopping \$DESC: "
+
 	if [ "\$os" == "centos" ]
 	then 	
-		killproc \$DAEMON -TERM
+		if redis-cli shutdown
+		then
+			echo "OK"
+    		else
+			echo "FAIL"
+			exit 1
+    		fi
 	elif [ "\$os" == "debian" ]
 	then
-		start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE --exec \$DAEMON
+		if redis-cli shutdown
+		then		
+			log_end_msg 0
+    		else
+			log_end_msg 1
+			exit 1
+    		fi
+		#start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE --exec \$DAEMON
 	fi
 	rm -f \$PIDFILE
 	;;
@@ -652,6 +700,12 @@ EOF
 
 	chown -R $REDISUSER.$GROUP $HOMEROOT/$REDISUSER/
 
+	#
+	# Finished configuring
+	#
+
+ 	fi
+
 	echo " - Starting service"
 	/etc/init.d/$REDISUSER-server start
 fi
@@ -661,7 +715,7 @@ fi
 # Install NODEJS
 #
 
-if [ $NODEJS_TASK == 'true' ]
+if [ "$NODEJS_TASK" != '' ]
 then
 	echo "*** Installing NODEJS ($NODEJSFOLDER)"
 
@@ -698,7 +752,7 @@ fi
 # Install VARNISH
 #
 
-if [ $VARNISH_TASK == 'true' ]
+if [ "$VARNISH_TASK" != "" ]
 then
 	echo "*** Installing VARNISH ($VARNISHFOLDER)"
 
@@ -758,6 +812,22 @@ then
 
 # Source function library
 . /lib/lsb/init-functions
+
+os=""
+if [ "\`grep centos /proc/version -c\`" != "0" ]
+then
+        os="centos"
+fi
+if [ "\`grep debian /proc/version -c\`" != "0" ]
+then
+        os="debian"
+fi
+if [ "\$os" == "" ]
+then
+        echo "not a valid system os"
+        exit 1
+fi
+
 
 if [ "\$os" == "centos" ]
 then
@@ -894,7 +964,7 @@ fi
 # Install HTTPD
 #
 
-if [ $HTTPD_TASK == 'true' ]
+if [ "$HTTPD_TASK" != "" ]
 then
 	echo "*** Installing HTTPD ($HTTPDFOLDER)"
 
@@ -950,6 +1020,22 @@ then
 
 # Source function library
 . /lib/lsb/init-functions
+
+os=""
+if [ "\`grep centos /proc/version -c\`" != "0" ]
+then
+        os="centos"
+fi
+if [ "\`grep debian /proc/version -c\`" != "0" ]
+then
+        os="debian"
+fi
+if [ "\$os" == "" ]
+then
+        echo "not a valid system os"
+        exit 1
+fi
+
 
 if [ "\$os" == "centos" ]
 then
@@ -1112,7 +1198,7 @@ fi
 # Install FTPD
 #
 
-if [ $FTPD_TASK == 'true' ]
+if [ "$FTPD_TASK" != "" ]
 then
 	echo "*** Installing FTPD ($FTPDFOLDER)"
 
@@ -1168,6 +1254,21 @@ then
 
 # Source function library
 . /lib/lsb/init-functions
+
+os=""
+if [ "\`grep centos /proc/version -c\`" != "0" ]
+then
+        os="centos"
+fi
+if [ "\`grep debian /proc/version -c\`" != "0" ]
+then
+        os="debian"
+fi
+if [ "\$os" == "" ]
+then
+        echo "not a valid system os"
+        exit 1
+fi
 
 if [ "\$os" == "centos" ]
 then
