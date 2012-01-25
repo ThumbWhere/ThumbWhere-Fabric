@@ -13,9 +13,9 @@ set -e
 # Config variables
 #
 
-IRCD_TASK=""
-REDIS_TASK=""
-NODEJS_TASK=""
+IRCD_TASK="download,compile,install,configure"
+REDIS_TASK="download,compile,install,configure"
+NODEJS_TASK="download,compile,install,configure"
 VARNISH_TASK="download,compile,install,configure"
 HTTPD_TASK=""
 FTPD_TASK=""
@@ -68,6 +68,7 @@ REDISPROCESS=redis
 
 VARNISHCONFIG=$HOMEROOT/$VARNISHUSER/thumbwhere.vcl
 VARNISHPROCESS=varnishd
+VARNISHPID=$HOMEROOT/$VARNISHUSER/varnish.pid
 
 HTTPDROOT=$HOMEROOT/$HTTPDUSER/apache2
 HTTPDCONFIG=$HTTPDROOT/conf/httpd.conf
@@ -619,9 +620,9 @@ case "\$1" in
 	then 	
 		if su - \$USER -c "\$DAEMON \$DAEMON_ARGS" 2> /dev/null
 		then
-                        echo "${cc_green}OK${cc_normal}"
+                        echo " ${cc_green}OK${cc_normal}"
                 else
-			echo "${cc_red}FAIL${cc_normal}"
+			echo " ${cc_red}FAIL${cc_normal}"
                         exit 1
                 fi
 
@@ -643,9 +644,9 @@ case "\$1" in
 	then 	
 		if redis-cli shutdown  2> /dev/null
 		then
-			echo "${cc_green}OK${cc_normal}"
+			echo " ${cc_green}OK${cc_normal}"
     	else
-			echo "${cc_green}FAIL${cc_normal}"
+			echo " ${cc_red}FAIL${cc_normal}"
 			exit 1
     	fi
 	elif [ "\$os" == "debian" ]
@@ -675,17 +676,17 @@ esac
 exit 0
 EOF
 
-chmod +x /etc/init.d/$REDISUSER-server
-chown root.root /etc/init.d/$REDISUSER-server
-if [ $os == "debian" ]
-then
-	insserv /etc/init.d/$REDISUSER-server
-elif [ $os == "centos" ]
-then
-        chkconfig $REDISUSER-server on
-else
-	ln -fs /etc/init.d/$REDISUSER-server /etc/rc2.d/S19$REDISUSER-server 
-fi
+		chmod +x /etc/init.d/$REDISUSER-server
+		chown root.root /etc/init.d/$REDISUSER-server
+		if [ $os == "debian" ]
+		then
+			insserv /etc/init.d/$REDISUSER-server
+		elif [ $os == "centos" ]
+		then
+        		chkconfig $REDISUSER-server on
+		else
+		ln -fs /etc/init.d/$REDISUSER-server /etc/rc2.d/S19$REDISUSER-server 
+	fi
 
 # ---- REDIS CONTROL SCRIPT -- END ----
 
@@ -789,9 +790,9 @@ then
 		useradd $VARNISHUSER -m -g $GROUP
 	else
 
-		if [ -f /etc/init.d/$REDISUSER-server ]
+		if [ -f /etc/init.d/$VARNISHUSER-server ]
 		then
-			echo " - Starting service"
+			echo " - Stopping service"
 			/etc/init.d/$VARNISHUSER-server stop
 		else
 			echo " - Killing service (control script not found at /etc/init.d/$VARNISHUSER-server)"
@@ -803,25 +804,37 @@ then
 		fi
 	fi
 
-	cp $DOWNLOADS/$VARNISHFILE $HOMEROOT/$VARNISHUSER/
-	chown $VARNISHUSER.$GROUP $HOMEROOT/$VARNISHUSER
-	cd  $HOMEROOT/$VARNISHUSER
-	echo " - Deleting old instance"
-	rm -rf $VARNISHFOLDER
-	echo " - Uncompressing"
-	tar -xzf $VARNISHFILE
-	echo " - Building"
-	cd $VARNISHFOLDER
-	./configure 
-	make
-	echo " - Installing"
-	make install
 
-	echo " - Configuring"
+        if [[ $VARNISH_TASK == *compile* ]]
+        then
+		cp $DOWNLOADS/$VARNISHFILE $HOMEROOT/$VARNISHUSER/
+		chown $VARNISHUSER.$GROUP $HOMEROOT/$VARNISHUSER
+		cd  $HOMEROOT/$VARNISHUSER
+		echo " - Deleting old instance"
+		rm -rf $VARNISHFOLDER
+		echo " - Uncompressing"
+		tar -xzf $VARNISHFILE
+		echo " - Building"
+		cd $VARNISHFOLDER
+		./configure 
+		make
+	
+		if [[ $VARNISH_TASK == *install* ]]
+        	then
+			echo " - Installing"
+			make install
+		fi
+	fi
+
+
+	if [[ $VARNISH_TASK == *configure* ]]
+        then
+
+		echo " - Configuring"
 
 # ---- VARNISH CONTROL SCRIPT -- START ----
 
-	cat > /etc/init.d/$VARNISHUSER-server << EOF
+		cat > /etc/init.d/$VARNISHUSER-server << EOF
 #! /bin/sh
 
 ### BEGIN INIT INFO
@@ -866,7 +879,7 @@ NAME=varnishd
 DESC="ThumbWhere HTTP accelerator (Varnish)"
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin/
 DAEMON=/usr/local/sbin/varnishd
-PIDFILE=/var/run/\$NAME.pid
+PIDFILE=$VARNISHPID
 
 test -x \$DAEMON || echo "Could not locate \$DAEMON" exit 0
 
@@ -876,42 +889,36 @@ ulimit -n \${NFILES:-131072}
 # Maxiumum locked memory size for shared memory log
 ulimit -l \${MEMLOCK:-82000}
 
-DAEMON_ARGS="-f $VARNISHCONFIG"
+DAEMON_ARGS="-f $VARNISHCONFIG -P \$PIDFILE"
 
-
-if [ -f "\$VARNISHPID" ]; then
+if [ -f "\$PIDFILE" ]; then
 	VARNISHPIDN="\`cat \"\$PIDFILE\" 2> /dev/null\`"
 fi
-
-
 
 # Ensure we have a PATH
 export PATH="\${PATH:+\$PATH:}/usr/sbin:/usr/bin:/sbin:/bin"
 
 start_varnishd() {
-
-	
-
 	# Start based on OS type
 	if [ "\$os" == "centos" ]
 	then 	
-		echo "Starting \$DESC" "\$NAME"
-		if su - \$USER -c "\$DAEMON \$DAEMON_ARGS" 2> /dev/null
+		echo -n "Starting \$DESC" "\$NAME"
+		if su - \$VARNISHUSER -c "\$DAEMON \$DAEMON_ARGS"
 		then
-                 echo "${cc_green}OK${cc_normal}"
+                 	echo " ${cc_green}OK${cc_normal}"
 		else
-			echo "${cc_red}FAIL${cc_normal}"
+			echo " ${cc_red}FAIL${cc_normal}"
 			exit 1
 		fi
 	elif [ "\$os" == "debian" ]
 	then	
 		log_daemon_msg "Starting \$DESC" "\$NAME"
-		if start-stop-daemon --start --quiet --pidfile \${PIDFILE} --exec \${DAEMON} -- -P \${PIDFILE} \$DAEMON_ARGS > \${output} 2>&1
+		if start-stop-daemon --start --quiet --pidfile \${PIDFILE} --exec \${DAEMON} -- \$DAEMON_ARGS > \${output} 2>&1
 		then
 			log_end_msg 0
 		else
-				log_end_msg 1
-				exit 1
+			log_end_msg 1
+			exit 1
 		fi
 	fi
 }
@@ -926,14 +933,14 @@ stop_varnishd() {
 
 	if [ "\$os" == "centos" ]
 	then 	
-		echo "Stopping \$DESC" "\$NAME"
+		echo -n "Stopping \$DESC" "\$NAME" 
 		if [ ! -z "\$VARNISHPIDN" ] && kill -0 \$VARNISHPIDN 2> /dev/null 
 		then
-			if kill -HUP \$VARNISHPIDN >/dev/null 2>&1  2> /dev/null
+			if kill -2 \$VARNISHPIDN >/dev/null 2>&1  2> /dev/null
 			then
-				echo "${cc_green}OK${cc_normal}"
+				echo " ${cc_green}OK${cc_normal}"
 			else
-				echo "${cc_green}FAIL${cc_normal}"
+				echo " ${cc_red}FAIL${cc_normal}"
 				exit 1
 			fi
 		else
@@ -943,7 +950,7 @@ stop_varnishd() {
 	elif [ "\$os" == "debian" ]
 	then
 		log_daemon_msg "Stopping \$DESC" "\$NAME"
-		if if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
+		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
 		then		
 			log_end_msg 0
 		else
@@ -952,14 +959,15 @@ stop_varnishd() {
 		fi
 		#start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE --exec \$DAEMON  2> /dev/null
 	fi	
+	rm -f \$PIDFILE
 }
 
 reload_varnishd() {
     echo "Reloading \$DESC" "\$NAME"
     if /usr/share/varnish/reload-vcl -q; then
-		echo "${cc_green}OK${cc_normal}"
+		echo " ${cc_green}OK${cc_normal}"
     else
-		echo "${cc_green}FAIL${cc_normal}"
+		echo " ${cc_red}FAIL${cc_normal}"
     fi
 }
 
@@ -985,13 +993,27 @@ case "\$1" in
 	\$0 start
 	;;
     *)
-	log_success_msg "Usage: \$0 {start|stop|restart|force-reload}"
+	echo  "Usage: \$0 {start|stop|restart|force-reload}"
 	exit 1
 	;;
 esac
 
 exit 0
 EOF
+
+ 		chmod +x /etc/init.d/$VARNISHUSER-server
+                chown root.root /etc/init.d/$VARNISHUSER-server
+
+		if [ $os == "debian" ]
+		then
+                        insserv /etc/init.d/$VARNISHUSER-server
+                elif [ $os == "centos" ]
+                then
+                        chkconfig $VARNISHUSER-server on
+                else
+                	ln -fs /etc/init.d/$VARNISHUSER-server /etc/rc2.d/S19$VARNISHUSER-server
+		fi
+
 
 # ---- VARNISH CONTROL SCRIPT -- END ----
 
@@ -1006,18 +1028,7 @@ EOF
 
 # ---- VARNISH CONFIG -- END ----
 
-chmod +x /etc/init.d/$VARNISHUSER-server
-chown root.root /etc/init.d/$VARNISHUSER-server
-
-if [ $os == "debian" ]
-then
-	insserv /etc/init.d/$VARNISHUSER-server
-elif [ $os == "centos" ]
-then
-        chkconfig $VARNISHUSER-server on
-else
-	ln -fs /etc/init.d/$VARNISHUSER-server /etc/rc2.d/S19$VARNISHUSER-server
-fi
+	fi
 
 # ---- VARNISH CONTROL SCRIPT -- END ----
 
@@ -1179,18 +1190,18 @@ case "\$1" in
 esac
 EOF
 
-chmod +x /etc/init.d/$HTTPDUSER-server
-chown root.root /etc/init.d/$HTTPDUSER-server
+	chmod +x /etc/init.d/$HTTPDUSER-server
+	chown root.root /etc/init.d/$HTTPDUSER-server
 
-if [ $os == "debian" ]
-then
-	insserv /etc/init.d/$HTTPDUSER-server
-elif [ $os == "centos" ]
-then
-        chkconfig $HTTPDUSER-server on
-else
-	ln -fs /etc/init.d/$HTTPDUSER-server /etc/rc2.d/S19$HTTPDUSER-server
-fi
+		if [ $os == "debian" ]
+		then
+			insserv /etc/init.d/$HTTPDUSER-server
+		elif [ $os == "centos" ]
+		then
+        		chkconfig $HTTPDUSER-server on
+		else
+			ln -fs /etc/init.d/$HTTPDUSER-server /etc/rc2.d/S19$HTTPDUSER-server
+		fi
 
 	# ---- INSTALL CONTROL SCRIPTS -- END ----
 
