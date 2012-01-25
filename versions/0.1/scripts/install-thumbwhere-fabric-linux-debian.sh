@@ -15,8 +15,8 @@ set -e
 
 IRCD_TASK=""
 REDIS_TASK=""
-NODEJS_TASK="download,compile,install,configure"
-VARNISH_TASK=""
+NODEJS_TASK=""
+VARNISH_TASK="download,compile,install,configure"
 HTTPD_TASK=""
 FTPD_TASK=""
 
