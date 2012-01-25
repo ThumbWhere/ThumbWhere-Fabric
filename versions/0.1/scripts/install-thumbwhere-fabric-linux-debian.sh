@@ -358,11 +358,11 @@ then
         exit 1
 fi
 
-#if [ "\$os" == "centos" ]
-#then
+if [ "\$os" == "centos" ]
+then
 	# source function library
 	. /etc/rc.d/init.d/functions
-#fi
+fi
 
 
 IRCD="/usr/sbin/inspircd"
