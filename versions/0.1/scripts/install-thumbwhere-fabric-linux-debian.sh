@@ -644,19 +644,19 @@ case "\$1" in
 		if redis-cli shutdown  2> /dev/null
 		then
 			echo "${cc_green}OK${cc_normal}"
-    		else
+    	else
 			echo "${cc_green}FAIL${cc_normal}"
 			exit 1
-    		fi
+    	fi
 	elif [ "\$os" == "debian" ]
 	then
 		if redis-cli shutdown  2> /dev/null
 		then		
 			log_end_msg 0
-    		else
+    	else
 			log_end_msg 1
 			exit 1
-    		fi
+    	fi
 		#start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE --exec \$DAEMON  2> /dev/null
 	fi
 	rm -f \$PIDFILE
@@ -876,22 +876,44 @@ ulimit -n \${NFILES:-131072}
 # Maxiumum locked memory size for shared memory log
 ulimit -l \${MEMLOCK:-82000}
 
-DAEMON_OPTS="-f $VARNISHCONFIG"
+DAEMON_ARGS="-f $VARNISHCONFIG"
+
+
+if [ -f "\$VARNISHPID" ]; then
+	VARNISHPIDN="\`cat \"\$PIDFILE\" 2> /dev/null\`"
+fi
+
+
 
 # Ensure we have a PATH
 export PATH="\${PATH:+\$PATH:}/usr/sbin:/usr/bin:/sbin:/bin"
 
 start_varnishd() {
-    log_daemon_msg "Starting \$DESC" "\$NAME"
-    output=\$(/bin/tempfile -s.varnish)
-    if start-stop-daemon --start --quiet --pidfile \${PIDFILE} --exec \${DAEMON} -- -P \${PIDFILE} \$DAEMON_OPTS > \${output} 2>&1; then
-	log_end_msg 0
-    else
-	log_end_msg 1
-	cat \$output
-	exit 1
-    fi
-    rm \$output
+
+	
+
+	# Start based on OS type
+	if [ "\$os" == "centos" ]
+	then 	
+		echo "Starting \$DESC" "\$NAME"
+		if su - \$USER -c "\$DAEMON \$DAEMON_ARGS" 2> /dev/null
+		then
+                 echo "${cc_green}OK${cc_normal}"
+		else
+			echo "${cc_red}FAIL${cc_normal}"
+			exit 1
+		fi
+	elif [ "\$os" == "debian" ]
+	then	
+		log_daemon_msg "Starting \$DESC" "\$NAME"
+		if start-stop-daemon --start --quiet --pidfile \${PIDFILE} --exec \${DAEMON} -- -P \${PIDFILE} \$DAEMON_ARGS > \${output} 2>&1
+		then
+			log_end_msg 0
+		else
+				log_end_msg 1
+				exit 1
+		fi
+	fi
 }
 
 disabled_varnishd() {
@@ -901,22 +923,43 @@ disabled_varnishd() {
 }
 
 stop_varnishd() {
-    log_daemon_msg "Stopping \$DESC" "\$NAME"
-    if start-stop-daemon \
-	--stop --quiet --pidfile \$PIDFILE --retry 10 \
-	--exec \$DAEMON; then
-	log_end_msg 0
-    else
-	log_end_msg 1
-    fi
+
+	if [ "\$os" == "centos" ]
+	then 	
+		echo "Stopping \$DESC" "\$NAME"
+		if [ ! -z "\$VARNISHPIDN" ] && kill -0 \$VARNISHPIDN 2> /dev/null 
+		then
+			if kill -HUP \$VARNISHPIDN >/dev/null 2>&1  2> /dev/null
+			then
+				echo "${cc_green}OK${cc_normal}"
+			else
+				echo "${cc_green}FAIL${cc_normal}"
+				exit 1
+			fi
+		else
+			echo "Error: varnishd is not running."
+			return 1
+		fi
+	elif [ "\$os" == "debian" ]
+	then
+		log_daemon_msg "Stopping \$DESC" "\$NAME"
+		if if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
+		then		
+			log_end_msg 0
+		else
+			log_end_msg 1
+			exit 1
+		fi
+		#start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE --exec \$DAEMON  2> /dev/null
+	fi	
 }
 
 reload_varnishd() {
-    log_daemon_msg "Reloading \$DESC" "\$NAME"
+    echo "Reloading \$DESC" "\$NAME"
     if /usr/share/varnish/reload-vcl -q; then
-	log_end_msg 0
+		echo "${cc_green}OK${cc_normal}"
     else
-	log_end_msg 1
+		echo "${cc_green}FAIL${cc_normal}"
     fi
 }
 
