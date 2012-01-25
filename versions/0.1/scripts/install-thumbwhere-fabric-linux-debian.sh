@@ -14,8 +14,8 @@ set -e
 #
 
 IRCD_TASK=""
-REDIS_TASK="configure"
-NODEJS_TASK=""
+REDIS_TASK=""
+NODEJS_TASK="download,compile,install,configure"
 VARNISH_TASK=""
 HTTPD_TASK=""
 FTPD_TASK=""
@@ -1408,4 +1408,4 @@ EOF
         /etc/init.d/$FTPDUSER-server start
 fi
 
-echo " *** ${cc_blue}Completed${cc_normal}"
+echo " *** ${cc_blue}Completed${cc_normal} ${cc_green}OK${cc_normal} \o/"
