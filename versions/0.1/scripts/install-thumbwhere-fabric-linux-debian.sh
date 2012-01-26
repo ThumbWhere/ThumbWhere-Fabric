@@ -10,15 +10,15 @@ set -e
 
 ###############################################################################
 #
-# Config variables
+# Config variables ; Each one can contain the following keywords "download,compile,install,configure"
 #
 
-IRCD_TASK="download,compile,install,configure"
-REDIS_TASK="download,compile,install,configure"
-NODEJS_TASK="download,compile,install,configure"
-VARNISH_TASK="download,compile,install,configure"
-HTTPD_TASK=""
-FTPD_TASK=""
+IRCD_TASK="configure"
+REDIS_TASK="configure"
+NODEJS_TASK="configure"
+VARNISH_TASK="configure"
+HTTPD_TASK="configure"
+FTPD_TASK="configure"
 
 IRCDURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
 REDISURL=http://redis.googlecode.com/files/redis-2.4.6.tar.gz
@@ -94,6 +94,13 @@ cc_red="${esc}[0;31m"
 cc_green="${esc}[0;32m"
 cc_yellow="${esc}[0;33m"
 cc_blue="${esc}[0;34m"
+cc_cyan="${esc}[0;36m"
+cc_white="${esc}[1;37m"
+cc_purple="${esc}[0;35m"
+cc_lgray="${esc}[0;37m"
+cc_dgray="${esc}[1;30m"
+
+
 cc_normal=`echo -en "${esc}[m\017"`
 
 
@@ -131,7 +138,7 @@ fi
 # Install the source packages...
 #
 
-echo "*** ${cc_blue}Downloading source packages${cc_normal}"
+echo "*** ${cc_cyan}Downloading source packages${cc_normal}"
 
 mkdir -p $DOWNLOADS
 cd $DOWNLOADS
@@ -175,7 +182,7 @@ if [[ $FTPD_TASK = *download* ]]
 then
 	[ -f $FTPDFILE ] && echo " - $FTPDFILE exists" || wget $FTPDURL
 else
-        echo " - ${cc_yellow}Skipping $IRCDFILE${cc_normal}"fi
+        echo " - ${cc_yellow}Skipping $IRCDFILE${cc_normal}"
 fi
 
 cd ..
@@ -187,7 +194,7 @@ cd ..
 
 if [ "$IRCD_TASK" != "" ]
 then
-	echo "$*** ${cc_blue}Installing IRCD ($IRCDFOLDER)${cc_normal}"
+	echo "$*** ${cc_cyan}Installing IRCD ($IRCDFOLDER)${cc_normal}"
 
 	if [ "`id -un $IRCDUSER`" != "$IRCDUSER" ]
 	then
@@ -340,9 +347,20 @@ EOF
 ### END INIT INFO
 # GPL Licensed
 
+DAEMON="/usr/sbin/inspircd"
+PIDFILE="$IRCDPID"
+LOG="/var/log/inspircd.log"
+CONFIG="$IRCDCONFIG"
+ARGS="--logfile \$LOG --config \$CONFIG"
+USER="$IRCDUSER"
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+SERVICENAME=$IRCDUSER-service
+PROCESSNAME=$IRCDPROCESS
+
 # Source function library
 . /lib/lsb/init-functions
 
+# Determine os
 os=""
 if [ "\`grep centos /proc/version -c\`" != "0" ]
 then
@@ -364,40 +382,52 @@ then
 	. /etc/rc.d/init.d/functions
 fi
 
+if [ ! -x "\$DAEMON" ]; then echo "could not locate \$DAEMON - exiting." ; exit 0; fi
 
-IRCD="/usr/sbin/inspircd"
-IRCDPID="$IRCDPID"
-IRCDLOG="/var/log/inspircd.log"
-IRCDCONFIG="$IRCDCONFIG"
-IRCDARGS="--logfile \$IRCDLOG --config \$IRCDCONFIG"
-USER="$IRCDUSER"
-PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-SERVICENAME=$IRCDUSER-service
-PROCESSNAME=$IRCDPROCESS
-
-#if [ -f "/var/lib/inspircd/inspircd" ]; then
-#	. /var/lib/inspircd/inspircd
-#fi
-
-if [ ! -x "\$IRCD" ]; then exit 0; fi
-
-if [ -f "\$IRCDPID" ]; then
-	IRCDPIDN="\`cat \"\$IRCDPID\" 2> /dev/null\`"
+if [ -f "\$PIDFILE" ]; then
+	PIDN="\`cat \"\$PIDFILE\" 2> /dev/null\`"
 fi
 
 start_ircd()
 {
-	[ -f "\$IRCDPID" ] || ( touch "\$IRCDPID" ; chown "\$USER" "\$IRCDPID" )
-	[ -f "\$IRCDLOG" ] || ( touch "\$IRCDLOG" ; chown "\$USER:thumbwhere" "\$IRCDLOG" ; chmod 0640 "\$IRCDLOG" )
+	[ -f "\$PIDFILE" ] || ( touch "\$PIDFILE" ; chown "\$USER" "\$PIDFILE" )
+	[ -f "\$LOG" ] || ( touch "\$LOG" ; chown "\$USER:thumbwhere" "\$LOG" ; chmod 0640 "\$LOG" )
 	export LD_LIBRARY_PATH=/usr/lib/inspircd
 	
 	# Start based on OS type
 	if [ "\$os" = "centos" ]
 	then 	
-		exec su - \$USER -c "\$IRCD \$IRCDARGS"
+		if su - \$USER -c "\$DAEMON \$ARGS"
+ 		then
+                        echo " ${cc_green}OK${cc_normal}"
+                else
+                        echo -n " ${cc_red}FAIL${cc_normal} ("
+
+                        if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+                        then
+                                echo -n "${cc_yellow}Seems \$PROCESSNAME is already running.${cc_normal}"
+
+                                # and just to be sure the pids are not out of whack
+                                killall -2 \$PROCESSNAME 2> /dev/null
+                        else
+                                echo -n "${cc_yellow}Looks like \$PROCESSNAME is not already running.${cc_normal}"
+                        fi
+			echo -n ")"
+
+                        exit 1
+                fi
+
+		
 	elif [ "\$os" = "debian" ]
 	then
-		start-stop-daemon --start --quiet --oknodo --chuid "\$USER" --pidfile "\$IRCDPID" --exec "\$IRCD" --  \$IRCDARGS
+		if start-stop-daemon --start --quiet --oknodo --chuid "\$USER" --pidfile "\$PIDFILE" --exec "\$DAEMON" --  \$ARGS
+		then
+                        echo " ${cc_green}OK${cc_normal}"
+                else
+                        echo " ${cc_red}FAIL${cc_normal} (is it already running?)"
+                        exit 1
+                fi
+
 	fi
 }
 
@@ -406,27 +436,57 @@ stop_ircd()
 
 	# This logic is generated at script built time (if you are wondering about this comparison)
 	if [ "\$os" = "centos" ]
-	then 	
+	then 
+		echo  "Stopping \$DESC" "\$PROCESSNAME"
 		killproc \$PROCESSNAME -TERM
 	elif [ "\$os" = "debian" ]
 	then
-		start-stop-daemon --stop --quiet --pidfile "\$IRCDPID"
+		#start-stop-daemon --stop --quiet --pidfile "\$PIDFILE"
 
 		# and just to be sure the pids are not out of whack 
-		killall -2 \$PROCESSNAME 2> /dev/null
+		#killall -2 \$PROCESSNAME 2> /dev/null
+
+		log_daemon_msg "Stopping \$DESC" "\$PROCESSNAME"
+		
+		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
+		then		
+			echo " ${cc_green}OK${cc_normal}"
+
+        		# and just to be sure the pids are not out of whack
+        		killall -2 \$PROCESSNAME 2> /dev/null
+		else
+			echo -n " ${cc_red}FAIL${cc_normal} ("
+
+ 			if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+	 		then
+                                echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
+
+                                # and just to be sure the pids are not out of whack
+                                killall -2 \$PROCESSNAME 2> /dev/null
+                        else
+				echo -n "${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
+			fi
+
+			echo ")"
+		fi
+
+                # And finally, to ensure there are no issues
+                killall -9 \$PROCESSNAME 2> /dev/null
+
+
 	fi
 	
-	rm -f "\$IRCDPID"
+	rm -f "\$PIDFILE"
 	return 0
 }
 
 reload_ircd()
 {
-	if [ ! -z "\$IRCDPIDN" ] && kill -0 \$IRCDPIDN 2> /dev/null; then
-		kill -HUP \$IRCDPIDN >/dev/null 2>&1 || return 1
+	if [ ! -z "\$PIDN" ] && kill -0 \$PIDN 2> /dev/null; then
+		kill -HUP \$PIDN >/dev/null 2>&1 || return 1
 		return 0
 	else
-		echo "Error: IRCD is not running."
+		echo "Error: $DAEMON is not running."
 		return 1
 	fi
 }
@@ -438,15 +498,15 @@ case "\$1" in
 	#	exit 0
 	#fi
 	echo "Starting Inspircd... "
-	start_ircd && echo "... done."
+	start_ircd
 	;;
   stop)
 	echo "Stopping Inspircd... "
-	stop_ircd && echo "... done."
+	stop_ircd
 	;;
   force-reload|reload)
 	echo "Reloading Inspircd... "
-	reload_ircd && echo "... done."
+	reload_ircd
 	;;
   restart)
 	\$0 stop
@@ -500,7 +560,7 @@ fi
 
 if [ "$REDIS_TASK" != "" ]
 then
-	echo "*** ${cc_blue}Installing REDIS ($REDISFILE)${cc_normal}"
+	echo "*** ${cc_cyan}Installing REDIS ($REDISFILE)${cc_normal}"
 	if [ "`id -un $REDISUSER`" != "$REDISUSER" ]
 	then
 		 echo " - Adding user $REDISUSER"
@@ -599,7 +659,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/local/bin/redis-server
 DAEMON_ARGS=$REDISCONFIG
 USER=\$REDISUSER
-NAME=redis-server
+PROCESSNAME=redis-server
 DESC=redis-server
 PIDFILE=$REDISPID
 
@@ -632,10 +692,10 @@ case "\$1" in
 	elif [ "\$os" = "debian" ]
 	then	
 		if start-stop-daemon --start --quiet --umask 007 --pidfile \$PIDFILE --chuid $REDISUSER:$GROUP --exec \$DAEMON -- \$DAEMON_ARGS  2> /dev/null
-		then
-                        log_end_msg 0
+ 		 then
+                        echo " ${cc_green}OK${cc_normal}"
                 else
-                        log_end_msg 1
+                        echo " ${cc_red}FAIL${cc_normal}"
                         exit 1
                 fi
 	fi
@@ -671,7 +731,7 @@ case "\$1" in
 	\${0} start
 	;;
   *)
-	echo "Usage: /etc/init.d/\$NAME {start|stop|restart|force-reload}" >&2
+	echo "Usage: /etc/init.d/\$PROCESSNAME {start|stop|restart|force-reload}" >&2
 	exit 1
 	;;
 esac
@@ -748,7 +808,7 @@ fi
 
 if [ "$NODEJS_TASK" != '' ]
 then
-	echo "*** ${cc_blue}Installing NODEJS ($NODEJSFOLDER)${cc_normal}"
+	echo "*** ${cc_cyan}Installing NODEJS ($NODEJSFOLDER)${cc_normal}"
 
 	if [ "`id -un $NODEJSUSER`" != "$NODEJSUSER" ]
 	then
@@ -756,22 +816,35 @@ then
 		useradd $NODEJSUSER -m -g $GROUP
 	fi
 
-	cp $DOWNLOADS/$NODEJSFILE $HOMEROOT/$NODEJSUSER/
-	chown $NODEJSUSER.$GROUP $HOMEROOT/$NODEJSUSER
-	cd  $HOMEROOT/$NODEJSUSER
-	echo " - Deleting old instance"
-	rm -rf $NODEJSFOLDER
-	echo " - Uncompressing"
-	tar -xzf $NODEJSFILE
-	echo " - Building"
-	cd $NODEJSFOLDER
-	./configure --shared-zlib --shared-cares
-	make
-	#echo " - Testing"
-	#make test
-	echo " - Installing"
-	make install
-	echo " - Configuring"
+	if [[ $NODEJS_TASK = *compile* ]]
+	then
+	
+
+		cp $DOWNLOADS/$NODEJSFILE $HOMEROOT/$NODEJSUSER/
+		chown $NODEJSUSER.$GROUP $HOMEROOT/$NODEJSUSER
+		cd  $HOMEROOT/$NODEJSUSER
+		echo " - Deleting old instance"
+		rm -rf $NODEJSFOLDER
+		echo " - Uncompressing"
+		tar -xzf $NODEJSFILE
+		echo " - Building"
+		cd $NODEJSFOLDER
+		./configure --shared-zlib --shared-cares
+		make
+		#echo " - Testing"
+		#make test
+	fi
+
+	if [[ $NODEJS_TASK = *install* ]]
+	then
+		echo " - Installing"
+		make install
+	fi
+
+	if [[ $NODEJS_TASK = *configure* ]]
+	then
+		echo " - Configuring"
+	fi
 
 	echo " - Setting permissions"
 	chown -R $NODEJSUSER.$GROUP $HOMEROOT/$NODEJSUSER/
@@ -785,7 +858,7 @@ fi
 
 if [ "$VARNISH_TASK" != "" ]
 then
-	echo "*** ${cc_blue}Installing VARNISH ($VARNISHFOLDER)${cc_normal}"
+	echo "*** ${cc_cyan}Installing VARNISH ($VARNISHFOLDER)${cc_normal}"
 
 	if [ "`id -un $VARNISHUSER`" != "$VARNISHUSER" ]
 	then
@@ -895,7 +968,7 @@ ulimit -l \${MEMLOCK:-82000}
 DAEMON_ARGS="-f $VARNISHCONFIG -P \$PIDFILE"
 
 if [ -f "\$PIDFILE" ]; then
-	VARNISHPIDN="\`cat \"\$PIDFILE\" 2> /dev/null\`"
+	PIDN="\`cat \"\$PIDFILE\" 2> /dev/null\`"
 fi
 
 # Ensure we have a PATH
@@ -916,11 +989,11 @@ start_varnishd() {
 	elif [ "\$os" = "debian" ]
 	then	
 		log_daemon_msg "Starting \$DESC" "\$PROCESSNAME"
-		if start-stop-daemon --start --quiet --pidfile \${PIDFILE} --exec \${DAEMON} -- \$DAEMON_ARGS > \${output} 2>&1
+		if start-stop-daemon --start --quiet --pidfile \${PIDFILE} --exec \${DAEMON} -- \$DAEMON_ARGS
 		then
-			log_end_msg 0
+			echo " ${cc_green}OK${cc_normal}"
 		else
-			log_end_msg 1
+			echo " ${cc_red}FAIL${cc_normal} (is it already running?)"
 			exit 1
 		fi
 	fi
@@ -937,35 +1010,48 @@ stop_varnishd() {
 	if [ "\$os" = "centos" ]
 	then 	
 		echo -n "Stopping \$DESC" "\$PROCESSNAME" 
-		if [ ! -z "\$VARNISHPIDN" ] && kill -0 \$VARNISHPIDN 2> /dev/null 
+		if [ ! -z "\$PIDN" ] && kill -0 \$PIDN 2> /dev/null 
 		then
-			if kill -2 \$VARNISHPIDN >/dev/null 2>&1  2> /dev/null
+			if kill -2 \$PIDN >/dev/null 2>&1  2> /dev/null
 			then
 				echo " ${cc_green}OK${cc_normal}"
 			else
 				echo " ${cc_red}FAIL${cc_normal}"
-				exit 1
 			fi
 		else
-			echo "Error: varnishd is not running."
-			return 1
+			echo " ${cc_red}FAIL${cc_normal} (varnishd is not running)"
 		fi
 	elif [ "\$os" = "debian" ]
 	then
 		log_daemon_msg "Stopping \$DESC" "\$PROCESSNAME"
 		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
 		then		
-			log_end_msg 0
+			echo " ${cc_green}OK${cc_normal}"
 
         		# and just to be sure the pids are not out of whack
         		killall -2 \$PROCESSNAME 2> /dev/null
-
 		else
-			log_end_msg 1
-			exit 1
+			echo -n " ${cc_red}FAIL${cc_normal} ("
+
+ 			if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+	 		then
+                                echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
+
+                                # and just to be sure the pids are not out of whack
+                                killall -2 \$PROCESSNAME 2> /dev/null
+                        else
+				echo -n "${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
+			fi
+
+			echo ")"
 		fi
+
+                # And finally, to ensure there are no issues
+                killall -9 \$PROCESSNAME 2> /dev/null
 		#start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE --exec \$DAEMON  2> /dev/null
 	fi	
+
+	# clean out the pid file anyway...
 	rm -f \$PIDFILE
 }
 
@@ -1054,7 +1140,7 @@ fi
 
 if [ "$HTTPD_TASK" != "" ]
 then
-	echo "*** ${cc_blue}Installing HTTPD ($HTTPDFOLDER)${cc_normal}"
+	echo "*** ${cc_cyan}Installing HTTPD ($HTTPDFOLDER)${cc_normal}"
 
 	if [ "`id -un $HTTPDUSER`" != "$HTTPDUSER" ]
 	then
@@ -1074,24 +1160,35 @@ then
 		fi
 	fi
 
-	cp $DOWNLOADS/$HTTPDFILE $HOMEROOT/$HTTPDUSER/
-	chown $HTTPDUSER.$GROUP $HOMEROOT/$HTTPDUSER/
-	cd  $HOMEROOT/$HTTPDUSER
-	echo " - Deleting old instance"
-	rm -rf $HTTPDFOLDER
-	echo " - Uncompressing"
-	tar -xzf $HTTPDFILE
-	echo " - Building"
-	cd $HTTPDFOLDER
-	./configure  --prefix=$HTTPDROOT
-	make
-	echo " - Installing"
-	make install
-	echo " - Configuring"
+	if [[ $HTTPD_TASK = *compile* ]]
+	then
+
+		cp $DOWNLOADS/$HTTPDFILE $HOMEROOT/$HTTPDUSER/
+		chown $HTTPDUSER.$GROUP $HOMEROOT/$HTTPDUSER/
+		cd  $HOMEROOT/$HTTPDUSER
+		echo " - Deleting old instance"
+		rm -rf $HTTPDFOLDER
+		echo " - Uncompressing"
+		tar -xzf $HTTPDFILE
+		echo " - Building"
+		cd $HTTPDFOLDER
+		./configure  --prefix=$HTTPDROOT
+		make
+	fi
+
+        if [[ $HTTPD_TASK = *install* ]]
+        then
+		echo " - Installing"
+		make install
+	fi
+
+        if [[ $HTTPD_TASK = *configure* ]]
+        then
+		echo " - Configuring"
 
 	# ---- INSTALL CONTROL SCRIPTS -- START ----
 
-	cat > /etc/init.d/$HTTPDUSER-server << EOF
+		cat > /etc/init.d/$HTTPDUSER-server << EOF
 #!/bin/sh
 ### BEGIN INIT INFO
 # Provides:	  $HTTPDUSER-server
@@ -1109,6 +1206,15 @@ then
 # Source function library
 . /lib/lsb/init-functions
 
+DAEMON="$HTTPDROOT/bin/apachectl"
+PIDFILE="$HTTPDPID"
+LOG="/var/log/inspircd.log"
+CONFIG="$HTTPDCONFIG"
+USER="$HTTPDUSER"
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+PROCESSNAME="httpd"
+
+# Determine OS
 os=""
 if [ "\`grep centos /proc/version -c\`" != "0" ]
 then
@@ -1124,38 +1230,71 @@ then
         exit 1
 fi
 
-
 if [ "\$os" = "centos" ]
 then
-# source function library
-. /etc/rc.d/init.d/functions
+	# source function library
+	. /etc/rc.d/init.d/functions
 fi
 
+# Does the executable exist?
+if [ ! -x "\$DAEMON" ]; then echo "could not locate \$DAEMON - exiting." ; exit 0; fi
 
-HTTPD="$HTTPDROOT/bin/apache2ctrl"
-HTTPDPID="$HTTPDPID"
-HTTPDLOG="/var/log/inspircd.log"
-HTTPDCONFIG="$IRCDCONFIG"
-USER="$HTTPDUSER"
-PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-PROCESSNAME="httpd"
-
-
-if [ ! -x "\$HTTPD" ]; then exit 0; fi
-
-if [ -f "\$HTTPDPID" ]; then
-	HTTPDPIDN="\`cat \"\$HTTPDPID\" 2> /dev/null\`"
+# Get the pid file
+if [ -f "\$PIDFILE" ]; then
+	PIDN="\`cat \"\$PIDFILE\" 2> /dev/null\`"
 fi
 
 start_httpd()
 {
-	start-stop-daemon --start --quiet --oknodo --chuid "\$USER" --pidfile "\$HTTPDPID" --exec "\$HTTPD" -- start
+	#start-stop-daemon --start --quiet --oknodo --chuid "\$USER" --pidfile "\$PIDFILE" --exec "\$DAEMON" -- start
+
+		if \$DAEMON start
+ 		then
+                        echo " ${cc_green}OK${cc_normal}"
+                else
+                        echo -n " ${cc_red}FAIL${cc_normal} ("
+
+                        if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+                        then
+                                echo -n "${cc_yellow}Seems \$PROCESSNAME is already running.${cc_normal}"
+
+                                # and just to be sure the pids are not out of whack
+                                killall -2 \$PROCESSNAME 2> /dev/null
+                        else
+                                echo -n "${cc_yellow}Looks like \$PROCESSNAME is not already running.${cc_normal}"
+                        fi
+			echo -n ")"
+
+                        exit 1
+                fi
+
+
 }
 
 stop_httpd()
 {
-	start-stop-daemon --stop --quiet --pidfile "\$HTTPDPID" --exec "\$HTTPD" -- stop
-	rm -f "\$HTTPDPID"
+	if \$DAEMON stop
+ 	then
+		echo " ${cc_green}OK${cc_normal}"
+	else
+		echo -n " ${cc_red}FAIL${cc_normal} ("
+
+		if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+                then
+                	echo -n "${cc_yellow}Seems \$PROCESSNAME is already running.${cc_normal}"
+
+                        # and just to be sure the pids are not out of whack
+                     	killall -2 \$PROCESSNAME 2> /dev/null
+                else
+                        echo -n "${cc_yellow}Looks like \$PROCESSNAME is not already running.${cc_normal}"
+                fi
+		echo -n ")"
+
+        fi
+
+
+	#start-stop-daemon --stop --quiet --pidfile "\$PIDFILE" --exec "\$DAEMON" -- stop
+	rm -f "\$PIDFILE"
 
         # and just to be sure the pids are not out of whack
         killall -2 \$PROCESSNAME 2> /dev/null
@@ -1165,8 +1304,8 @@ stop_httpd()
 
 reload_httpd()
 {
-	if [ ! -z "\$HTTPDPIDN" ] && kill -0 \$HTTPDPIDN 2> /dev/null; then
-		kill -HUP \$HTTPDPIDN >/dev/null 2>&1 || return 1
+	if [ ! -z "\$PIDN" ] && kill -0 \$PIDN 2> /dev/null; then
+		kill -HUP \$PIDN >/dev/null 2>&1 || return 1
 		return 0
 	else
 		echo "Error: Apache2 is not running."
@@ -1177,15 +1316,15 @@ reload_httpd()
 case "\$1" in
   start)
 	echo -n "Starting Apache2... "
-	start_httpd && echo "done."
+	start_httpd
 	;;
   stop)
 	echo -n "Stopping Apache2... "
-	stop_httpd && echo "done."
+	stop_httpd
 	;;
   force-reload|reload)
 	echo -n "Reloading Apache2 config "
-	reload_httpd && echo "done."
+	reload_httpd 
 	;;
   restart)
 	\$0 stop
@@ -1279,6 +1418,12 @@ EOF
 
 	# ---- INSTALL CONFIG -- END --
 
+	fi
+
+	#
+	# End of configuration
+	#
+
 	echo " - Setting permissions"
 	chown -R $HTTPDUSER.$GROUP $HOMEROOT/$HTTPDUSER/
 
@@ -1293,7 +1438,7 @@ fi
 
 if [ "$FTPD_TASK" != "" ]
 then
-	echo "*** ${cc_blue}Installing FTPD ($FTPDFOLDER)${cc_normal}"
+	echo "*** ${cc_cyan}Installing FTPD ($FTPDFOLDER)${cc_normal}"
 
 	if [ "`id -un $FTPDUSER`" != "$FTPDUSER" ]
 	then
@@ -1313,24 +1458,36 @@ then
 		fi
 	fi
 
-	cp $DOWNLOADS/$FTPDFILE $HOMEROOT/$FTPDUSER/
-	chown $FTPDUSER.$GROUP $HOMEROOT/$FTPDUSER
-	cd  $HOMEROOT/$FTPDUSER
-	echo " - Deleting old instance"
-	rm -rf $FTPDFOLDER
-	echo " - Uncompressing"
-	tar -xzf $FTPDFILE
-	echo " - Building"
-	cd $FTPDFOLDER
-	./configure  --prefix=$FTPDROOT  --enable-ctrls
-	make
-	echo " - Installing"
-	make install
-	echo " - Configuring"
+        if [[ $FTPD_TASK = *compile* ]]
+        then
+		cp $DOWNLOADS/$FTPDFILE $HOMEROOT/$FTPDUSER/
+		chown $FTPDUSER.$GROUP $HOMEROOT/$FTPDUSER
+		cd  $HOMEROOT/$FTPDUSER
+		echo " - Deleting old instance"
+		rm -rf $FTPDFOLDER
+		echo " - Uncompressing"
+		tar -xzf $FTPDFILE
+		echo " - Building"
+		cd $FTPDFOLDER
+		./configure  --prefix=$FTPDROOT  --enable-ctrls
+		make
+	fi
 
-	# ---- INSTALL CONTROL SCRIPTS -- START ----
+        if [[ $FTPD_TASK = *install* ]]
+        then
+		echo " - Installing"
+		make install
+	fi
 
-	cat > /etc/init.d/$FTPDUSER-server << EOF
+
+	if [[ $FTPD_TASK = *configure* ]]
+        then
+
+		echo " - Configuring"
+
+		# ---- INSTALL CONTROL SCRIPTS -- START ----
+
+		cat > /etc/init.d/$FTPDUSER-server << EOF
 #!/bin/sh
 ### BEGIN INIT INFO
 # Provides:	  $FTPDUSER-server
@@ -1348,6 +1505,15 @@ then
 # Source function library
 . /lib/lsb/init-functions
 
+DAEMON="$FTPDROOT/sbin/proftpd"
+PIDFILE="$FTPDPID"
+FTPDLOG="/var/log/ftpd.log"
+FTPDCONFIG="$FTPDCONFIG"
+USER="$FTPDUSER"
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+PROCESSNAME="proftpd"
+
+# Determine OS
 os=""
 if [ "\`grep centos /proc/version -c\`" != "0" ]
 then
@@ -1365,44 +1531,101 @@ fi
 
 if [ "\$os" = "centos" ]
 then
-# source function library
-. /etc/rc.d/init.d/functions
+	# source function library
+	. /etc/rc.d/init.d/functions
 fi
 
-FTPD="$FTPDROOT/sbin/proftpd"
-FTPDPID="$FTPDPID"
-FTPDLOG="/var/log/ftpd.log"
-FTPDCONFIG="$IRCDCONFIG"
-USER="$FTPDUSER"
-PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-PROCESSNAME="proftpd"
+# Does the executable exist?
+if [ ! -x "\$DAEMON" ]; then echo "could not locate \$DAEMON - exiting." ; exit 0; fi
 
-if [ ! -x "\$FTPD" ]; then echo "could not locate \$FTPD - exiting" ; exit 0; fi
-
-if [ -f "\$FTPDPID" ]; then
-	FTPDPIDN="\`cat \"\$FTPDPID\" 2> /dev/null\`"
+# Get the pid file
+if [ -f "\$PIDFILE" ]; then
+	PIDN="\`cat \"\$PIDFILE\" 2> /dev/null\`"
 fi
 
 start_ftpd()
 {
-	start-stop-daemon --start --quiet --oknodo --pidfile "\$FTPDPID" --exec "\$FTPD" 
+	# Start based on OS type
+	if [ "\$os" = "centos" ]
+	then 	
+		if su - \$USER -c "\$DAEMON \$ARGS"
+ 		then
+                        echo " ${cc_green}OK${cc_normal}"
+                else
+                        echo -n " ${cc_red}FAIL${cc_normal} ("
+
+                        if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+                        then
+                                echo -n "${cc_yellow}Seems \$PROCESSNAME is already running.${cc_normal}"
+
+                                # and just to be sure the pids are not out of whack
+                                killall -2 \$PROCESSNAME 2> /dev/null
+                        else
+                                echo -n "${cc_yellow}Looks like \$PROCESSNAME is not already running.${cc_normal}"
+                        fi
+			echo -n ")"
+
+                        exit 1
+                fi
+
+
+	elif [ "\$os" = "debian" ]
+	then
+		if  start-stop-daemon --start --quiet --oknodo --pidfile "\$PIDFILE" --exec "\$DAEMON" 
+		then
+                        echo " ${cc_green}OK${cc_normal}"
+                else
+                        echo " ${cc_red}FAIL${cc_normal} (is it already running?)"
+                        exit 1
+                fi
+
+	fi
 }
 
 stop_ftpd()
 {
-	start-stop-daemon --stop --quiet --pidfile "\$FTPDPID"
-	rm -f "\$FTPDPID"
 
-        # and just to be sure the pids are not out of whack
-        killall -2 \$PROCESSNAME 2> /dev/null
+	# Stop  based on OS
+	if [ "\$os" = "centos" ]
+	then 
+		killproc \$PROCESSNAME -TERM
+	elif [ "\$os" = "debian" ]
+	then
+		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
+		then
+			echo " ${cc_green}OK${cc_normal}"
 
+        		# and just to be sure the pids are not out of whack
+        		killall -2 \$PROCESSNAME 2> /dev/null
+		else
+			echo -n " ${cc_red}FAIL${cc_normal} ("
+
+ 			if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+	 		then
+                                echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
+
+                                # and just to be sure the pids are not out of whack
+                                killall -2 \$PROCESSNAME 2> /dev/null
+                        else
+				echo -n "${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
+			fi
+
+			echo ")"
+		fi
+
+                # And finally, to ensure there are no issues
+                killall -9 \$PROCESSNAME 2> /dev/null
+
+	fi
+
+	rm -f "\$PIDFILE"
 	return 0
 }
 
 reload_ftpd()
 {
-	if [ ! -z "\$FTPDPIDN" ] && kill -0 \$FTPDPIDN 2> /dev/null; then
-		kill -HUP \$FTPDPIDN >/dev/null 2>&1 || return 1
+	if [ ! -z "\$PIDN" ] && kill -0 \$PIDN 2> /dev/null; then
+		kill -HUP \$PIDN >/dev/null 2>&1 || return 1
 		return 0
 	else
 		echo "Error: ftpd is not running."
@@ -1413,15 +1636,15 @@ reload_ftpd()
 case "\$1" in
   start)
 	echo -n "Starting ftpd... "
-	start_ftpd && echo "done."
+	start_ftpd
 	;;
   stop)
 	echo -n "Stopping ftpd... "
-	stop_ftpd && echo "done."
+	stop_ftpd 
 	;;
   force-reload|reload)
 	echo -n "Reloading ftpd config "
-	reload_ftpd && echo "done."
+	reload_ftpd 
 	;;
   restart)
 	\$0 stop
@@ -1469,6 +1692,8 @@ AllowOverwrite                  on
 </Limit>
 EOF
 
+	fi
+
 	# ---- INSTALL CONFIG -- END --
 
 	echo " - Setting permissions"
@@ -1478,4 +1703,9 @@ EOF
         /etc/init.d/$FTPDUSER-server start
 fi
 
-echo " *** ${cc_blue}Completed${cc_normal} ${cc_green}OK${cc_normal} \o/"
+#
+# And we are done..
+#
+
+echo " *** ${cc_cyan}Completed${cc_normal}"
+echo ""
