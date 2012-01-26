@@ -119,10 +119,10 @@ then
 	exit 1
 fi
 
-if [ $os == "debian" ]
+if [ $os = "debian" ]
 then
 	apt-get -y install wget bzip2 binutils g++ make tcl8.5 curl build-essential openssl libssl-dev libssh-dev pkg-config libpcre3 libpcre3-dev libpcre++0 xsltproc libncurses5-dev
-elif [ $os == "centos" ]
+elif [ $os = "centos" ]
 then
         yum -y install wget bzip2 binutils gcc-c++ make gcc tcl curl openssl pcre gnutls openssh openssl ncurses pcre-devel gnutls-devel openssl-devel ncurses-devel libxslt redhat-lsb
 fi
@@ -136,42 +136,42 @@ echo "*** ${cc_blue}Downloading source packages${cc_normal}"
 mkdir -p $DOWNLOADS
 cd $DOWNLOADS
 
-if [[ $IRCD_TASK == *download* ]] 
+if [[ $IRCD_TASK = *download* ]] 
 then
 	[ -f $IRCDFILE ] && echo " - $IRCDFILE exists" || wget $IRCDURL
 else
 	echo " - ${cc_yellow}Skipping $IRCDFILE${cc_normal}"
 fi
 
-if [[ $REDIS_TASK == *download* ]] 
+if [[ $REDIS_TASK = *download* ]] 
 then
 	[ -f $REDISFILE ] && echo " - $REDISFILE exists" || wget $REDISURL
 else
         echo " - ${cc_yellow}Skipping $REDISFILE${cc_normal}"
 fi
 
-if [[ $NODEJS_TASK == *download* ]] 
+if [[ $NODEJS_TASK = *download* ]] 
 then
 	[ -f $NODEJSFILE ] && echo " - $NODEJSFILE exists" || wget $NODEJSURL
 else
         echo " - ${cc_yellow}Skipping $NODEJSFILE${cc_normal}"
 fi
 
-if [[ $VARNISH_TASK == *download* ]] 
+if [[ $VARNISH_TASK = *download* ]] 
 then
 	[ -f $VARNISHFILE ] && echo " - $VARNISHFILE exists" || wget $VARNISHURL
 else
         echo " - ${cc_yellow}Skipping $VARNISHFILE${cc_normal}"
 fi
 
-if [[ $HTTPD_TASK == *download* ]] 
+if [[ $HTTPD_TASK = *download* ]] 
 then
 	[ -f $HTTPDFILE ] && echo " - $HTTPDFILE exists" || wget $HTTPDURL
 else
         echo " - ${cc_yellow}Skipping $HTTPDFILE${cc_normal}"
 fi
 
-if [[ $FTPD_TASK == *download* ]] 
+if [[ $FTPD_TASK = *download* ]] 
 then
 	[ -f $FTPDFILE ] && echo " - $FTPDFILE exists" || wget $FTPDURL
 else
@@ -207,7 +207,7 @@ then
 		fi
 	fi
 
-	if [[ $IRCD_TASK == *compile* ]]
+	if [[ $IRCD_TASK = *compile* ]]
 	then
 		cp $DOWNLOADS/$IRCDFILE $HOMEROOT/$IRCDUSER/
 		chown $IRCDUSER.$GROUP $HOMEROOT/$IRCDUSER
@@ -222,7 +222,7 @@ then
 		cd $IRCDFOLDER
 		./configure  --uid=$IRCDUSER --disable-interactive
 		make
-		if [[ $IRCD_TASK == *install* ]]
+		if [[ $IRCD_TASK = *install* ]]
 		then
 			echo " - Installing"
 			make install
@@ -233,7 +233,7 @@ then
 	# Generate configure scripts
 	#
 	
-	if [[ $IRCD_TASK == *configure* ]]
+	if [[ $IRCD_TASK = *configure* ]]
 	then
 	
 
@@ -352,13 +352,13 @@ if [ "\`grep debian /proc/version -c\`" != "0" ]
 then
         os="debian"
 fi
-if [ "\$os" == "" ]
+if [ "\$os" = "" ]
 then
         echo "not a valid system os"
         exit 1
 fi
 
-if [ "\$os" == "centos" ]
+if [ "\$os" = "centos" ]
 then
 	# source function library
 	. /etc/rc.d/init.d/functions
@@ -392,10 +392,10 @@ start_ircd()
 	export LD_LIBRARY_PATH=/usr/lib/inspircd
 	
 	# Start based on OS type
-	if [ "\$os" == "centos" ]
+	if [ "\$os" = "centos" ]
 	then 	
 		exec su - \$USER -c "\$IRCD \$IRCDARGS"
-	elif [ "\$os" == "debian" ]
+	elif [ "\$os" = "debian" ]
 	then
 		start-stop-daemon --start --quiet --oknodo --chuid "\$USER" --pidfile "\$IRCDPID" --exec "\$IRCD" --  \$IRCDARGS
 	fi
@@ -405,10 +405,10 @@ stop_ircd()
 {
 
 	# This logic is generated at script built time (if you are wondering about this comparison)
-	if [ "\$os" == "centos" ]
+	if [ "\$os" = "centos" ]
 	then 	
 		killproc \$PROCESSNAME -TERM
-	elif [ "\$os" == "debian" ]
+	elif [ "\$os" = "debian" ]
 	then
 		start-stop-daemon --stop --quiet --pidfile "\$IRCDPID" 
 	fi
@@ -467,10 +467,10 @@ EOF
 
 		chmod +x /etc/init.d/$IRCDUSER-server
 		chown root.root /etc/init.d/$IRCDUSER-server
-		if [ $os == "debian" ]
+		if [ $os = "debian" ]
 		then
 			insserv /etc/init.d/$IRCDUSER-server
-		elif [ $os == "centos" ]
+		elif [ $os = "centos" ]
 		then
 			chkconfig $IRCDUSER-server on
 		else
@@ -517,7 +517,7 @@ then
 		fi
 	fi
 
-	if [[ $REDIS_TASK == *compile* ]]
+	if [[ $REDIS_TASK = *compile* ]]
 	then
 
 		cp $DOWNLOADS/$REDISFILE $HOMEROOT/$REDISUSER/
@@ -532,7 +532,7 @@ then
 		make
 		echo " - Testing"
 		make test
-		if [[ $REDIS_TASK == *install* ]]
+		if [[ $REDIS_TASK = *install* ]]
 		then		
 			echo " - Installing"
 			make install
@@ -541,7 +541,7 @@ then
 
 
 
-	if [[ $REDIS_TASK == *configure* ]]
+	if [[ $REDIS_TASK = *configure* ]]
 	then
 
 	# 
@@ -578,14 +578,14 @@ if [ "\`grep debian /proc/version -c\`" != "0" ]
 then
         os="debian"
 fi
-if [ "\$os" == "" ]
+if [ "\$os" = "" ]
 then
         echo "not a valid system os"
         exit 1
 fi
 
 
-if [ "\$os" == "centos" ]
+if [ "\$os" = "centos" ]
 then
 	# source function library
 	. /etc/rc.d/init.d/functions
@@ -616,7 +616,7 @@ case "\$1" in
 	
 	
 	# Start based on OS type
-	if [ "\$os" == "centos" ]
+	if [ "\$os" = "centos" ]
 	then 	
 		if su - \$USER -c "\$DAEMON \$DAEMON_ARGS" 2> /dev/null
 		then
@@ -626,7 +626,7 @@ case "\$1" in
                         exit 1
                 fi
 
-	elif [ "\$os" == "debian" ]
+	elif [ "\$os" = "debian" ]
 	then	
 		if start-stop-daemon --start --quiet --umask 007 --pidfile \$PIDFILE --chuid $REDISUSER:$GROUP --exec \$DAEMON -- \$DAEMON_ARGS  2> /dev/null
 		then
@@ -640,7 +640,7 @@ case "\$1" in
   stop)
 	echo -n "Stopping \$DESC: "
 
-	if [ "\$os" == "centos" ]
+	if [ "\$os" = "centos" ]
 	then 	
 		if redis-cli shutdown  2> /dev/null
 		then
@@ -649,7 +649,7 @@ case "\$1" in
 			echo " ${cc_red}FAIL${cc_normal}"
 			exit 1
     	fi
-	elif [ "\$os" == "debian" ]
+	elif [ "\$os" = "debian" ]
 	then
 		if redis-cli shutdown  2> /dev/null
 		then		
@@ -678,10 +678,10 @@ EOF
 
 		chmod +x /etc/init.d/$REDISUSER-server
 		chown root.root /etc/init.d/$REDISUSER-server
-		if [ $os == "debian" ]
+		if [ $os = "debian" ]
 		then
 			insserv /etc/init.d/$REDISUSER-server
-		elif [ $os == "centos" ]
+		elif [ $os = "centos" ]
 		then
         		chkconfig $REDISUSER-server on
 		else
@@ -805,7 +805,7 @@ then
 	fi
 
 
-        if [[ $VARNISH_TASK == *compile* ]]
+        if [[ $VARNISH_TASK = *compile* ]]
         then
 		cp $DOWNLOADS/$VARNISHFILE $HOMEROOT/$VARNISHUSER/
 		chown $VARNISHUSER.$GROUP $HOMEROOT/$VARNISHUSER
@@ -819,7 +819,7 @@ then
 		./configure 
 		make
 	
-		if [[ $VARNISH_TASK == *install* ]]
+		if [[ $VARNISH_TASK = *install* ]]
         	then
 			echo " - Installing"
 			make install
@@ -827,7 +827,7 @@ then
 	fi
 
 
-	if [[ $VARNISH_TASK == *configure* ]]
+	if [[ $VARNISH_TASK = *configure* ]]
         then
 
 		echo " - Configuring"
@@ -862,14 +862,14 @@ if [ "\`grep debian /proc/version -c\`" != "0" ]
 then
         os="debian"
 fi
-if [ "\$os" == "" ]
+if [ "\$os" = "" ]
 then
         echo "not a valid system os"
         exit 1
 fi
 
 
-if [ "\$os" == "centos" ]
+if [ "\$os" = "centos" ]
 then
 # source function library
 . /etc/rc.d/init.d/functions
@@ -900,7 +900,7 @@ export PATH="\${PATH:+\$PATH:}/usr/sbin:/usr/bin:/sbin:/bin"
 
 start_varnishd() {
 	# Start based on OS type
-	if [ "\$os" == "centos" ]
+	if [ "\$os" = "centos" ]
 	then 	
 		echo -n "Starting \$DESC" "\$NAME"
 		if su - \$VARNISHUSER -c "\$DAEMON \$DAEMON_ARGS"
@@ -910,7 +910,7 @@ start_varnishd() {
 			echo " ${cc_red}FAIL${cc_normal}"
 			exit 1
 		fi
-	elif [ "\$os" == "debian" ]
+	elif [ "\$os" = "debian" ]
 	then	
 		log_daemon_msg "Starting \$DESC" "\$NAME"
 		if start-stop-daemon --start --quiet --pidfile \${PIDFILE} --exec \${DAEMON} -- \$DAEMON_ARGS > \${output} 2>&1
@@ -931,7 +931,7 @@ disabled_varnishd() {
 
 stop_varnishd() {
 
-	if [ "\$os" == "centos" ]
+	if [ "\$os" = "centos" ]
 	then 	
 		echo -n "Stopping \$DESC" "\$NAME" 
 		if [ ! -z "\$VARNISHPIDN" ] && kill -0 \$VARNISHPIDN 2> /dev/null 
@@ -947,7 +947,7 @@ stop_varnishd() {
 			echo "Error: varnishd is not running."
 			return 1
 		fi
-	elif [ "\$os" == "debian" ]
+	elif [ "\$os" = "debian" ]
 	then
 		log_daemon_msg "Stopping \$DESC" "\$NAME"
 		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
@@ -1004,10 +1004,10 @@ EOF
  		chmod +x /etc/init.d/$VARNISHUSER-server
                 chown root.root /etc/init.d/$VARNISHUSER-server
 
-		if [ $os == "debian" ]
+		if [ $os = "debian" ]
 		then
                         insserv /etc/init.d/$VARNISHUSER-server
-                elif [ $os == "centos" ]
+                elif [ $os = "centos" ]
                 then
                         chkconfig $VARNISHUSER-server on
                 else
@@ -1111,14 +1111,14 @@ if [ "\`grep debian /proc/version -c\`" != "0" ]
 then
         os="debian"
 fi
-if [ "\$os" == "" ]
+if [ "\$os" = "" ]
 then
         echo "not a valid system os"
         exit 1
 fi
 
 
-if [ "\$os" == "centos" ]
+if [ "\$os" = "centos" ]
 then
 # source function library
 . /etc/rc.d/init.d/functions
@@ -1193,10 +1193,10 @@ EOF
 	chmod +x /etc/init.d/$HTTPDUSER-server
 	chown root.root /etc/init.d/$HTTPDUSER-server
 
-		if [ $os == "debian" ]
+		if [ $os = "debian" ]
 		then
 			insserv /etc/init.d/$HTTPDUSER-server
-		elif [ $os == "centos" ]
+		elif [ $os = "centos" ]
 		then
         		chkconfig $HTTPDUSER-server on
 		else
@@ -1345,13 +1345,13 @@ if [ "\`grep debian /proc/version -c\`" != "0" ]
 then
         os="debian"
 fi
-if [ "\$os" == "" ]
+if [ "\$os" = "" ]
 then
         echo "not a valid system os"
         exit 1
 fi
 
-if [ "\$os" == "centos" ]
+if [ "\$os" = "centos" ]
 then
 # source function library
 . /etc/rc.d/init.d/functions
@@ -1424,10 +1424,10 @@ EOF
 
 chmod +x /etc/init.d/$FTPDUSER-server
 chown root.root /etc/init.d/$FTPDUSER-server
-if [ $os == "debian" ]
+if [ $os = "debian" ]
 then
 	insserv /etc/init.d/$FTPDUSER-server
-elif [ $os == "centos" ]
+elif [ $os = "centos" ]
 then
         chkconfig $FTPDUSER-server on
 else
