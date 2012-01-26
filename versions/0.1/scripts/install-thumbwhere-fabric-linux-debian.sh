@@ -13,7 +13,7 @@ set -e
 # Config variables
 #
 
-IRCD_TASK="configure"
+IRCD_TASK="download,compile,install,configure"
 REDIS_TASK="download,compile,install,configure"
 NODEJS_TASK="download,compile,install,configure"
 VARNISH_TASK="download,compile,install,configure"
@@ -410,7 +410,10 @@ stop_ircd()
 		killproc \$PROCESSNAME -TERM
 	elif [ "\$os" = "debian" ]
 	then
-		start-stop-daemon --stop --quiet --pidfile "\$IRCDPID" 
+		start-stop-daemon --stop --quiet --pidfile "\$IRCDPID"
+
+		# and just to be sure the pids are not out of whack 
+		killall -2 \$PROCESSNAME 2> /dev/null
 	fi
 	
 	rm -f "\$IRCDPID"
@@ -875,7 +878,7 @@ then
 . /etc/rc.d/init.d/functions
 fi
 
-NAME=varnishd
+PROCESSNAME=varnishd
 DESC="ThumbWhere HTTP accelerator (Varnish)"
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin/
 DAEMON=/usr/local/sbin/varnishd
@@ -902,7 +905,7 @@ start_varnishd() {
 	# Start based on OS type
 	if [ "\$os" = "centos" ]
 	then 	
-		echo -n "Starting \$DESC" "\$NAME"
+		echo -n "Starting \$DESC" "\$PROCESSNAME"
 		if su - \$VARNISHUSER -c "\$DAEMON \$DAEMON_ARGS"
 		then
                  	echo " ${cc_green}OK${cc_normal}"
@@ -912,7 +915,7 @@ start_varnishd() {
 		fi
 	elif [ "\$os" = "debian" ]
 	then	
-		log_daemon_msg "Starting \$DESC" "\$NAME"
+		log_daemon_msg "Starting \$DESC" "\$PROCESSNAME"
 		if start-stop-daemon --start --quiet --pidfile \${PIDFILE} --exec \${DAEMON} -- \$DAEMON_ARGS > \${output} 2>&1
 		then
 			log_end_msg 0
@@ -924,7 +927,7 @@ start_varnishd() {
 }
 
 disabled_varnishd() {
-    log_daemon_msg "Not starting \$DESC" "\$NAME"
+    log_daemon_msg "Not starting \$DESC" "\$PROCESSNAME"
     log_progress_msg "disabled in /etc/default/varnish"
     log_end_msg 0
 }
@@ -933,7 +936,7 @@ stop_varnishd() {
 
 	if [ "\$os" = "centos" ]
 	then 	
-		echo -n "Stopping \$DESC" "\$NAME" 
+		echo -n "Stopping \$DESC" "\$PROCESSNAME" 
 		if [ ! -z "\$VARNISHPIDN" ] && kill -0 \$VARNISHPIDN 2> /dev/null 
 		then
 			if kill -2 \$VARNISHPIDN >/dev/null 2>&1  2> /dev/null
@@ -949,10 +952,14 @@ stop_varnishd() {
 		fi
 	elif [ "\$os" = "debian" ]
 	then
-		log_daemon_msg "Stopping \$DESC" "\$NAME"
+		log_daemon_msg "Stopping \$DESC" "\$PROCESSNAME"
 		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
 		then		
 			log_end_msg 0
+
+        		# and just to be sure the pids are not out of whack
+        		killall -2 \$PROCESSNAME 2> /dev/null
+
 		else
 			log_end_msg 1
 			exit 1
@@ -963,7 +970,7 @@ stop_varnishd() {
 }
 
 reload_varnishd() {
-    echo "Reloading \$DESC" "\$NAME"
+    echo "Reloading \$DESC" "\$PROCESSNAME"
     if /usr/share/varnish/reload-vcl -q; then
 		echo " ${cc_green}OK${cc_normal}"
     else
@@ -972,7 +979,7 @@ reload_varnishd() {
 }
 
 status_varnishd() {
-    status_of_proc -p "\${PIDFILE}" "\${DAEMON}" "\${NAME}"
+    status_of_proc -p "\${PIDFILE}" "\${DAEMON}" "\${PROCESSNAME}"
 }
 
 case "\$1" in
@@ -1131,6 +1138,7 @@ HTTPDLOG="/var/log/inspircd.log"
 HTTPDCONFIG="$IRCDCONFIG"
 USER="$HTTPDUSER"
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+PROCESSNAME="httpd"
 
 
 if [ ! -x "\$HTTPD" ]; then exit 0; fi
@@ -1148,6 +1156,10 @@ stop_httpd()
 {
 	start-stop-daemon --stop --quiet --pidfile "\$HTTPDPID" --exec "\$HTTPD" -- stop
 	rm -f "\$HTTPDPID"
+
+        # and just to be sure the pids are not out of whack
+        killall -2 \$PROCESSNAME 2> /dev/null
+
 	return 0
 }
 
@@ -1363,7 +1375,7 @@ FTPDLOG="/var/log/ftpd.log"
 FTPDCONFIG="$IRCDCONFIG"
 USER="$FTPDUSER"
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-
+PROCESSNAME="proftpd"
 
 if [ ! -x "\$FTPD" ]; then echo "could not locate \$FTPD - exiting" ; exit 0; fi
 
@@ -1380,6 +1392,10 @@ stop_ftpd()
 {
 	start-stop-daemon --stop --quiet --pidfile "\$FTPDPID"
 	rm -f "\$FTPDPID"
+
+        # and just to be sure the pids are not out of whack
+        killall -2 \$PROCESSNAME 2> /dev/null
+
 	return 0
 }
 
