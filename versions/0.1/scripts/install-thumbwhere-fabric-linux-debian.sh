@@ -13,12 +13,12 @@ set -e
 # Config variables ; Each one can contain the following keywords "download,compile,install,configure"
 #
 
-IRCD_TASK="configure"
-REDIS_TASK="configure"
-NODEJS_TASK="configure"
-VARNISH_TASK="configure"
-HTTPD_TASK="configure"
-FTPD_TASK="configure"
+IRCD_TASK="download,compile,install,configure"
+REDIS_TASK="download,compile,install,configure"
+NODEJS_TASK="download,compile,install,configure"
+VARNISH_TASK="download,compile,install,configure"
+HTTPD_TASK="download,compile,install,configure"
+FTPD_TASK="download,compile,install,configure"
 
 IRCDURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
 REDISURL=http://redis.googlecode.com/files/redis-2.4.6.tar.gz
