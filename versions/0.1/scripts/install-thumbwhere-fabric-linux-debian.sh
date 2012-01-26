@@ -356,6 +356,7 @@ USER="$IRCDUSER"
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 SERVICENAME=$IRCDUSER-service
 PROCESSNAME=$IRCDPROCESS
+DESC="IRC Server"
 
 # Source function library
 . /lib/lsb/init-functions
@@ -434,48 +435,53 @@ start_ircd()
 stop_ircd()
 {
 
-	# This logic is generated at script built time (if you are wondering about this comparison)
-	if [ "\$os" = "centos" ]
-	then 
-		echo  "Stopping \$DESC" "\$PROCESSNAME"
-		killproc \$PROCESSNAME -TERM
+        # Stop based on OS type
+        if [ "\$os" = "centos" ]
+        then
+
+ 		if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+                then
+           		if killall -2 \$PROCESSNAME 2> /dev/null
+			then
+				 echo " ${cc_green}OK${cc_normal}"
+			else
+				 echo " ${cc_red}FAIL${cc_normal}"
+			fi
+                else
+			echo -n " ${cc_red}FAIL${cc_normal}"
+                       	echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
+                fi
+
 	elif [ "\$os" = "debian" ]
-	then
-		#start-stop-daemon --stop --quiet --pidfile "\$PIDFILE"
+        then
 
-		# and just to be sure the pids are not out of whack 
-		#killall -2 \$PROCESSNAME 2> /dev/null
-
-		log_daemon_msg "Stopping \$DESC" "\$PROCESSNAME"
-		
 		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
 		then		
 			echo " ${cc_green}OK${cc_normal}"
-
-        		# and just to be sure the pids are not out of whack
-        		killall -2 \$PROCESSNAME 2> /dev/null
+       			# and just to be sure the pids are not out of whack
+       			killall -2 \$PROCESSNAME 2> /dev/null
 		else
 			echo -n " ${cc_red}FAIL${cc_normal} ("
-
  			if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
-	 		then
-                                echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
-
-                                # and just to be sure the pids are not out of whack
-                                killall -2 \$PROCESSNAME 2> /dev/null
-                        else
+ 			then
+				echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
+                        	# and just to be sure the pids are not out of whack
+                        	killall -2 \$PROCESSNAME 2> /dev/null
+                	else
 				echo -n "${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
 			fi
 
 			echo ")"
 		fi
 
-                # And finally, to ensure there are no issues
-                killall -9 \$PROCESSNAME 2> /dev/null
-
-
 	fi
-	
+
+	# 5 seconds grace
+	sleep 5
+
+        # And finally, to ensure there are no issues
+        killall -9 \$PROCESSNAME 2> /dev/null
+
 	rm -f "\$PIDFILE"
 	return 0
 }
@@ -497,18 +503,19 @@ case "\$1" in
 	#	echo "Please configure inspircd first and edit /etc/default/inspircd, otherwise inspircd won't start"
 	#	exit 0
 	#fi
-	echo "Starting Inspircd... "
+	echo -n "Starting \$DESC (\$PROCESSNAME): "
 	start_ircd
 	;;
   stop)
-	echo "Stopping Inspircd... "
+	echo -n "Stopping \$DESC (\$PROCESSNAME): "
 	stop_ircd
 	;;
   force-reload|reload)
-	echo "Reloading Inspircd... "
+	echo -n "Reloading \$DESC (\$PROCESSNAME): "
 	reload_ircd
 	;;
   restart)
+	echo "Restarting \$DESC (\$PROCESSNAME): "
 	\$0 stop
 	sleep 2s
 	\$0 start
@@ -662,6 +669,7 @@ USER=\$REDISUSER
 PROCESSNAME=redis-server
 DESC=redis-server
 PIDFILE=$REDISPID
+DESC="Redis"
 
 test -x \$DAEMON || exit 0
 
@@ -673,10 +681,7 @@ fi
 
 case "\$1" in
   start)
-	echo -n "Starting \$DESC: "
-	#touch \$PIDFILE
-	#chown $REDISUSER:$GROUP \$PIDFILE
-	
+	echo -n "Starting \$DESC (\$PROCESSNAME): "
 	
 	# Start based on OS type
 	if [ "\$os" = "centos" ]
@@ -701,7 +706,7 @@ case "\$1" in
 	fi
 	;;
   stop)
-	echo -n "Stopping \$DESC: "
+	echo -n "Stopping \$DESC (\$PROCESSNAME): "
 
 	if [ "\$os" = "centos" ]
 	then 	
@@ -727,6 +732,7 @@ case "\$1" in
 	;;
 
   restart|force-reload)
+	echo "Restarting \$DESC (\$PROCESSNAME): "
 	\${0} stop
 	\${0} start
 	;;
@@ -952,7 +958,7 @@ then
 fi
 
 PROCESSNAME=varnishd
-DESC="ThumbWhere HTTP accelerator (Varnish)"
+DESC="Varnish"
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin/
 DAEMON=/usr/local/sbin/varnishd
 PIDFILE=$VARNISHPID
@@ -1009,7 +1015,6 @@ stop_varnishd() {
 
 	if [ "\$os" = "centos" ]
 	then 	
-		echo -n "Stopping \$DESC" "\$PROCESSNAME" 
 		if [ ! -z "\$PIDN" ] && kill -0 \$PIDN 2> /dev/null 
 		then
 			if kill -2 \$PIDN >/dev/null 2>&1  2> /dev/null
@@ -1023,7 +1028,6 @@ stop_varnishd() {
 		fi
 	elif [ "\$os" = "debian" ]
 	then
-		log_daemon_msg "Stopping \$DESC" "\$PROCESSNAME"
 		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
 		then		
 			echo " ${cc_green}OK${cc_normal}"
@@ -1046,10 +1050,14 @@ stop_varnishd() {
 			echo ")"
 		fi
 
-                # And finally, to ensure there are no issues
-                killall -9 \$PROCESSNAME 2> /dev/null
-		#start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE --exec \$DAEMON  2> /dev/null
-	fi	
+	fi
+
+	# 5 seconds grace	
+	sleep 5
+
+        # And finally, to ensure there are no issues
+        killall -9 \$PROCESSNAME 2> /dev/null
+	
 
 	# clean out the pid file anyway...
 	rm -f \$PIDFILE
@@ -1070,18 +1078,22 @@ status_varnishd() {
 
 case "\$1" in
     start)
+	echo -n "Starting \$DESC (\$PROCESSNAME): "
 	start_varnishd
 	;;
     stop)
+	echo -n "Stopping \$DESC (\$PROCESSNAME): "
 	stop_varnishd
 	;;
     reload)
+	echo -n "Reloading \$DESC (\$PROCESSNAME): "
 	reload_varnishd
 	;;
     status)
 	status_varnishd
 	;;
     restart|force-reload)
+	 echo "Restarting \$DESC (\$PROCESSNAME): "
 	\$0 stop
 	\$0 start
 	;;
@@ -1213,6 +1225,7 @@ CONFIG="$HTTPDCONFIG"
 USER="$HTTPDUSER"
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 PROCESSNAME="httpd"
+DESC="apache2"
 
 # Determine OS
 os=""
@@ -1315,18 +1328,19 @@ reload_httpd()
 
 case "\$1" in
   start)
-	echo -n "Starting Apache2... "
+	echo -n "Starting \$DESC (\$PROCESSNAME): "
 	start_httpd
 	;;
   stop)
-	echo -n "Stopping Apache2... "
+	echo -n "Stopping \$DESC (\$PROCESSNAME): "
 	stop_httpd
 	;;
   force-reload|reload)
-	echo -n "Reloading Apache2 config "
+	echo -n "Reloading \$DESC (\$PROCESSNAME): "
 	reload_httpd 
 	;;
   restart)
+	echo "Restarting \$DESC (\$PROCESSNAME): "
 	\$0 stop
 	sleep 2s
 	\$0 start
@@ -1442,7 +1456,7 @@ then
 
 	if [ "`id -un $FTPDUSER`" != "$FTPDUSER" ]
 	then
-		 echo " - Adding user $FTPDUSER"
+		echo " - Adding user $FTPDUSER"
 		useradd $FTPDUSER -m -g $GROUP
 	else
 		if [ -f /etc/init.d/$FTPDUSER-server ]
@@ -1512,6 +1526,7 @@ FTPDCONFIG="$FTPDCONFIG"
 USER="$FTPDUSER"
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 PROCESSNAME="proftpd"
+DESC="FTP Server"
 
 # Determine OS
 os=""
@@ -1548,7 +1563,7 @@ start_ftpd()
 	# Start based on OS type
 	if [ "\$os" = "centos" ]
 	then 	
-		if su - \$USER -c "\$DAEMON \$ARGS"
+		if \$DAEMON
  		then
                         echo " ${cc_green}OK${cc_normal}"
                 else
@@ -1567,8 +1582,6 @@ start_ftpd()
 
                         exit 1
                 fi
-
-
 	elif [ "\$os" = "debian" ]
 	then
 		if  start-stop-daemon --start --quiet --oknodo --pidfile "\$PIDFILE" --exec "\$DAEMON" 
@@ -1588,7 +1601,19 @@ stop_ftpd()
 	# Stop  based on OS
 	if [ "\$os" = "centos" ]
 	then 
-		killproc \$PROCESSNAME -TERM
+             	if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+                then
+                        if killall -2 \$PROCESSNAME 2> /dev/null
+                        then
+                                 echo " ${cc_green}OK${cc_normal}"
+                        else
+                                 echo " ${cc_red}FAIL${cc_normal}"
+                        fi
+                else
+                        echo -n " ${cc_red}FAIL${cc_normal}"
+                        echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
+                fi
+
 	elif [ "\$os" = "debian" ]
 	then
 		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
@@ -1613,10 +1638,13 @@ stop_ftpd()
 			echo ")"
 		fi
 
-                # And finally, to ensure there are no issues
-                killall -9 \$PROCESSNAME 2> /dev/null
-
 	fi
+
+	# 5 seconds grace
+	sleep 5
+
+        # And finally, to ensure there are no issues
+        killall -9 \$PROCESSNAME 2> /dev/null
 
 	rm -f "\$PIDFILE"
 	return 0
@@ -1635,18 +1663,19 @@ reload_ftpd()
 
 case "\$1" in
   start)
-	echo -n "Starting ftpd... "
+	echo -n "Starting \$DESC (\$PROCESSNAME): "
 	start_ftpd
 	;;
   stop)
-	echo -n "Stopping ftpd... "
+	echo -n "Stopping \$DESC (\$PROCESSNAME): "
 	stop_ftpd 
 	;;
   force-reload|reload)
-	echo -n "Reloading ftpd config "
+	echo -n "Reloading \$DESC (\$PROCESSNAME): "
 	reload_ftpd 
 	;;
   restart)
+	echo "Restarting \$DESC (\$PROCESSNAME): "
 	\$0 stop
 	sleep 2s
 	\$0 start
@@ -1661,16 +1690,17 @@ case "\$1" in
 esac
 EOF
 
-chmod +x /etc/init.d/$FTPDUSER-server
-chown root.root /etc/init.d/$FTPDUSER-server
+chmod +x /etc/init.d/$FTPDUSER-server 2> /dev/null
+chown root.root /etc/init.d/$FTPDUSER-server 2> /dev/null
+
 if [ $os = "debian" ]
 then
-	insserv /etc/init.d/$FTPDUSER-server
+	insserv /etc/init.d/$FTPDUSER-server 2> /dev/null
 elif [ $os = "centos" ]
 then
-        chkconfig $FTPDUSER-server on
+        chkconfig $FTPDUSER-server on 2> /dev/null
 else
-	ln -fs /etc/init.d/$FTPDUSER-server /etc/rc2.d/S19$FTPDUSER-server
+	ln -fs /etc/init.d/$FTPDUSER-server /etc/rc2.d/S19$FTPDUSER-server 2> /dev/null
 fi
 	# ---- INSTALL CONTROL SCRIPTS -- END ----
 
@@ -1697,7 +1727,7 @@ EOF
 	# ---- INSTALL CONFIG -- END --
 
 	echo " - Setting permissions"
-	chown -R $FTPDUSER.$GROUP $HOMEROOT/$FTPDUSER/
+	chown -R $FTPDUSER.$GROUP $HOMEROOT/$FTPDUSER/ 2> /dev/null
 
         echo " - Starting service"
         /etc/init.d/$FTPDUSER-server start
