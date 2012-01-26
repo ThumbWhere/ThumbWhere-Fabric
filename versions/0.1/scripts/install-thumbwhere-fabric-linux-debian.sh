@@ -13,7 +13,7 @@ set -e
 # Config variables
 #
 
-IRCD_TASK="download,compile,install,configure"
+IRCD_TASK="configure"
 REDIS_TASK="download,compile,install,configure"
 NODEJS_TASK="download,compile,install,configure"
 VARNISH_TASK="download,compile,install,configure"
