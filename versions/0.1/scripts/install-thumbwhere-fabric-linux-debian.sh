@@ -115,14 +115,19 @@ then
 	os="centos"
 fi
 
+if [ "`grep \"Red Hat\" /proc/version -c`" != "0" ] 
+then
+	os="centos"
+fi
+
 if [ "`grep debian /proc/version -c`" != "0" ] 
 then
 	os="debian"
 fi
 
-if [ $os = "" ] 
+if [ "$os" = "" ] 
 then
-	echo "not a valid system os"
+	echo "Unable to determine os from `cat /proc/version -c`"
 	exit 1
 fi
 
@@ -361,21 +366,7 @@ DESC="IRC Server"
 # Source function library
 . /lib/lsb/init-functions
 
-# Determine os
-os=""
-if [ "\`grep centos /proc/version -c\`" != "0" ]
-then
-        os="centos"
-fi
-if [ "\`grep debian /proc/version -c\`" != "0" ]
-then
-        os="debian"
-fi
-if [ "\$os" = "" ]
-then
-        echo "not a valid system os"
-        exit 1
-fi
+os="$os"
 
 if [ "\$os" = "centos" ]
 then
@@ -600,8 +591,11 @@ then
 		echo " - Building"
 		cd $REDISFOLDER
 		make
-		echo " - Testing"
-		make test
+		if [[ $REDIS_TASK = *test* ]]
+        	then
+			echo " - Testing"
+			make test
+		fi
 		if [[ $REDIS_TASK = *install* ]]
 		then		
 			echo " - Installing"
@@ -639,21 +633,7 @@ then
 # Source function library
 . /lib/lsb/init-functions
 
-os=""
-if [ "\`grep centos /proc/version -c\`" != "0" ]
-then
-        os="centos"
-fi
-if [ "\`grep debian /proc/version -c\`" != "0" ]
-then
-        os="debian"
-fi
-if [ "\$os" = "" ]
-then
-        echo "not a valid system os"
-        exit 1
-fi
-
+os="$os"
 
 if [ "\$os" = "centos" ]
 then
@@ -935,21 +915,7 @@ then
 # Source function library
 . /lib/lsb/init-functions
 
-os=""
-if [ "\`grep centos /proc/version -c\`" != "0" ]
-then
-        os="centos"
-fi
-if [ "\`grep debian /proc/version -c\`" != "0" ]
-then
-        os="debian"
-fi
-if [ "\$os" = "" ]
-then
-        echo "not a valid system os"
-        exit 1
-fi
-
+os="$os"
 
 if [ "\$os" = "centos" ]
 then
@@ -1227,21 +1193,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 PROCESSNAME="httpd"
 DESC="apache2"
 
-# Determine OS
-os=""
-if [ "\`grep centos /proc/version -c\`" != "0" ]
-then
-        os="centos"
-fi
-if [ "\`grep debian /proc/version -c\`" != "0" ]
-then
-        os="debian"
-fi
-if [ "\$os" = "" ]
-then
-        echo "not a valid system os"
-        exit 1
-fi
+os="$os"
 
 if [ "\$os" = "centos" ]
 then
@@ -1528,21 +1480,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 PROCESSNAME="proftpd"
 DESC="FTP Server"
 
-# Determine OS
-os=""
-if [ "\`grep centos /proc/version -c\`" != "0" ]
-then
-        os="centos"
-fi
-if [ "\`grep debian /proc/version -c\`" != "0" ]
-then
-        os="debian"
-fi
-if [ "\$os" = "" ]
-then
-        echo "not a valid system os"
-        exit 1
-fi
+os="$os"
 
 if [ "\$os" = "centos" ]
 then
