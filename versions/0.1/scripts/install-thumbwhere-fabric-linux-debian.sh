@@ -81,7 +81,7 @@ VARNISHPID=$HOMEROOT/$VARNISHUSER/varnish.pid
 NGINXROOT=$HOMEROOT/$NGINXUSER/nginx
 NGINXCONFIG=$HOMEROOT/$NGINXUSER/nginx.conf
 NGINXPROCESS=nginx
-NGINXPID=$HOMEROOT/$NGINXUSER/nginx.pid
+NGINXPID=$HOMEROOT/$NGINXUSER/nginx/nginx.pid
 
 HTTPDROOT=$HOMEROOT/$HTTPDUSER/apache2
 HTTPDCONFIG=$HTTPDROOT/conf/httpd.conf
@@ -1390,7 +1390,7 @@ EOF
 
 cat > $NGINXCONFIG << EOF
 
-#user  nobody;
+user  $NGINXUSER;
 worker_processes  1;
 
 #error_log  logs/error.log;
