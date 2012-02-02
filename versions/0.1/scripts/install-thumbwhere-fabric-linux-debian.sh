@@ -18,7 +18,7 @@ IRCD_TASK=""
 REDIS_TASK=""
 NODEJS_TASK=""
 VARNISH_TASK=""
-NGINX_TASK="download,compile,install,configure,enable"
+NGINX_TASK="configure,inctall,enable"
 HTTPD_TASK=""
 FTPD_TASK=""
 
@@ -78,6 +78,7 @@ VARNISHCONFIG=$HOMEROOT/$VARNISHUSER/thumbwhere.vcl
 VARNISHPROCESS=varnishd
 VARNISHPID=$HOMEROOT/$VARNISHUSER/varnish.pid
 
+NGINXROOT=$HOMEROOT/$NGINXUSER/nginx
 NGINXCONFIG=$HOMEROOT/$NGINXUSER/nginx.conf
 NGINXPROCESS=nginx
 NGINXPID=$HOMEROOT/$NGINXUSER/nginx.pid
@@ -1175,7 +1176,7 @@ then
 		tar -xzf $NGINXFILE
 		echo " - Building"
 		cd $NGINXFOLDER
-		./configure 
+		./configure --prefix=$NGINXROOT
 		make
 	
 		if [[ $NGINX_TASK = *install* ]]
@@ -1221,9 +1222,9 @@ then
 fi
 
 PROCESSNAME=$NGINXPROCESS
-DESC="Varnish"
+DESC="Nginx"
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin/
-DAEMON=/usr/local/sbin/$NGINXPROCESS
+DAEMON=$NGINXROOT/sbin/$NGINXPROCESS
 PIDFILE=$NGINXPID
 
 test -x \$DAEMON || echo "Could not locate \$DAEMON" exit 0
@@ -1234,7 +1235,7 @@ ulimit -n \${NFILES:-131072}
 # Maxiumum locked memory size for shared memory log
 ulimit -l \${MEMLOCK:-82000}
 
-DAEMON_ARGS="-f $NGINXCONFIG -P \$PIDFILE"
+DAEMON_ARGS=""
 
 if [ -f "\$PIDFILE" ]; then
 	PIDN="\`cat \"\$PIDFILE\" 2> /dev/null\`"
