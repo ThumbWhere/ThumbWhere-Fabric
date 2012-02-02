@@ -16,7 +16,8 @@ set -e
 IRCD_TASK="download,compile,install,configure"
 REDIS_TASK="download,compile,install,configure"
 NODEJS_TASK="download,compile,install,configure"
-VARNISH_TASK="download,compile,install,configure"
+VARNISH_TASK=""
+NGINX_TASK="download,compile,install,configure"
 HTTPD_TASK="download,compile,install,configure"
 FTPD_TASK="download,compile,install,configure"
 
@@ -24,8 +25,11 @@ IRCDURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/Ins
 REDISURL=http://redis.googlecode.com/files/redis-2.4.6.tar.gz
 NODEJSURL=http://nodejs.org/dist/v0.6.8/node-v0.6.8.tar.gz
 VARNISHURL=http://repo.varnish-cache.org/source/varnish-3.0.2.tar.gz
+NGINXURL=http://nginx.org/download/nginx-1.0.11.tar.gz
 HTTPDURL=http://apache.mirror.aussiehq.net.au//httpd/httpd-2.2.21.tar.gz
 FTPDURL=ftp://ftp.proftpd.org/distrib/source/proftpd-1.3.4a.tar.gz
+
+
 
 ###############################################################################
 #
@@ -40,6 +44,7 @@ IRCDUSER=tw-ircd
 REDISUSER=tw-redis
 NODEJSUSER=tw-nodejs
 VARNISHUSER=tw-varnish
+NGINXUSER=tw-nginx
 HTTPDUSER=tw-httpd
 FTPDUSER=tw-ftpd
 
@@ -47,6 +52,7 @@ IRCDFILE=`echo $IRCDURL | rev | cut -d\/ -f1 | rev`
 REDISFILE=`echo $REDISURL | rev | cut -d\/ -f1 | rev`
 NODEJSFILE=`echo $NODEJSURL | rev | cut -d\/ -f1 | rev`
 VARNISHFILE=`echo $VARNISHURL | rev | cut -d\/ -f1 | rev`
+NGINXFILE=`echo $NGINXURL | rev | cut -d\/ -f1 | rev`
 HTTPDFILE=`echo $HTTPDURL | rev | cut -d\/ -f1 | rev`
 FTPDFILE=`echo $FTPDURL | rev | cut -d\/ -f1 | rev`
 
@@ -54,6 +60,7 @@ IRCDFOLDER=`echo $IRCDFILE | rev | cut -d\. -f3- | rev`
 REDISFOLDER=`echo $REDISFILE | rev | cut -d\. -f3- | rev`
 NODEJSFOLDER=`echo $NODEJSFILE | rev | cut -d\. -f3- | rev`
 VARNISHFOLDER=`echo $VARNISHFILE | rev | cut -d\. -f3- | rev`
+NGINXFOLDER=`echo $NGINXFILE | rev | cut -d\. -f3- | rev`
 HTTPDFOLDER=`echo $HTTPDFILE | rev | cut -d\. -f3- | rev`
 FTPDFOLDER=`echo $FTPDFILE | rev | cut -d\. -f3- | rev`
 
@@ -69,6 +76,10 @@ REDISPROCESS=redis
 VARNISHCONFIG=$HOMEROOT/$VARNISHUSER/thumbwhere.vcl
 VARNISHPROCESS=varnishd
 VARNISHPID=$HOMEROOT/$VARNISHUSER/varnish.pid
+
+NGINXCONFIG=$HOMEROOT/$NGINXUSER/nginx.conf
+NGINXPROCESS=nginx
+NGINXPID=$HOMEROOT/$NGINXUSER/nginx.pid
 
 HTTPDROOT=$HOMEROOT/$HTTPDUSER/apache2
 HTTPDCONFIG=$HTTPDROOT/conf/httpd.conf
@@ -175,6 +186,15 @@ then
 else
         echo " - ${cc_yellow}Skipping $VARNISHFILE${cc_normal}"
 fi
+
+
+if [[ $NGINX_TASK = *download* ]] 
+then
+	[ -f $NGINXFILE ] && echo " - $NGINXFILE exists" || wget $NGINXURL
+else
+        echo " - ${cc_yellow}Skipping $NGINXFILE${cc_normal}"
+fi
+
 
 if [[ $HTTPD_TASK = *download* ]] 
 then
@@ -1108,6 +1128,282 @@ EOF
 
 	echo " - Starting service"
 	/etc/init.d/$VARNISHUSER-server start
+
+fi
+
+
+
+###############################################################################
+#
+# Install NGINX
+#
+
+if [ "$NGINX_TASK" != "" ]
+then
+	echo "*** ${cc_cyan}Installing NGINX ($NGINXFOLDER)${cc_normal}"
+
+	if [ "`id -un $NGINXUSER`" != "$NGINXUSER" ]
+	then
+		echo " - Adding user $NGINXUSER"
+		useradd $NGINXUSER -m -g $GROUP
+	else
+
+		if [ -f /etc/init.d/$NGINXUSER-server ]
+		then
+			echo " - Stopping service"
+			/etc/init.d/$NGINXUSER-server stop
+		else
+			echo " - Killing service (control script not found at /etc/init.d/$NGINXUSER-server)"
+			for i in `ps ax | grep $NGINXPROCESS | grep -v grep | cut -d ' ' -f 1`
+			do
+				kill -2 $i
+			done
+
+		fi
+	fi
+
+
+        if [[ $NGINX_TASK = *compile* ]]
+        then
+		cp $DOWNLOADS/$NGINXFILE $HOMEROOT/$NGINXUSER/
+		chown $NGINXUSER.$GROUP $HOMEROOT/$NGINXUSER
+		cd  $HOMEROOT/$NGINXUSER
+		echo " - Deleting old instance"
+		rm -rf $NGINXFOLDER
+		echo " - Uncompressing"
+		tar -xzf $NGINXFILE
+		echo " - Building"
+		cd $NGINXFOLDER
+		./configure 
+		make
+	
+		if [[ $NGINX_TASK = *install* ]]
+        	then
+			echo " - Installing"
+			make install
+		fi
+	fi
+
+
+	if [[ $NGINX_TASK = *configure* ]]
+        then
+
+		echo " - Configuring"
+
+# ---- NGINX CONTROL SCRIPT -- START ----
+
+		cat > /etc/init.d/$NGINXUSER-server << EOF
+#! /bin/sh
+
+### BEGIN INIT INFO
+# Provides:	  $NGINXUSER-server
+# Required-Start:    \$local_fs \$remote_fs \$network
+# Required-Stop:     \$local_fs \$remote_fs \$network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start HTTP accelerator
+# Description:       This script provides a server-side cache
+#		    to be run in front of a httpd and should
+#		    listen on port 80 on a properly configured
+#		    system
+### END INIT INFO
+
+# Source function library
+. /lib/lsb/init-functions
+
+os="$os"
+
+if [ "\$os" = "centos" ]
+then
+# source function library
+. /etc/rc.d/init.d/functions
+fi
+
+PROCESSNAME=$NGINXPROCESS
+DESC="Varnish"
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin/
+DAEMON=/usr/local/sbin/$NGINXPROCESS
+PIDFILE=$NGINXPID
+
+test -x \$DAEMON || echo "Could not locate \$DAEMON" exit 0
+
+# Open files (usually 1024, which is way too small for nginx)
+ulimit -n \${NFILES:-131072}
+
+# Maxiumum locked memory size for shared memory log
+ulimit -l \${MEMLOCK:-82000}
+
+DAEMON_ARGS="-f $NGINXCONFIG -P \$PIDFILE"
+
+if [ -f "\$PIDFILE" ]; then
+	PIDN="\`cat \"\$PIDFILE\" 2> /dev/null\`"
+fi
+
+# Ensure we have a PATH
+export PATH="\${PATH:+\$PATH:}/usr/sbin:/usr/bin:/sbin:/bin"
+
+start_nginxd() {
+	# Start based on OS type
+	if [ "\$os" = "centos" ]
+	then 	
+		echo -n "Starting \$DESC" "\$PROCESSNAME"
+		if su - \$NGINXUSER -c "\$DAEMON \$DAEMON_ARGS"
+		then
+                 	echo " ${cc_green}OK${cc_normal}"
+		else
+			echo " ${cc_red}FAIL${cc_normal}"
+			exit 1
+		fi
+	elif [ "\$os" = "debian" ]
+	then	
+		log_daemon_msg "Starting \$DESC" "\$PROCESSNAME"
+		if start-stop-daemon --start --quiet --pidfile \${PIDFILE} --exec \${DAEMON} -- \$DAEMON_ARGS
+		then
+			echo " ${cc_green}OK${cc_normal}"
+		else
+			echo " ${cc_red}FAIL${cc_normal} (is it already running?)"
+			exit 1
+		fi
+	fi
+}
+
+disabled_nginxd() {
+    log_daemon_msg "Not starting \$DESC" "\$PROCESSNAME"
+    log_progress_msg "disabled in /etc/default/nginx"
+    log_end_msg 0
+}
+
+stop_nginxd() {
+
+	if [ "\$os" = "centos" ]
+	then 	
+		if [ ! -z "\$PIDN" ] && kill -0 \$PIDN 2> /dev/null 
+		then
+			if kill -2 \$PIDN >/dev/null 2>&1  2> /dev/null
+			then
+				echo " ${cc_green}OK${cc_normal}"
+			else
+				echo " ${cc_red}FAIL${cc_normal}"
+			fi
+		else
+			echo " ${cc_red}FAIL${cc_normal} ($NGINXPROCESS is not running)"
+		fi
+	elif [ "\$os" = "debian" ]
+	then
+		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
+		then		
+			echo " ${cc_green}OK${cc_normal}"
+
+        		# and just to be sure the pids are not out of whack
+        		killall -2 \$PROCESSNAME 2> /dev/null
+		else
+			echo -n " ${cc_red}FAIL${cc_normal} ("
+
+ 			if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+	 		then
+                                echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
+
+                                # and just to be sure the pids are not out of whack
+                                killall -2 \$PROCESSNAME 2> /dev/null
+                        else
+				echo -n "${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
+			fi
+
+			echo ")"
+		fi
+
+	fi
+
+	# 5 seconds grace	
+	sleep 5
+
+        # And finally, to ensure there are no issues
+        killall -9 \$PROCESSNAME 2> /dev/null
+	
+
+	# clean out the pid file anyway...
+	rm -f \$PIDFILE
+}
+
+reload_nginxd() {
+    echo "Reloading \$DESC" "\$PROCESSNAME"
+    if /usr/share/nginx/reload-vcl -q; then
+		echo " ${cc_green}OK${cc_normal}"
+    else
+		echo " ${cc_red}FAIL${cc_normal}"
+    fi
+}
+
+status_nginxd() {
+    status_of_proc -p "\${PIDFILE}" "\${DAEMON}" "\${PROCESSNAME}"
+}
+
+case "\$1" in
+    start)
+	echo -n "Starting \$DESC (\$PROCESSNAME): "
+	start_nginxd
+	;;
+    stop)
+	echo -n "Stopping \$DESC (\$PROCESSNAME): "
+	stop_nginxd
+	;;
+    reload)
+	echo -n "Reloading \$DESC (\$PROCESSNAME): "
+	reload_nginxd
+	;;
+    status)
+	status_nginxd
+	;;
+    restart|force-reload)
+	 echo "Restarting \$DESC (\$PROCESSNAME): "
+	\$0 stop
+	\$0 start
+	;;
+    *)
+	echo  "Usage: \$0 {start|stop|restart|force-reload}"
+	exit 1
+	;;
+esac
+
+exit 0
+EOF
+
+ 		chmod +x /etc/init.d/$NGINXUSER-server
+                chown root.root /etc/init.d/$NGINXUSER-server
+
+		if [ $os = "debian" ]
+		then
+                        insserv /etc/init.d/$NGINXUSER-server
+                elif [ $os = "centos" ]
+                then
+                        chkconfig $NGINXUSER-server on
+                else
+                	ln -fs /etc/init.d/$NGINXUSER-server /etc/rc2.d/S19$NGINXUSER-server
+		fi
+
+
+# ---- NGINX CONTROL SCRIPT -- END ----
+
+# ---- NGINX CONFIG -- START ----
+
+cat > $NGINXCONFIG << EOF
+backend default {
+	.host = "0.0.0.0";
+	.port = "80";
+}
+EOF
+
+# ---- NGINX CONFIG -- END ----
+
+	fi
+
+# ---- NGINX CONTROL SCRIPT -- END ----
+
+	echo " - Setting permissions"
+	chown -R $NGINXUSER.$GROUP $HOMEROOT/$NGINXUSER/
+
+	echo " - Starting service"
+	/etc/init.d/$NGINXUSER-server start
 
 fi
 
