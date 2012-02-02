@@ -10,16 +10,17 @@ set -e
 
 ###############################################################################
 #
-# Config variables ; Each one can contain the following keywords "download,compile,install,configure"
+# Config variables ; Each one can contain the following keywords "download,compile,install,configure,enable"
+# If enable is not part of the string, then the service is deemed to be 'disabled'
 #
 
-IRCD_TASK="download,compile,install,configure"
-REDIS_TASK="download,compile,install,configure"
-NODEJS_TASK="download,compile,install,configure"
+IRCD_TASK=""
+REDIS_TASK=""
+NODEJS_TASK=""
 VARNISH_TASK=""
-NGINX_TASK="download,compile,install,configure"
-HTTPD_TASK="download,compile,install,configure"
-FTPD_TASK="download,compile,install,configure"
+NGINX_TASK="download,compile,install,configure,enable"
+HTTPD_TASK=""
+FTPD_TASK=""
 
 IRCDURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
 REDISURL=http://redis.googlecode.com/files/redis-2.4.6.tar.gz
