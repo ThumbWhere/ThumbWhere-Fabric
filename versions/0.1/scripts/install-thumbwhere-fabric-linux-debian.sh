@@ -18,7 +18,7 @@ IRCD_TASK="disable"
 REDIS_TASK="disable"
 NODEJS_TASK="disable"
 VARNISH_TASK="disable"
-NGINX_TASK="download,compile,install,configure,enable"
+NGINX_TASK="disable"
 HTTPD_TASK="disable"
 FTPD_TASK="disable"
 
@@ -29,8 +29,6 @@ VARNISHURL=http://repo.varnish-cache.org/source/varnish-3.0.2.tar.gz
 NGINXURL=http://nginx.org/download/nginx-1.0.11.tar.gz
 HTTPDURL=http://apache.mirror.aussiehq.net.au//httpd/httpd-2.2.21.tar.gz
 FTPDURL=ftp://ftp.proftpd.org/distrib/source/proftpd-1.3.4a.tar.gz
-
-
 
 ###############################################################################
 #
@@ -112,9 +110,90 @@ cc_white="${esc}[1;37m"
 cc_purple="${esc}[0;35m"
 cc_lgray="${esc}[0;37m"
 cc_dgray="${esc}[1;30m"
-
-
 cc_normal=`echo -en "${esc}[m\017"`
+
+#
+# Functions for things we do a lot of..
+#
+
+
+#
+# We run this at the beginning of an install to create the user if it does not exist, and if it does, stop the server if it is running.
+# We assume that no user == no server.
+#
+
+create_user()
+{
+	p_user = $1
+	p_process = $2
+
+	if [ "`id -un $p_user`" != "${p_user}" ]
+	then
+		echo " - Adding user ${p_user}"
+		useradd ${p_user} -m -g $GROUP
+	else
+
+		if [ -f /etc/init.d/${p_user}-server ]
+		then
+			echo " - Stopping service"
+			/etc/init.d/$p_user-server stop
+		else
+			echo " - Killing service (control script not found at /etc/init.d/${p_user}-server)"
+			for i in `ps ax | grep ${p_process} | grep -v grep | cut -d ' ' -f 1`
+			do
+				kill -2 $i
+			done
+		fi
+	fi
+}
+
+
+#
+# We run this at the end where we enable the service or disable it if we don't pass in the 'enabled' flag.
+#
+
+enable_disable()
+{
+	p_user = $1
+	p_task = $2
+
+	# If we are configured and ready to run..
+	if [ -f /etc/init.d/$p_user-server ]
+	then
+		if [[ $p_task = *enable* ]]
+		then
+			# If we are enabling...
+			echo " - Enabling service."
+			if [ $os = "debian" ]
+			then
+				insserv /etc/init.d/$p_user-server 2> /dev/null
+			elif [ $os = "centos" ]
+			then
+				chkconfig $p_user-server on 2> /dev/null
+			else
+				ln -fs /etc/init.d/$p_user-server /etc/rc2.d/S19$p_user-server 2> /dev/null
+			fi
+			
+			echo " - Starting service."
+			/etc/init.d/$p_user-server start		
+		else
+			echo " - Disabling service."
+		
+			# .. we disable..
+			if [ $os = "debian" ]
+			then
+				insserv -r /etc/init.d/$p_user-server 2> /dev/null
+			elif [ $os = "centos" ]
+			then
+				chkconfig $p_user-server off 2> /dev/null
+			else
+				rm -r /etc/rc2.d/S19$p_user-server 2> /dev/null
+			fi	
+		fi
+	else
+		echo " - Service is not configured."
+	fi
+}
 
 
 #
@@ -234,7 +313,7 @@ then
 			/etc/init.d/$IRCDUSER-server stop
 		else
 		 	echo " - Killing service (control script not found at /etc/init.d/$IRCDUSER-server)"
-			for i in `ps ax | grep inspircd | grep -v grep | cut -d ' ' -f 1`
+			for i in `ps ax | grep $IRCDPROCESS | grep -v grep | cut -d ' ' -f 1`
 			do
   				kill -2 $i
 			done
@@ -270,6 +349,7 @@ then
 	if [[ $IRCD_TASK = *configure* ]]
 	then
 		# ---- IRCD CONFIG -- START ----	
+		
 		cat > $IRCDCONFIG << EOF
 <config format="xml">
 <define name="bindip" value="0.0.0.0">
@@ -350,11 +430,10 @@ EOF
 		cat > $IRCDCONFIG.motd << EOF
 This is the MOTD
 EOF
+		# ---- IRCD CONFIG -- END ----
 
-# ---- IRCD CONFIG -- END ----
 
-
-# ---- IRCD CONTROL SCRIPT -- START --
+		# ---- IRCD CONTROL SCRIPT -- START --
 
 		cat > /etc/init.d/$IRCDUSER-server << EOF
 #!/bin/sh
@@ -539,45 +618,18 @@ case "\$1" in
 	exit 1
 esac
 EOF
-
-		#
-		# .. the rest of the configure scripts
-		#
+		# ---- IRCD CONTROL SCRIPT --- END ---
 		
 		chmod +x /etc/init.d/$IRCDUSER-server
 		chown root.root /etc/init.d/$IRCDUSER-server
 		
-		if [[ $IRCD_TASK = *enable* ]]
-		then
-			if [ $os = "debian" ]
-			then
-				insserv /etc/init.d/$IRCDUSER-server
-			elif [ $os = "centos" ]
-			then
-				chkconfig $IRCDUSER-server on
-			else
-				ln -fs /etc/init.d/$IRCDUSER-server /etc/rc2.d/S19$IRCDUSER-server
-			fi
-		else
-			if [ $os = "debian" ]
-			then
-				insserv -r /etc/init.d/$IRCDUSER-server
-			elif [ $os = "centos" ]
-			then
-				chkconfig $IRCDUSER-server off
-			else
-				rm -f /etc/rc2.d/S19$IRCDUSER-server
-			fi			
-		fi	
 	fi
-
-# ---- IRCD CONTROL SCRIPT --- END ---
 
 	echo " - Setting permissions"
 	chown -R $IRCDUSER.$GROUP $HOMEROOT/$IRCDUSER/
-
-	echo " - Starting service"
-	/etc/init.d/$IRCDUSER-server start
+	
+	# Enable or disable...
+	enable_disable $IRCDUSER,$IRCD_TASK
 
 fi
 
@@ -590,6 +642,7 @@ fi
 if [ "$REDIS_TASK" != "" ]
 then
 	echo "*** ${cc_cyan}Installing REDIS ($REDISFILE)${cc_normal}"
+
 	if [ "`id -un $REDISUSER`" != "$REDISUSER" ]
 	then
 		 echo " - Adding user $REDISUSER"
@@ -601,7 +654,7 @@ then
 			/etc/init.d/$REDISUSER-server stop
 		else
 			echo " - Killing service (control script not found at /etc/init.d/$REDISUSER-server)"
-			for i in `ps ax | grep redis-server | grep -v grep | cut -d ' ' -f 1`
+			for i in `ps ax | grep $REDISPROCESS | grep -v grep | cut -d ' ' -f 1`
 			do
 				kill -2 $i
 			done
@@ -759,36 +812,12 @@ EOF
 		chmod +x /etc/init.d/$REDISUSER-server
 		chown root.root /etc/init.d/$REDISUSER-server
 		
-		if [[ $$REDIS_TASK = *enable* ]]
-		then
-			if [ $os = "debian" ]
-			then
-				insserv /etc/init.d/$REDISUSER-server
-			elif [ $os = "centos" ]
-			then
-					chkconfig $REDISUSER-server on
-			else		
-				ln -fs /etc/init.d/$REDISUSER-server /etc/rc2.d/S19$REDISUSER-server 
-			fi
-		else
-			if [ $os = "debian" ]
-			then
-				insserv -r /etc/init.d/$REDISUSER-server
-			elif [ $os = "centos" ]
-			then
-				chkconfig $REDISUSER-server off
-			else		
-				rm -f /etc/rc2.d/S19$REDISUSER-server 
-			fi			
-		fi
-
-# ---- REDIS CONTROL SCRIPT -- END ----
+		# ---- REDIS CONTROL SCRIPT -- END ----
 
 
+		# ---- REDIS CONFIG -- START ----
 
-# ---- REDIS CONFIG -- START ----
-
-	cat > $REDISCONFIG << EOF
+		cat > $REDISCONFIG << EOF
 daemonize yes
 pidfile  $REDISPID
 port 6379
@@ -816,20 +845,15 @@ glueoutputbuf yes
 #shareobjects no
 #shareobjectspoolsize 1024
 EOF
-# ---- REDIS CONFIG -- END ----
-
-	echo " - Setting permissions"
-
-	chown -R $REDISUSER.$GROUP $HOMEROOT/$REDISUSER/
-
-	#
-	# Finished configuring
-	#
-
+		# ---- REDIS CONFIG -- END ----
  	fi
 
-	echo " - Starting service"
-	/etc/init.d/$REDISUSER-server start
+	echo " - Setting permissions"
+	chown -R $REDISUSER.$GROUP $HOMEROOT/$REDISUSER/
+	
+	# Enable or disable...
+	enable_disable $REDISUSER,$REDIS_TASK
+
 fi
 
 ###############################################################################
@@ -849,8 +873,6 @@ then
 
 	if [[ $NODEJS_TASK = *compile* ]]
 	then
-	
-
 		cp $DOWNLOADS/$NODEJSFILE $HOMEROOT/$NODEJSUSER/
 		chown $NODEJSUSER.$GROUP $HOMEROOT/$NODEJSUSER
 		cd  $HOMEROOT/$NODEJSUSER
@@ -1117,53 +1139,27 @@ EOF
 
  		chmod +x /etc/init.d/$VARNISHUSER-server
 		chown root.root /etc/init.d/$VARNISHUSER-server
-		
-		if [[ $VARNISH_TASK = *enable* ]]
-		then
-			if [ $os = "debian" ]
-			then
-				insserv /etc/init.d/$VARNISHUSER-server
-			elif [ $os = "centos" ]
-			then
-				chkconfig $VARNISHUSER-server on
-			else
-				ln -fs /etc/init.d/$VARNISHUSER-server /etc/rc2.d/S19$VARNISHUSER-server
-			fi
-		else
-			if [ $os = "debian" ]
-			then
-				insserv -r /etc/init.d/$VARNISHUSER-server
-			elif [ $os = "centos" ]
-			then
-				chkconfig $VARNISHUSER-server off
-			else
-				rm -f /etc/rc2.d/S19$VARNISHUSER-server
-			fi		
-		fi
 
+		# ---- VARNISH CONTROL SCRIPT -- END ----
 
-# ---- VARNISH CONTROL SCRIPT -- END ----
+		# ---- VARNISH CONFIG -- START ----
 
-# ---- VARNISH CONFIG -- START ----
-
-cat > $VARNISHCONFIG << EOF
+		cat > $VARNISHCONFIG << EOF
 backend default {
 	.host = "0.0.0.0";
 	.port = "80";
 }
 EOF
 
-# ---- VARNISH CONFIG -- END ----
+		# ---- VARNISH CONFIG -- END ----
 
 	fi
-
-# ---- VARNISH CONTROL SCRIPT -- END ----
 
 	echo " - Setting permissions"
 	chown -R $VARNISHUSER.$GROUP $HOMEROOT/$VARNISHUSER/
 
-	echo " - Starting service"
-	/etc/init.d/$VARNISHUSER-server start
+	# Enable or disable...
+	enable_disable $VARNISHUSER,$VARNISH_TASK
 
 fi
 
@@ -1226,7 +1222,7 @@ then
 
 		echo " - Configuring"
 
-# ---- NGINX CONTROL SCRIPT -- START ----
+		# ---- NGINX CONTROL SCRIPT -- START ----
 
 		cat > /etc/init.d/$NGINXUSER-server << EOF
 #! /bin/sh
@@ -1406,27 +1402,13 @@ EOF
 
  		chmod +x /etc/init.d/$NGINXUSER-server
 		chown root.root /etc/init.d/$NGINXUSER-server
-
-
 				
 
-		
-		if [ $os = "debian" ]
-		then
-				insserv /etc/init.d/$NGINXUSER-server
-		elif [ $os = "centos" ]
-		then
-			chkconfig $NGINXUSER-server on
-		else
-			ln -fs /etc/init.d/$NGINXUSER-server /etc/rc2.d/S19$NGINXUSER-server
-		fi
+		# ---- NGINX CONTROL SCRIPT -- END ----
 
+		# ---- NGINX CONFIG -- START ----
 
-# ---- NGINX CONTROL SCRIPT -- END ----
-
-# ---- NGINX CONFIG -- START ----
-
-cat > $NGINXCONFIG << EOF
+		cat > $NGINXCONFIG << EOF
 
 user  $NGINXUSER;
 worker_processes  1;
@@ -1547,17 +1529,16 @@ http {
 }
 EOF
 
-# ---- NGINX CONFIG -- END ----
-
+		# ---- NGINX CONFIG -- END ----
 	fi
-
-# ---- NGINX CONTROL SCRIPT -- END ----
+	
 
 	echo " - Setting permissions"
 	chown -R $NGINXUSER.$GROUP $HOMEROOT/$NGINXUSER/
-
-	echo " - Starting service"
-	/etc/init.d/$NGINXUSER-server start
+	
+	
+	# Enable or disable...
+	enable_disable $NGINXUSER,$NGINX_TASK
 
 fi
 
@@ -1617,6 +1598,7 @@ then
 
 		# ---- INSTALL CONTROL SCRIPTS -- START ----
 
+		echo " - Creating control script."
 		cat > /etc/init.d/$HTTPDUSER-server << EOF
 #!/bin/sh
 ### BEGIN INIT INFO
@@ -1757,44 +1739,14 @@ case "\$1" in
 	exit 1
 esac
 EOF
-
+		
 		chmod +x /etc/init.d/$HTTPDUSER-server
 		chown root.root /etc/init.d/$HTTPDUSER-server
 
-		#
-		# Are we anabled?
-		#		
-		
-		if [[ $HTTPD_TASK = *enable* ]]
-		then		
-			# Enable.
-		
-			if [ $os = "debian" ]
-			then
-				insserv /etc/init.d/$HTTPDUSER-server
-			elif [ $os = "centos" ]
-			then
-				chkconfig $HTTPDUSER-server on
-			else
-				ln -fs /etc/init.d/$HTTPDUSER-server /etc/rc2.d/S19$HTTPDUSER-server
-			fi
-		else
-			# Disable
-			if [ $os = "debian" ]
-			then
-				insserv - r/etc/init.d/$HTTPDUSER-server
-			elif [ $os = "centos" ]
-			then
-				chkconfig $HTTPDUSER-server off
-			else
-				rm -f /etc/rc2.d/S19$HTTPDUSER-server
-			fi		
-		fi
+		# ---- INSTALL CONTROL SCRIPTS -- END ----
 
-	# ---- INSTALL CONTROL SCRIPTS -- END ----
-
-	# ---- INSTALL CONFIG -- START --
-	cat > $HTTPDCONFIG << EOF
+		# ---- INSTALL CONFIG -- START --
+		cat > $HTTPDCONFIG << EOF
 ServerRoot "$HTTPDROOT"
 Listen 127.0.0.1:81
 User $HTTPDUSER
@@ -1863,9 +1815,9 @@ EOF
 
 	echo " - Setting permissions"
 	chown -R $HTTPDUSER.$GROUP $HOMEROOT/$HTTPDUSER/
-
-	echo " - Starting service"
-	/etc/init.d/$HTTPDUSER-server start
+		
+	# Enable or disable...
+	enable_disable $HTTPDUSER,$HTTPD_TASK
 
 fi
 
@@ -1881,6 +1833,8 @@ then
 	then
 		echo " - Adding user $FTPDUSER"
 		useradd $FTPDUSER -m -g $GROUP
+		
+		# we know that the user did not exist, so we 
 	else
 		if [ -f /etc/init.d/$FTPDUSER-server ]
 		then
@@ -1924,6 +1878,7 @@ then
 
 		# ---- INSTALL CONTROL SCRIPTS -- START ----
 
+		echo " - Creating control script."
 		cat > /etc/init.d/$FTPDUSER-server << EOF
 #!/bin/sh
 ### BEGIN INIT INFO
@@ -2099,40 +2054,14 @@ case "\$1" in
 esac
 EOF
 
-	chmod +x /etc/init.d/$FTPDUSER-server 2> /dev/null
-	chown root.root /etc/init.d/$FTPDUSER-server 2> /dev/null
-
+		# Set set permissions on the startup script
+		chmod +x /etc/init.d/$FTPDUSER-server 2> /dev/null
+		chown root.root /etc/init.d/$FTPDUSER-server 2> /dev/null
 	
-		
+		# ---- INSTALL CONTROL SCRIPTS -- END ----
 
-	if [[ $FTPD_TASK = *enable* ]]
-	then
-		if [ $os = "debian" ]
-		then
-			insserv /etc/init.d/$FTPDUSER-server 2> /dev/null
-		elif [ $os = "centos" ]
-		then
-			chkconfig $FTPDUSER-server on 2> /dev/null
-		else
-			ln -fs /etc/init.d/$FTPDUSER-server /etc/rc2.d/S19$FTPDUSER-server 2> /dev/null
-		fi
-	else
-		if [ $os = "debian" ]
-		then
-			insserv -r /etc/init.d/$FTPDUSER-server 2> /dev/null
-		elif [ $os = "centos" ]
-		then
-			chkconfig $FTPDUSER-server off 2> /dev/null
-		else
-			rm -r /etc/rc2.d/S19$FTPDUSER-server 2> /dev/null
-		fi	
-	fi
-	
-	
-	# ---- INSTALL CONTROL SCRIPTS -- END ----
-
-	# ---- INSTALL CONFIG -- START --
-	cat > $FTPDCONFIG << EOF
+		# ---- INSTALL CONFIG -- START --
+		cat > $FTPDCONFIG << EOF
 ServerName					  "ThumbWhere FTP"
 ServerType					  standalone
 DefaultServer				   on
@@ -2156,8 +2085,9 @@ EOF
 	echo " - Setting permissions"
 	chown -R $FTPDUSER.$GROUP $HOMEROOT/$FTPDUSER/ 2> /dev/null
 
-	echo " - Starting service"
-	/etc/init.d/$FTPDUSER-server start
+	# Enable or disable...
+	enable_disable $FTPDUSER,$FTPD_TASK
+
 fi
 
 #
