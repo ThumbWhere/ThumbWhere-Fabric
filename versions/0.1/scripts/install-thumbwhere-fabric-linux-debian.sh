@@ -124,10 +124,10 @@ cc_normal=`echo -en "${esc}[m\017"`
 
 create_user()
 {
-	p_user = $1
-	p_process = $2
+	p_user=$1
+	p_process=$2
 
-	if [ "`id -un $p_user`" != "${p_user}" ]
+	if [ "`id -un ${p_user}`" != "${p_user}" ]
 	then
 		echo " - Adding user ${p_user}"
 		useradd ${p_user} -m -g $GROUP
@@ -136,7 +136,7 @@ create_user()
 		if [ -f /etc/init.d/${p_user}-server ]
 		then
 			echo " - Stopping service"
-			/etc/init.d/$p_user-server stop
+			/etc/init.d/${p_user}-server stop
 		else
 			echo " - Killing service (control script not found at /etc/init.d/${p_user}-server)"
 			for i in `ps ax | grep ${p_process} | grep -v grep | cut -d ' ' -f 1`
@@ -154,40 +154,40 @@ create_user()
 
 enable_disable()
 {
-	p_user = $1
-	p_task = $2
+	p_user=$1
+	p_task=$2
 
 	# If we are configured and ready to run..
-	if [ -f /etc/init.d/$p_user-server ]
+	if [ -f /etc/init.d/${p_user}-server ]
 	then
-		if [[ $p_task = *enable* ]]
+		if [[ ${p_task} = *enable* ]]
 		then
 			# If we are enabling...
 			echo " - Enabling service."
 			if [ $os = "debian" ]
 			then
-				insserv /etc/init.d/$p_user-server 2> /dev/null
+				insserv /etc/init.d/${p_user}-server 2> /dev/null
 			elif [ $os = "centos" ]
 			then
-				chkconfig $p_user-server on 2> /dev/null
+				chkconfig ${p_user}-server on 2> /dev/null
 			else
-				ln -fs /etc/init.d/$p_user-server /etc/rc2.d/S19$p_user-server 2> /dev/null
+				ln -fs /etc/init.d/${p_user}-server /etc/rc2.d/S19${p_user}-server 2> /dev/null
 			fi
 			
 			echo " - Starting service."
-			/etc/init.d/$p_user-server start		
+			/etc/init.d/${p_user}-server start		
 		else
 			echo " - Disabling service."
 		
 			# .. we disable..
 			if [ $os = "debian" ]
 			then
-				insserv -r /etc/init.d/$p_user-server 2> /dev/null
+				insserv -r /etc/init.d/${p_user}-server 2> /dev/null
 			elif [ $os = "centos" ]
 			then
-				chkconfig $p_user-server off 2> /dev/null
+				chkconfig ${p_user}-server off 2> /dev/null
 			else
-				rm -r /etc/rc2.d/S19$p_user-server 2> /dev/null
+				rm -r /etc/rc2.d/S19${p_user}-server 2> /dev/null
 			fi	
 		fi
 	else
@@ -524,52 +524,51 @@ start_ircd()
 stop_ircd()
 {
 
-		# Stop based on OS type
-		if [ "\$os" = "centos" ]
-		then
+	# Stop based on OS type
+	if [ "\$os" = "centos" ]
+	then
 
  		if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
-				then
-		   		if killall -2 \$PROCESSNAME 2> /dev/null
+		then
+			if killall -2 \$PROCESSNAME 2> /dev/null
 			then
 				 echo " ${cc_green}OK${cc_normal}"
 			else
 				 echo " ${cc_red}FAIL${cc_normal}"
 			fi
-				else
+		else
 			echo -n " ${cc_red}FAIL${cc_normal}"
-					   	echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
-				fi
+			echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
+		fi
 
 	elif [ "\$os" = "debian" ]
-		then
+	then
 
 		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
 		then		
 			echo " ${cc_green}OK${cc_normal}"
-	   			# and just to be sure the pids are not out of whack
-	   			killall -2 \$PROCESSNAME 2> /dev/null
+	   		# and just to be sure the pids are not out of whack
+	   		killall -2 \$PROCESSNAME 2> /dev/null
 		else
 			echo -n " ${cc_red}FAIL${cc_normal} ("
  			if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
  			then
 				echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
-							# and just to be sure the pids are not out of whack
-							killall -2 \$PROCESSNAME 2> /dev/null
-					else
+				# and just to be sure the pids are not out of whack
+				killall -2 \$PROCESSNAME 2> /dev/null
+			else
 				echo -n "${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
 			fi
 
 			echo ")"
 		fi
-
 	fi
 
 	# 5 seconds grace
 	sleep 5
 
-		# And finally, to ensure there are no issues
-		killall -9 \$PROCESSNAME 2> /dev/null
+	# And finally, to ensure there are no issues
+	killall -9 \$PROCESSNAME 2> /dev/null
 
 	rm -f "\$PIDFILE"
 	return 0
@@ -629,7 +628,7 @@ EOF
 	chown -R $IRCDUSER.$GROUP $HOMEROOT/$IRCDUSER/
 	
 	# Enable or disable...
-	enable_disable $IRCDUSER,$IRCD_TASK
+	enable_disable $IRCDUSER $IRCD_TASK
 
 fi
 
@@ -752,21 +751,20 @@ case "\$1" in
 	then 	
 		if su - \$USER -c "\$DAEMON \$DAEMON_ARGS" 2> /dev/null
 		then
-						echo " ${cc_green}OK${cc_normal}"
-				else
+			echo " ${cc_green}OK${cc_normal}"
+		else
 			echo " ${cc_red}FAIL${cc_normal}"
-						exit 1
-				fi
-
+			exit 1
+		fi
 	elif [ "\$os" = "debian" ]
 	then	
 		if start-stop-daemon --start --quiet --umask 007 --pidfile \$PIDFILE --chuid $REDISUSER:$GROUP --exec \$DAEMON -- \$DAEMON_ARGS  2> /dev/null
- 		 then
-						echo " ${cc_green}OK${cc_normal}"
-				else
-						echo " ${cc_red}FAIL${cc_normal}"
-						exit 1
-				fi
+ 		then
+			echo " ${cc_green}OK${cc_normal}"
+		else
+			echo " ${cc_red}FAIL${cc_normal}"
+			exit 1
+		fi
 	fi
 	;;
   stop)
@@ -779,7 +777,6 @@ case "\$1" in
 			echo " ${cc_green}OK${cc_normal}"
 		else
 			echo " ${cc_red}FAIL${cc_normal}"
-			exit 1
 		fi
 	elif [ "\$os" = "debian" ]
 	then
@@ -788,7 +785,6 @@ case "\$1" in
 			log_end_msg 0
 		else
 			log_end_msg 1
-			exit 1
 		fi
 		#start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE --exec \$DAEMON  2> /dev/null
 	fi
@@ -852,7 +848,7 @@ EOF
 	chown -R $REDISUSER.$GROUP $HOMEROOT/$REDISUSER/
 	
 	# Enable or disable...
-	enable_disable $REDISUSER,$REDIS_TASK
+	enable_disable $REDISUSER $REDIS_TASK
 
 fi
 
@@ -1159,7 +1155,7 @@ EOF
 	chown -R $VARNISHUSER.$GROUP $HOMEROOT/$VARNISHUSER/
 
 	# Enable or disable...
-	enable_disable $VARNISHUSER,$VARNISH_TASK
+	enable_disable $VARNISHUSER $VARNISH_TASK
 
 fi
 
@@ -1538,7 +1534,7 @@ EOF
 	
 	
 	# Enable or disable...
-	enable_disable $NGINXUSER,$NGINX_TASK
+	enable_disable $NGINXUSER $NGINX_TASK
 
 fi
 
@@ -1817,7 +1813,7 @@ EOF
 	chown -R $HTTPDUSER.$GROUP $HOMEROOT/$HTTPDUSER/
 		
 	# Enable or disable...
-	enable_disable $HTTPDUSER,$HTTPD_TASK
+	enable_disable $HTTPDUSER $HTTPD_TASK
 
 fi
 
@@ -2086,7 +2082,7 @@ EOF
 	chown -R $FTPDUSER.$GROUP $HOMEROOT/$FTPDUSER/ 2> /dev/null
 
 	# Enable or disable...
-	enable_disable $FTPDUSER,$FTPD_TASK
+	enable_disable $FTPDUSER $FTPD_TASK
 
 fi
 
