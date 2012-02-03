@@ -17,7 +17,7 @@ set -e
 if ("$IRCD_TASK" = "") 
 then
 	IRCD_TASK="download,compile,install,configure,enable"
-if
+fi
 
 if ("$REDIS_TASK" = "") 
 then
