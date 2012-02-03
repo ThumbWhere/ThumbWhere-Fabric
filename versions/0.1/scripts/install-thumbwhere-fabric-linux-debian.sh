@@ -162,7 +162,7 @@ create_user_and_stop_service()
 
 		if [ -f /etc/init.d/${p_user}-server ]
 		then
-			if [ killall -0 ${p_process} ]
+			if killall -0 ${p_process}
 			then
 				echo " - Stopping service"
 				/etc/init.d/${p_user}-server stop
