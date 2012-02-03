@@ -149,7 +149,7 @@ cc_normal=`echo -en "${esc}[m\017"`
 # We assume that no user == no server.
 #
 
-create_user()
+create_user_and_stop_service()
 {
 	p_user=$1
 	p_process=$2
@@ -162,8 +162,11 @@ create_user()
 
 		if [ -f /etc/init.d/${p_user}-server ]
 		then
-			echo " - Stopping service"
-			/etc/init.d/${p_user}-server stop
+			if [ killall -0 ${p_process} ]
+			then
+				echo " - Stopping service"
+				/etc/init.d/${p_user}-server stop
+			fi
 		else
 			echo " - Killing service (control script not found at /etc/init.d/${p_user}-server)"
 			for i in `ps ax | grep ${p_process} | grep -v grep | cut -d ' ' -f 1`
@@ -328,24 +331,8 @@ cd ..
 if [ "$IRCD_TASK" != "" ]
 then
 	echo "$*** ${cc_cyan}Installing IRCD ($IRCDFOLDER)${cc_normal}"
-
-	if [ "`id -un $IRCDUSER`" != "$IRCDUSER" ]
-	then
-		 echo " - Adding user $IRCDUSER"
-		useradd $IRCDUSER -m -g $GROUP
-	else
-		if [ -f /etc/init.d/$IRCDUSER-server ]
-		then
-		 	echo " - Stopping service"
-			/etc/init.d/$IRCDUSER-server stop
-		else
-		 	echo " - Killing service (control script not found at /etc/init.d/$IRCDUSER-server)"
-			for i in `ps ax | grep $IRCDPROCESS | grep -v grep | cut -d ' ' -f 1`
-			do
-  				kill -2 $i
-			done
-		fi
-	fi
+	
+	create_user_and_stop_service $IRCDUSER $IRCDPROCESS
 
 	if [[ $IRCD_TASK = *compile* ]]
 	then
@@ -667,24 +654,7 @@ if [ "$REDIS_TASK" != "" ]
 then
 	echo "*** ${cc_cyan}Installing REDIS ($REDISFILE)${cc_normal}"
 
-	if [ "`id -un $REDISUSER`" != "$REDISUSER" ]
-	then
-		 echo " - Adding user $REDISUSER"
-		useradd $REDISUSER -m -g $GROUP
-	else
-		if [ -f /etc/init.d/$REDISUSER-server ]
-		then
-		 	echo " - Stopping service"
-			/etc/init.d/$REDISUSER-server stop
-		else
-			echo " - Killing service (control script not found at /etc/init.d/$REDISUSER-server)"
-			for i in `ps ax | grep $REDISPROCESS | grep -v grep | cut -d ' ' -f 1`
-			do
-				kill -2 $i
-			done
-
-		fi
-	fi
+	create_user_and_stop_service $REDISUSER $REDISPROCESS
 
 	if [[ $REDIS_TASK = *compile* ]]
 	then
@@ -1196,26 +1166,7 @@ if [ "$NGINX_TASK" != "" ]
 then
 	echo "*** ${cc_cyan}Installing NGINX ($NGINXFOLDER)${cc_normal}"
 
-	if [ "`id -un $NGINXUSER`" != "$NGINXUSER" ]
-	then
-		echo " - Adding user $NGINXUSER"
-		useradd $NGINXUSER -m -g $GROUP
-	else
-
-		if [ -f /etc/init.d/$NGINXUSER-server ]
-		then
-			echo " - Stopping service"
-			/etc/init.d/$NGINXUSER-server stop
-		else
-			echo " - Killing service (control script not found at /etc/init.d/$NGINXUSER-server)"
-			for i in `ps ax | grep $NGINXPROCESS | grep -v grep | cut -d ' ' -f 1`
-			do
-				kill -2 $i
-			done
-
-		fi
-	fi
-
+	create_user_and_stop_service $NGINXUSER $NGINXPROCESS
 
 	if [[ $NGINX_TASK = *compile* ]]
 		then
@@ -1574,24 +1525,8 @@ fi
 if [ "$HTTPD_TASK" != "" ]
 then
 	echo "*** ${cc_cyan}Installing HTTPD ($HTTPDFOLDER)${cc_normal}"
-
-	if [ "`id -un $HTTPDUSER`" != "$HTTPDUSER" ]
-	then
-		echo " - Adding user $HTTPDUSER"
-		useradd $HTTPDUSER -m -g $GROUP
-	else
-		if [ -f /etc/init.d/$HTTPDUSER-server ]
-		then
-		 	echo " - Stopping service"
-			/etc/init.d/$HTTPDUSER-server stop
-		else
-		 	echo " - Killing service (control script not found at /etc/init.d/$HTTPDUSER-server)"
-			#for i in `ps ax | grep httpd | grep -v grep | cut -d ' ' -f 1`
-			#do
-  			#	kill -2 $i
-			#done
-		fi
-	fi
+	
+	create_user_and_stop_service $HTTPDUSER $HTTPDPROCESS
 
 	if [[ $HTTPD_TASK = *compile* ]]
 	then
@@ -1852,26 +1787,8 @@ fi
 if [ "$FTPD_TASK" != "" ]
 then
 	echo "*** ${cc_cyan}Installing FTPD ($FTPDFOLDER)${cc_normal}"
-
-	if [ "`id -un $FTPDUSER`" != "$FTPDUSER" ]
-	then
-		echo " - Adding user $FTPDUSER"
-		useradd $FTPDUSER -m -g $GROUP
-		
-		# we know that the user did not exist, so we 
-	else
-		if [ -f /etc/init.d/$FTPDUSER-server ]
-		then
-		 	echo " - Stopping service"
-			/etc/init.d/$FTPDUSER-server stop
-		else
-		 	echo " - Killing service (control script not found at /etc/init.d/$FTPDUSER-server)"
-			#for i in `ps ax | grep ftpd | grep -v grep | cut -d ' ' -f 1`
-			#do
-  			#	kill -2 $i
-			#done
-		fi
-	fi
+	
+	create_user_and_stop_service $FTPDUSER $FTPDPROCESS
 
 	if [[ $FTPD_TASK = *compile* ]]
 	then
