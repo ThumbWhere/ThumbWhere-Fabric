@@ -14,13 +14,13 @@ set -e
 # If enable is not part of the string, then the service is deemed to be 'disabled'
 #
 
-IRCD_TASK="download,compile,install,configure,enable"
-REDIS_TASK="download,compile,install,configure,enable"
-NODEJS_TASK="download,compile,install,configure,enable"
-VARNISH_TASK="download,compile,install,configure,enable"
-NGINX_TASK="download,compile,install,configure,enable"
-HTTPD_TASK="download,compile,install,configure,enable"
-FTPD_TASK="download,compile,install,configure,enable"
+IRCD_TASK="enable"
+REDIS_TASK="enable"
+NODEJS_TASK="enable"
+VARNISH_TASK="disable"
+NGINX_TASK="configure,enable"
+HTTPD_TASK="enable"
+FTPD_TASK="enable"
 
 IRCDURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
 REDISURL=http://redis.googlecode.com/files/redis-2.4.6.tar.gz
@@ -76,9 +76,9 @@ VARNISHCONFIG=$HOMEROOT/$VARNISHUSER/thumbwhere.vcl
 VARNISHPROCESS=varnishd
 VARNISHPID=$HOMEROOT/$VARNISHUSER/varnish.pid
 
-NGINXROOT=$HOMEROOT/$NGINXUSER/nginx
-NGINXCONFIG=$HOMEROOT/$NGINXUSER/nginx.conf
 NGINXPROCESS=nginx
+NGINXROOT=$HOMEROOT/$NGINXUSER/nginx
+NGINXCONFIG=$HOMEROOT/$NGINXUSER/nginx/conf/nginx.conf
 NGINXPID=$HOMEROOT/$NGINXUSER/nginx/nginx.pid
 
 HTTPDROOT=$HOMEROOT/$HTTPDUSER/apache2
@@ -1406,9 +1406,11 @@ EOF
 
 		# ---- NGINX CONFIG -- START ----
 
+		echo "Writing $NGINXCONFIG"
+
 		cat > $NGINXCONFIG << EOF
 
-user  $NGINXUSER;
+#user  $NGINXUSER;
 worker_processes  1;
 
 #error_log  logs/error.log;
