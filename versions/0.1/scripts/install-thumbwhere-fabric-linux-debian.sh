@@ -14,13 +14,13 @@ set -e
 # If enable is not part of the string, then the service is deemed to be 'disabled'
 #
 
-IRCD_TASK=""
-REDIS_TASK=""
-NODEJS_TASK=""
-VARNISH_TASK=""
-NGINX_TASK="configure,inctall,enable"
-HTTPD_TASK=""
-FTPD_TASK=""
+IRCD_TASK="disable"
+REDIS_TASK="disable"
+NODEJS_TASK="disable"
+VARNISH_TASK="disable"
+NGINX_TASK="download,compile,install,configure,enable"
+HTTPD_TASK="disable"
+FTPD_TASK="disable"
 
 IRCDURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
 REDISURL=http://redis.googlecode.com/files/redis-2.4.6.tar.gz
@@ -149,7 +149,7 @@ then
 	apt-get -y install wget bzip2 binutils g++ make tcl8.5 curl build-essential openssl libssl-dev libssh-dev pkg-config libpcre3 libpcre3-dev libpcre++0 xsltproc libncurses5-dev
 elif [ $os = "centos" ]
 then
-        yum -y install wget bzip2 binutils gcc-c++ make gcc tcl curl openssl pcre gnutls openssh openssl ncurses pcre-devel gnutls-devel openssl-devel ncurses-devel libxslt redhat-lsb
+		yum -y install wget bzip2 binutils gcc-c++ make gcc tcl curl openssl pcre gnutls openssh openssl ncurses pcre-devel gnutls-devel openssl-devel ncurses-devel libxslt redhat-lsb
 fi
 
 #
@@ -172,21 +172,21 @@ if [[ $REDIS_TASK = *download* ]]
 then
 	[ -f $REDISFILE ] && echo " - $REDISFILE exists" || wget $REDISURL
 else
-        echo " - ${cc_yellow}Skipping $REDISFILE${cc_normal}"
+		echo " - ${cc_yellow}Skipping $REDISFILE${cc_normal}"
 fi
 
 if [[ $NODEJS_TASK = *download* ]] 
 then
 	[ -f $NODEJSFILE ] && echo " - $NODEJSFILE exists" || wget $NODEJSURL
 else
-        echo " - ${cc_yellow}Skipping $NODEJSFILE${cc_normal}"
+		echo " - ${cc_yellow}Skipping $NODEJSFILE${cc_normal}"
 fi
 
 if [[ $VARNISH_TASK = *download* ]] 
 then
 	[ -f $VARNISHFILE ] && echo " - $VARNISHFILE exists" || wget $VARNISHURL
 else
-        echo " - ${cc_yellow}Skipping $VARNISHFILE${cc_normal}"
+		echo " - ${cc_yellow}Skipping $VARNISHFILE${cc_normal}"
 fi
 
 
@@ -194,7 +194,7 @@ if [[ $NGINX_TASK = *download* ]]
 then
 	[ -f $NGINXFILE ] && echo " - $NGINXFILE exists" || wget $NGINXURL
 else
-        echo " - ${cc_yellow}Skipping $NGINXFILE${cc_normal}"
+		echo " - ${cc_yellow}Skipping $NGINXFILE${cc_normal}"
 fi
 
 
@@ -202,14 +202,14 @@ if [[ $HTTPD_TASK = *download* ]]
 then
 	[ -f $HTTPDFILE ] && echo " - $HTTPDFILE exists" || wget $HTTPDURL
 else
-        echo " - ${cc_yellow}Skipping $HTTPDFILE${cc_normal}"
+		echo " - ${cc_yellow}Skipping $HTTPDFILE${cc_normal}"
 fi
 
 if [[ $FTPD_TASK = *download* ]] 
 then
 	[ -f $FTPDFILE ] && echo " - $FTPDFILE exists" || wget $FTPDURL
 else
-        echo " - ${cc_yellow}Skipping $IRCDFILE${cc_normal}"
+		echo " - ${cc_yellow}Skipping $IRCDFILE${cc_normal}"
 fi
 
 cd ..
@@ -269,10 +269,7 @@ then
 	
 	if [[ $IRCD_TASK = *configure* ]]
 	then
-	
-
-# ---- IRCD CONFIG -- START ----	
-
+		# ---- IRCD CONFIG -- START ----	
 		cat > $IRCDCONFIG << EOF
 <config format="xml">
 <define name="bindip" value="0.0.0.0">
@@ -363,14 +360,14 @@ EOF
 #!/bin/sh
 ### BEGIN INIT INFO
 # Provides:	  $IRCDUSER-server
-# Required-Start:    \$network \$syslog \$time
-# Required-Stop:     \$syslog
-# Should-Start:      \$local_fs
-# Should-Stop:       \$local_fs
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
+# Required-Start:	\$network \$syslog \$time
+# Required-Stop:	 \$syslog
+# Should-Start:	  \$local_fs
+# Should-Stop:	   \$local_fs
+# Default-Start:	 2 3 4 5
+# Default-Stop:	  0 1 6
 # Short-Description: Controls the ircd server
-# Description:       Controls the ircd server.
+# Description:	   Controls the ircd server.
 ### END INIT INFO
 # GPL Licensed
 
@@ -413,34 +410,34 @@ start_ircd()
 	then 	
 		if su - \$USER -c "\$DAEMON \$ARGS"
  		then
-                        echo " ${cc_green}OK${cc_normal}"
-                else
-                        echo -n " ${cc_red}FAIL${cc_normal} ("
+						echo " ${cc_green}OK${cc_normal}"
+				else
+						echo -n " ${cc_red}FAIL${cc_normal} ("
 
-                        if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
-                        then
-                                echo -n "${cc_yellow}Seems \$PROCESSNAME is already running.${cc_normal}"
+						if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+						then
+								echo -n "${cc_yellow}Seems \$PROCESSNAME is already running.${cc_normal}"
 
-                                # and just to be sure the pids are not out of whack
-                                killall -2 \$PROCESSNAME 2> /dev/null
-                        else
-                                echo -n "${cc_yellow}Looks like \$PROCESSNAME is not already running.${cc_normal}"
-                        fi
+								# and just to be sure the pids are not out of whack
+								killall -2 \$PROCESSNAME 2> /dev/null
+						else
+								echo -n "${cc_yellow}Looks like \$PROCESSNAME is not already running.${cc_normal}"
+						fi
 			echo -n ")"
 
-                        exit 1
-                fi
+						exit 1
+				fi
 
 		
 	elif [ "\$os" = "debian" ]
 	then
 		if start-stop-daemon --start --quiet --oknodo --chuid "\$USER" --pidfile "\$PIDFILE" --exec "\$DAEMON" --  \$ARGS
 		then
-                        echo " ${cc_green}OK${cc_normal}"
-                else
-                        echo " ${cc_red}FAIL${cc_normal} (is it already running?)"
-                        exit 1
-                fi
+						echo " ${cc_green}OK${cc_normal}"
+				else
+						echo " ${cc_red}FAIL${cc_normal} (is it already running?)"
+						exit 1
+				fi
 
 	fi
 }
@@ -448,39 +445,39 @@ start_ircd()
 stop_ircd()
 {
 
-        # Stop based on OS type
-        if [ "\$os" = "centos" ]
-        then
+		# Stop based on OS type
+		if [ "\$os" = "centos" ]
+		then
 
  		if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
-                then
-           		if killall -2 \$PROCESSNAME 2> /dev/null
+				then
+		   		if killall -2 \$PROCESSNAME 2> /dev/null
 			then
 				 echo " ${cc_green}OK${cc_normal}"
 			else
 				 echo " ${cc_red}FAIL${cc_normal}"
 			fi
-                else
+				else
 			echo -n " ${cc_red}FAIL${cc_normal}"
-                       	echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
-                fi
+					   	echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
+				fi
 
 	elif [ "\$os" = "debian" ]
-        then
+		then
 
 		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
 		then		
 			echo " ${cc_green}OK${cc_normal}"
-       			# and just to be sure the pids are not out of whack
-       			killall -2 \$PROCESSNAME 2> /dev/null
+	   			# and just to be sure the pids are not out of whack
+	   			killall -2 \$PROCESSNAME 2> /dev/null
 		else
 			echo -n " ${cc_red}FAIL${cc_normal} ("
  			if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
  			then
 				echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
-                        	# and just to be sure the pids are not out of whack
-                        	killall -2 \$PROCESSNAME 2> /dev/null
-                	else
+							# and just to be sure the pids are not out of whack
+							killall -2 \$PROCESSNAME 2> /dev/null
+					else
 				echo -n "${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
 			fi
 
@@ -492,8 +489,8 @@ stop_ircd()
 	# 5 seconds grace
 	sleep 5
 
-        # And finally, to ensure there are no issues
-        killall -9 \$PROCESSNAME 2> /dev/null
+		# And finally, to ensure there are no issues
+		killall -9 \$PROCESSNAME 2> /dev/null
 
 	rm -f "\$PIDFILE"
 	return 0
@@ -547,19 +544,31 @@ EOF
 		# .. the rest of the configure scripts
 		#
 		
-
 		chmod +x /etc/init.d/$IRCDUSER-server
 		chown root.root /etc/init.d/$IRCDUSER-server
-		if [ $os = "debian" ]
+		
+		if [[ $IRCD_TASK = *enable* ]]
 		then
-			insserv /etc/init.d/$IRCDUSER-server
-		elif [ $os = "centos" ]
-		then
-			chkconfig $IRCDUSER-server on
+			if [ $os = "debian" ]
+			then
+				insserv /etc/init.d/$IRCDUSER-server
+			elif [ $os = "centos" ]
+			then
+				chkconfig $IRCDUSER-server on
+			else
+				ln -fs /etc/init.d/$IRCDUSER-server /etc/rc2.d/S19$IRCDUSER-server
+			fi
 		else
-			ln -fs /etc/init.d/$IRCDUSER-server /etc/rc2.d/S19$IRCDUSER-server
-		fi
-	
+			if [ $os = "debian" ]
+			then
+				insserv -r /etc/init.d/$IRCDUSER-server
+			elif [ $os = "centos" ]
+			then
+				chkconfig $IRCDUSER-server off
+			else
+				rm -f /etc/rc2.d/S19$IRCDUSER-server
+			fi			
+		fi	
 	fi
 
 # ---- IRCD CONTROL SCRIPT --- END ---
@@ -614,7 +623,7 @@ then
 		cd $REDISFOLDER
 		make
 		if [[ $REDIS_TASK = *test* ]]
-        	then
+			then
 			echo " - Testing"
 			make test
 		fi
@@ -630,25 +639,25 @@ then
 	if [[ $REDIS_TASK = *configure* ]]
 	then
 
-	# 
-	# Generate configure scripts
-	#	
+		# 
+		# Generate configure scripts
+		#	
 
-	echo " - Configuring"
+		echo " - Configuring"
 
 # --- REDIS CONTROL SCRIPT -- START ----
 	
 	cat > /etc/init.d/$REDISUSER-server << EOF
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides:	     $REDISUSER-server
-# Required-Start:       $syslog $remote_fs
+# Provides:		 $REDISUSER-server
+# Required-Start:	   $syslog $remote_fs
 # Required-Stop:	$syslog $remote_fs
 # Should-Start:	 $local_fs
 # Should-Stop:	  $local_fs
 # Default-Start:	2 3 4 5
 # Default-Stop:	 0 1 6
-# Short-Description:    $REDISUSER-server - Persistent key-value db for ThumbWhere
+# Short-Description:	$REDISUSER-server - Persistent key-value db for ThumbWhere
 # Description:	  $REDISUSER-server - Persistent key-value db for ThumbWhere
 ### END INIT INFO
 
@@ -690,21 +699,21 @@ case "\$1" in
 	then 	
 		if su - \$USER -c "\$DAEMON \$DAEMON_ARGS" 2> /dev/null
 		then
-                        echo " ${cc_green}OK${cc_normal}"
-                else
+						echo " ${cc_green}OK${cc_normal}"
+				else
 			echo " ${cc_red}FAIL${cc_normal}"
-                        exit 1
-                fi
+						exit 1
+				fi
 
 	elif [ "\$os" = "debian" ]
 	then	
 		if start-stop-daemon --start --quiet --umask 007 --pidfile \$PIDFILE --chuid $REDISUSER:$GROUP --exec \$DAEMON -- \$DAEMON_ARGS  2> /dev/null
  		 then
-                        echo " ${cc_green}OK${cc_normal}"
-                else
-                        echo " ${cc_red}FAIL${cc_normal}"
-                        exit 1
-                fi
+						echo " ${cc_green}OK${cc_normal}"
+				else
+						echo " ${cc_red}FAIL${cc_normal}"
+						exit 1
+				fi
 	fi
 	;;
   stop)
@@ -715,19 +724,19 @@ case "\$1" in
 		if redis-cli shutdown  2> /dev/null
 		then
 			echo " ${cc_green}OK${cc_normal}"
-    	else
+		else
 			echo " ${cc_red}FAIL${cc_normal}"
 			exit 1
-    	fi
+		fi
 	elif [ "\$os" = "debian" ]
 	then
 		if redis-cli shutdown  2> /dev/null
 		then		
 			log_end_msg 0
-    	else
+		else
 			log_end_msg 1
 			exit 1
-    	fi
+		fi
 		#start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE --exec \$DAEMON  2> /dev/null
 	fi
 	rm -f \$PIDFILE
@@ -749,15 +758,29 @@ EOF
 
 		chmod +x /etc/init.d/$REDISUSER-server
 		chown root.root /etc/init.d/$REDISUSER-server
-		if [ $os = "debian" ]
+		
+		if [[ $$REDIS_TASK = *enable* ]]
 		then
-			insserv /etc/init.d/$REDISUSER-server
-		elif [ $os = "centos" ]
-		then
-        		chkconfig $REDISUSER-server on
+			if [ $os = "debian" ]
+			then
+				insserv /etc/init.d/$REDISUSER-server
+			elif [ $os = "centos" ]
+			then
+					chkconfig $REDISUSER-server on
+			else		
+				ln -fs /etc/init.d/$REDISUSER-server /etc/rc2.d/S19$REDISUSER-server 
+			fi
 		else
-		ln -fs /etc/init.d/$REDISUSER-server /etc/rc2.d/S19$REDISUSER-server 
-	fi
+			if [ $os = "debian" ]
+			then
+				insserv -r /etc/init.d/$REDISUSER-server
+			elif [ $os = "centos" ]
+			then
+				chkconfig $REDISUSER-server off
+			else		
+				rm -f /etc/rc2.d/S19$REDISUSER-server 
+			fi			
+		fi
 
 # ---- REDIS CONTROL SCRIPT -- END ----
 
@@ -888,9 +911,8 @@ then
 		fi
 	fi
 
-
-        if [[ $VARNISH_TASK = *compile* ]]
-        then
+	if [[ $VARNISH_TASK = *compile* ]]
+	then
 		cp $DOWNLOADS/$VARNISHFILE $HOMEROOT/$VARNISHUSER/
 		chown $VARNISHUSER.$GROUP $HOMEROOT/$VARNISHUSER
 		cd  $HOMEROOT/$VARNISHUSER
@@ -904,15 +926,14 @@ then
 		make
 	
 		if [[ $VARNISH_TASK = *install* ]]
-        	then
+			then
 			echo " - Installing"
 			make install
 		fi
 	fi
 
-
 	if [[ $VARNISH_TASK = *configure* ]]
-        then
+		then
 
 		echo " - Configuring"
 
@@ -923,15 +944,15 @@ then
 
 ### BEGIN INIT INFO
 # Provides:	  $VARNISHUSER-server
-# Required-Start:    \$local_fs \$remote_fs \$network
-# Required-Stop:     \$local_fs \$remote_fs \$network
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
+# Required-Start:	\$local_fs \$remote_fs \$network
+# Required-Stop:	 \$local_fs \$remote_fs \$network
+# Default-Start:	 2 3 4 5
+# Default-Stop:	  0 1 6
 # Short-Description: Start HTTP accelerator
-# Description:       This script provides a server-side cache
-#		    to be run in front of a httpd and should
-#		    listen on port 80 on a properly configured
-#		    system
+# Description:	   This script provides a server-side cache
+#			to be run in front of a httpd and should
+#			listen on port 80 on a properly configured
+#			system
 ### END INIT INFO
 
 # Source function library
@@ -975,7 +996,7 @@ start_varnishd() {
 		echo -n "Starting \$DESC" "\$PROCESSNAME"
 		if su - \$VARNISHUSER -c "\$DAEMON \$DAEMON_ARGS"
 		then
-                 	echo " ${cc_green}OK${cc_normal}"
+				 	echo " ${cc_green}OK${cc_normal}"
 		else
 			echo " ${cc_red}FAIL${cc_normal}"
 			exit 1
@@ -994,9 +1015,9 @@ start_varnishd() {
 }
 
 disabled_varnishd() {
-    log_daemon_msg "Not starting \$DESC" "\$PROCESSNAME"
-    log_progress_msg "disabled in /etc/default/varnish"
-    log_end_msg 0
+	log_daemon_msg "Not starting \$DESC" "\$PROCESSNAME"
+	log_progress_msg "disabled in /etc/default/varnish"
+	log_end_msg 0
 }
 
 stop_varnishd() {
@@ -1020,18 +1041,18 @@ stop_varnishd() {
 		then		
 			echo " ${cc_green}OK${cc_normal}"
 
-        		# and just to be sure the pids are not out of whack
-        		killall -2 \$PROCESSNAME 2> /dev/null
+				# and just to be sure the pids are not out of whack
+				killall -2 \$PROCESSNAME 2> /dev/null
 		else
 			echo -n " ${cc_red}FAIL${cc_normal} ("
 
  			if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
 	 		then
-                                echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
+								echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
 
-                                # and just to be sure the pids are not out of whack
-                                killall -2 \$PROCESSNAME 2> /dev/null
-                        else
+								# and just to be sure the pids are not out of whack
+								killall -2 \$PROCESSNAME 2> /dev/null
+						else
 				echo -n "${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
 			fi
 
@@ -1043,8 +1064,8 @@ stop_varnishd() {
 	# 5 seconds grace	
 	sleep 5
 
-        # And finally, to ensure there are no issues
-        killall -9 \$PROCESSNAME 2> /dev/null
+		# And finally, to ensure there are no issues
+		killall -9 \$PROCESSNAME 2> /dev/null
 	
 
 	# clean out the pid file anyway...
@@ -1052,40 +1073,40 @@ stop_varnishd() {
 }
 
 reload_varnishd() {
-    echo "Reloading \$DESC" "\$PROCESSNAME"
-    if /usr/share/varnish/reload-vcl -q; then
+	echo "Reloading \$DESC" "\$PROCESSNAME"
+	if /usr/share/varnish/reload-vcl -q; then
 		echo " ${cc_green}OK${cc_normal}"
-    else
+	else
 		echo " ${cc_red}FAIL${cc_normal}"
-    fi
+	fi
 }
 
 status_varnishd() {
-    status_of_proc -p "\${PIDFILE}" "\${DAEMON}" "\${PROCESSNAME}"
+	status_of_proc -p "\${PIDFILE}" "\${DAEMON}" "\${PROCESSNAME}"
 }
 
 case "\$1" in
-    start)
+	start)
 	echo -n "Starting \$DESC (\$PROCESSNAME): "
 	start_varnishd
 	;;
-    stop)
+	stop)
 	echo -n "Stopping \$DESC (\$PROCESSNAME): "
 	stop_varnishd
 	;;
-    reload)
+	reload)
 	echo -n "Reloading \$DESC (\$PROCESSNAME): "
 	reload_varnishd
 	;;
-    status)
+	status)
 	status_varnishd
 	;;
-    restart|force-reload)
+	restart|force-reload)
 	 echo "Restarting \$DESC (\$PROCESSNAME): "
 	\$0 stop
 	\$0 start
 	;;
-    *)
+	*)
 	echo  "Usage: \$0 {start|stop|restart|force-reload}"
 	exit 1
 	;;
@@ -1095,16 +1116,29 @@ exit 0
 EOF
 
  		chmod +x /etc/init.d/$VARNISHUSER-server
-                chown root.root /etc/init.d/$VARNISHUSER-server
-
-		if [ $os = "debian" ]
+		chown root.root /etc/init.d/$VARNISHUSER-server
+		
+		if [[ $VARNISH_TASK = *enable* ]]
 		then
-                        insserv /etc/init.d/$VARNISHUSER-server
-                elif [ $os = "centos" ]
-                then
-                        chkconfig $VARNISHUSER-server on
-                else
-                	ln -fs /etc/init.d/$VARNISHUSER-server /etc/rc2.d/S19$VARNISHUSER-server
+			if [ $os = "debian" ]
+			then
+				insserv /etc/init.d/$VARNISHUSER-server
+			elif [ $os = "centos" ]
+			then
+				chkconfig $VARNISHUSER-server on
+			else
+				ln -fs /etc/init.d/$VARNISHUSER-server /etc/rc2.d/S19$VARNISHUSER-server
+			fi
+		else
+			if [ $os = "debian" ]
+			then
+				insserv -r /etc/init.d/$VARNISHUSER-server
+			elif [ $os = "centos" ]
+			then
+				chkconfig $VARNISHUSER-server off
+			else
+				rm -f /etc/rc2.d/S19$VARNISHUSER-server
+			fi		
 		fi
 
 
@@ -1165,8 +1199,8 @@ then
 	fi
 
 
-        if [[ $NGINX_TASK = *compile* ]]
-        then
+	if [[ $NGINX_TASK = *compile* ]]
+		then
 		cp $DOWNLOADS/$NGINXFILE $HOMEROOT/$NGINXUSER/
 		chown $NGINXUSER.$GROUP $HOMEROOT/$NGINXUSER
 		cd  $HOMEROOT/$NGINXUSER
@@ -1180,7 +1214,7 @@ then
 		make
 	
 		if [[ $NGINX_TASK = *install* ]]
-        	then
+			then
 			echo " - Installing"
 			make install
 		fi
@@ -1188,7 +1222,7 @@ then
 
 
 	if [[ $NGINX_TASK = *configure* ]]
-        then
+	then
 
 		echo " - Configuring"
 
@@ -1199,15 +1233,15 @@ then
 
 ### BEGIN INIT INFO
 # Provides:	  $NGINXUSER-server
-# Required-Start:    \$local_fs \$remote_fs \$network
-# Required-Stop:     \$local_fs \$remote_fs \$network
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
+# Required-Start:	\$local_fs \$remote_fs \$network
+# Required-Stop:	 \$local_fs \$remote_fs \$network
+# Default-Start:	 2 3 4 5
+# Default-Stop:	  0 1 6
 # Short-Description: Start HTTP accelerator
-# Description:       This script provides a server-side cache
-#		    to be run in front of a httpd and should
-#		    listen on port 80 on a properly configured
-#		    system
+# Description:	   This script provides a server-side cache
+#			to be run in front of a httpd and should
+#			listen on port 80 on a properly configured
+#			system
 ### END INIT INFO
 
 # Source function library
@@ -1251,7 +1285,7 @@ start_nginxd() {
 		echo -n "Starting \$DESC" "\$PROCESSNAME"
 		if su - \$NGINXUSER -c "\$DAEMON \$DAEMON_ARGS"
 		then
-                 	echo " ${cc_green}OK${cc_normal}"
+				 	echo " ${cc_green}OK${cc_normal}"
 		else
 			echo " ${cc_red}FAIL${cc_normal}"
 			exit 1
@@ -1270,9 +1304,9 @@ start_nginxd() {
 }
 
 disabled_nginxd() {
-    log_daemon_msg "Not starting \$DESC" "\$PROCESSNAME"
-    log_progress_msg "disabled in /etc/default/nginx"
-    log_end_msg 0
+	log_daemon_msg "Not starting \$DESC" "\$PROCESSNAME"
+	log_progress_msg "disabled in /etc/default/nginx"
+	log_end_msg 0
 }
 
 stop_nginxd() {
@@ -1296,18 +1330,18 @@ stop_nginxd() {
 		then		
 			echo " ${cc_green}OK${cc_normal}"
 
-        		# and just to be sure the pids are not out of whack
-        		killall -2 \$PROCESSNAME 2> /dev/null
+				# and just to be sure the pids are not out of whack
+				killall -2 \$PROCESSNAME 2> /dev/null
 		else
 			echo -n " ${cc_red}FAIL${cc_normal} ("
 
  			if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
 	 		then
-                                echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
+								echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
 
-                                # and just to be sure the pids are not out of whack
-                                killall -2 \$PROCESSNAME 2> /dev/null
-                        else
+								# and just to be sure the pids are not out of whack
+								killall -2 \$PROCESSNAME 2> /dev/null
+						else
 				echo -n "${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
 			fi
 
@@ -1319,8 +1353,8 @@ stop_nginxd() {
 	# 5 seconds grace	
 	sleep 5
 
-        # And finally, to ensure there are no issues
-        killall -9 \$PROCESSNAME 2> /dev/null
+		# And finally, to ensure there are no issues
+		killall -9 \$PROCESSNAME 2> /dev/null
 	
 
 	# clean out the pid file anyway...
@@ -1328,40 +1362,40 @@ stop_nginxd() {
 }
 
 reload_nginxd() {
-    echo "Reloading \$DESC" "\$PROCESSNAME"
-    if /usr/share/nginx/reload-vcl -q; then
+	echo "Reloading \$DESC" "\$PROCESSNAME"
+	if /usr/share/nginx/reload-vcl -q; then
 		echo " ${cc_green}OK${cc_normal}"
-    else
+	else
 		echo " ${cc_red}FAIL${cc_normal}"
-    fi
+	fi
 }
 
 status_nginxd() {
-    status_of_proc -p "\${PIDFILE}" "\${DAEMON}" "\${PROCESSNAME}"
+	status_of_proc -p "\${PIDFILE}" "\${DAEMON}" "\${PROCESSNAME}"
 }
 
 case "\$1" in
-    start)
+	start)
 	echo -n "Starting \$DESC (\$PROCESSNAME): "
 	start_nginxd
 	;;
-    stop)
+	stop)
 	echo -n "Stopping \$DESC (\$PROCESSNAME): "
 	stop_nginxd
 	;;
-    reload)
+	reload)
 	echo -n "Reloading \$DESC (\$PROCESSNAME): "
 	reload_nginxd
 	;;
-    status)
+	status)
 	status_nginxd
 	;;
-    restart|force-reload)
+	restart|force-reload)
 	 echo "Restarting \$DESC (\$PROCESSNAME): "
 	\$0 stop
 	\$0 start
 	;;
-    *)
+	*)
 	echo  "Usage: \$0 {start|stop|restart|force-reload}"
 	exit 1
 	;;
@@ -1371,16 +1405,20 @@ exit 0
 EOF
 
  		chmod +x /etc/init.d/$NGINXUSER-server
-                chown root.root /etc/init.d/$NGINXUSER-server
+		chown root.root /etc/init.d/$NGINXUSER-server
 
+
+				
+
+		
 		if [ $os = "debian" ]
 		then
-                        insserv /etc/init.d/$NGINXUSER-server
-                elif [ $os = "centos" ]
-                then
-                        chkconfig $NGINXUSER-server on
-                else
-                	ln -fs /etc/init.d/$NGINXUSER-server /etc/rc2.d/S19$NGINXUSER-server
+				insserv /etc/init.d/$NGINXUSER-server
+		elif [ $os = "centos" ]
+		then
+			chkconfig $NGINXUSER-server on
+		else
+			ln -fs /etc/init.d/$NGINXUSER-server /etc/rc2.d/S19$NGINXUSER-server
 		fi
 
 
@@ -1397,114 +1435,114 @@ worker_processes  1;
 #error_log  logs/error.log  notice;
 #error_log  logs/error.log  info;
 
-pid        $NGINXPID;
+pid		$NGINXPID;
 
 
 events {
-    worker_connections  1024;
+	worker_connections  1024;
 }
 
 
 http {
-    include       mime.types;
-    default_type  application/octet-stream;
+	include	   mime.types;
+	default_type  application/octet-stream;
 
-    #log_format  main  '\$remote_addr - \$remote_user [\$time_local] "\$request" '
-    #                  '\$status \$body_bytes_sent "\$http_referer" '
-    #                  '"\$http_user_agent" "\$http_x_forwarded_for"';
+	#log_format  main  '\$remote_addr - \$remote_user [\$time_local] "\$request" '
+	#				  '\$status \$body_bytes_sent "\$http_referer" '
+	#				  '"\$http_user_agent" "\$http_x_forwarded_for"';
 
-    #access_log  logs/access.log  main;
+	#access_log  logs/access.log  main;
 
-    sendfile        on;
-    #tcp_nopush     on;
+	sendfile		on;
+	#tcp_nopush	 on;
 
-    #keepalive_timeout  0;
-    keepalive_timeout  65;
+	#keepalive_timeout  0;
+	keepalive_timeout  65;
 
-    #gzip  on;
+	#gzip  on;
 
-    server {
-        listen       80;
-        server_name  localhost;
+	server {
+		listen	   80;
+		server_name  localhost;
 
-        #charset koi8-r;
+		#charset koi8-r;
 
-        #access_log  logs/host.access.log  main;
+		#access_log  logs/host.access.log  main;
 
-        location / {
-            root   html;
-            index  index.html index.htm;
-        }
+		location / {
+			root   html;
+			index  index.html index.htm;
+		}
 
-        #error_page  404              /404.html;
+		#error_page  404			  /404.html;
 
-        # redirect server error pages to the static page /50x.html
-        #
-        error_page   500 502 503 504  /50x.html;
-        location = /50x.html {
-            root   html;
-        }
+		# redirect server error pages to the static page /50x.html
+		#
+		error_page   500 502 503 504  /50x.html;
+		location = /50x.html {
+			root   html;
+		}
 
-        # proxy the PHP scripts to Apache listening on 127.0.0.1:80
-        #
-        #location ~ \\.php\$ {
-        #    proxy_pass   http://127.0.0.1;
-        #}
+		# proxy the PHP scripts to Apache listening on 127.0.0.1:80
+		#
+		#location ~ \\.php\$ {
+		#	proxy_pass   http://127.0.0.1;
+		#}
 
-        # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
-        #
-        #location ~ \\.php\$ {
-        #    root           html;
-        #    fastcgi_pass   127.0.0.1:9000;
-        #    fastcgi_index  index.php;
-        #    fastcgi_param  SCRIPT_FILENAME  /scripts\$fastcgi_script_name;
-        #    include        fastcgi_params;
-        #}
+		# pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+		#
+		#location ~ \\.php\$ {
+		#	root		   html;
+		#	fastcgi_pass   127.0.0.1:9000;
+		#	fastcgi_index  index.php;
+		#	fastcgi_param  SCRIPT_FILENAME  /scripts\$fastcgi_script_name;
+		#	include		fastcgi_params;
+		#}
 
-        # deny access to .htaccess files, if Apache's document root
-        # concurs with nginx's one
-        #
-        #location ~ /\\.ht {
-        #    deny  all;
-        #}
-    }
-
-
-    # another virtual host using mix of IP-, name-, and port-based configuration
-    #
-    #server {
-    #    listen       8000;
-    #    listen       somename:8080;
-    #    server_name  somename  alias  another.alias;
-
-    #    location / {
-    #        root   html;
-    #        index  index.html index.htm;
-    #    }
-    #}
+		# deny access to .htaccess files, if Apache's document root
+		# concurs with nginx's one
+		#
+		#location ~ /\\.ht {
+		#	deny  all;
+		#}
+	}
 
 
-    # HTTPS server
-    #
-    #server {
-    #    listen       443;
-    #    server_name  localhost;
+	# another virtual host using mix of IP-, name-, and port-based configuration
+	#
+	#server {
+	#	listen	   8000;
+	#	listen	   somename:8080;
+	#	server_name  somename  alias  another.alias;
 
-    #    ssl                  on;
-    #    ssl_certificate      cert.pem;
-    #    ssl_certificate_key  cert.key;
+	#	location / {
+	#		root   html;
+	#		index  index.html index.htm;
+	#	}
+	#}
 
-    #    ssl_session_timeout  5m;
 
-    #    ssl_protocols  SSLv2 SSLv3 TLSv1;
-    #    ssl_ciphers  HIGH:!aNULL:!MD5;
-    #    ssl_prefer_server_ciphers   on;
+	# HTTPS server
+	#
+	#server {
+	#	listen	   443;
+	#	server_name  localhost;
 
-    #    location / {
-    #        root   html;
-    #        index  index.html index.htm;
-    #    }
-    #}
+	#	ssl				  on;
+	#	ssl_certificate	  cert.pem;
+	#	ssl_certificate_key  cert.key;
+
+	#	ssl_session_timeout  5m;
+
+	#	ssl_protocols  SSLv2 SSLv3 TLSv1;
+	#	ssl_ciphers  HIGH:!aNULL:!MD5;
+	#	ssl_prefer_server_ciphers   on;
+
+	#	location / {
+	#		root   html;
+	#		index  index.html index.htm;
+	#	}
+	#}
 
 }
 EOF
@@ -1534,7 +1572,7 @@ then
 
 	if [ "`id -un $HTTPDUSER`" != "$HTTPDUSER" ]
 	then
-		 echo " - Adding user $HTTPDUSER"
+		echo " - Adding user $HTTPDUSER"
 		useradd $HTTPDUSER -m -g $GROUP
 	else
 		if [ -f /etc/init.d/$HTTPDUSER-server ]
@@ -1566,30 +1604,31 @@ then
 		make
 	fi
 
-        if [[ $HTTPD_TASK = *install* ]]
-        then
+	if [[ $HTTPD_TASK = *install* ]]
+	then
 		echo " - Installing"
 		make install
 	fi
 
-        if [[ $HTTPD_TASK = *configure* ]]
-        then
+
+	if [[ $HTTPD_TASK = *configure* ]]
+	then
 		echo " - Configuring"
 
-	# ---- INSTALL CONTROL SCRIPTS -- START ----
+		# ---- INSTALL CONTROL SCRIPTS -- START ----
 
 		cat > /etc/init.d/$HTTPDUSER-server << EOF
 #!/bin/sh
 ### BEGIN INIT INFO
 # Provides:	  $HTTPDUSER-server
-# Required-Start:    \$network \$syslog \$time
-# Required-Stop:     \$syslog
-# Should-Start:      \$local_fs
-# Should-Stop:       \$local_fs
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
+# Required-Start:	\$network \$syslog \$time
+# Required-Stop:	 \$syslog
+# Should-Start:	  \$local_fs
+# Should-Stop:	   \$local_fs
+# Default-Start:	 2 3 4 5
+# Default-Stop:	  0 1 6
 # Short-Description: Controls the httpd server
-# Description:       Controls the httpd server.
+# Description:	   Controls the httpd server.
 ### END INIT INFO
 # GPL Licensed
 
@@ -1627,23 +1666,23 @@ start_httpd()
 
 		if \$DAEMON start
  		then
-                        echo " ${cc_green}OK${cc_normal}"
-                else
-                        echo -n " ${cc_red}FAIL${cc_normal} ("
+						echo " ${cc_green}OK${cc_normal}"
+				else
+						echo -n " ${cc_red}FAIL${cc_normal} ("
 
-                        if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
-                        then
-                                echo -n "${cc_yellow}Seems \$PROCESSNAME is already running.${cc_normal}"
+						if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+						then
+								echo -n "${cc_yellow}Seems \$PROCESSNAME is already running.${cc_normal}"
 
-                                # and just to be sure the pids are not out of whack
-                                killall -2 \$PROCESSNAME 2> /dev/null
-                        else
-                                echo -n "${cc_yellow}Looks like \$PROCESSNAME is not already running.${cc_normal}"
-                        fi
+								# and just to be sure the pids are not out of whack
+								killall -2 \$PROCESSNAME 2> /dev/null
+						else
+								echo -n "${cc_yellow}Looks like \$PROCESSNAME is not already running.${cc_normal}"
+						fi
 			echo -n ")"
 
-                        exit 1
-                fi
+						exit 1
+				fi
 
 
 }
@@ -1657,24 +1696,24 @@ stop_httpd()
 		echo -n " ${cc_red}FAIL${cc_normal} ("
 
 		if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
-                then
-                	echo -n "${cc_yellow}Seems \$PROCESSNAME is already running.${cc_normal}"
+				then
+					echo -n "${cc_yellow}Seems \$PROCESSNAME is already running.${cc_normal}"
 
-                        # and just to be sure the pids are not out of whack
-                     	killall -2 \$PROCESSNAME 2> /dev/null
-                else
-                        echo -n "${cc_yellow}Looks like \$PROCESSNAME is not already running.${cc_normal}"
-                fi
+						# and just to be sure the pids are not out of whack
+					 	killall -2 \$PROCESSNAME 2> /dev/null
+				else
+						echo -n "${cc_yellow}Looks like \$PROCESSNAME is not already running.${cc_normal}"
+				fi
 		echo -n ")"
 
-        fi
+		fi
 
 
 	#start-stop-daemon --stop --quiet --pidfile "\$PIDFILE" --exec "\$DAEMON" -- stop
 	rm -f "\$PIDFILE"
 
-        # and just to be sure the pids are not out of whack
-        killall -2 \$PROCESSNAME 2> /dev/null
+		# and just to be sure the pids are not out of whack
+		killall -2 \$PROCESSNAME 2> /dev/null
 
 	return 0
 }
@@ -1719,17 +1758,37 @@ case "\$1" in
 esac
 EOF
 
-	chmod +x /etc/init.d/$HTTPDUSER-server
-	chown root.root /etc/init.d/$HTTPDUSER-server
+		chmod +x /etc/init.d/$HTTPDUSER-server
+		chown root.root /etc/init.d/$HTTPDUSER-server
 
-		if [ $os = "debian" ]
-		then
-			insserv /etc/init.d/$HTTPDUSER-server
-		elif [ $os = "centos" ]
-		then
-        		chkconfig $HTTPDUSER-server on
+		#
+		# Are we anabled?
+		#		
+		
+		if [[ $HTTPD_TASK = *enable* ]]
+		then		
+			# Enable.
+		
+			if [ $os = "debian" ]
+			then
+				insserv /etc/init.d/$HTTPDUSER-server
+			elif [ $os = "centos" ]
+			then
+				chkconfig $HTTPDUSER-server on
+			else
+				ln -fs /etc/init.d/$HTTPDUSER-server /etc/rc2.d/S19$HTTPDUSER-server
+			fi
 		else
-			ln -fs /etc/init.d/$HTTPDUSER-server /etc/rc2.d/S19$HTTPDUSER-server
+			# Disable
+			if [ $os = "debian" ]
+			then
+				insserv - r/etc/init.d/$HTTPDUSER-server
+			elif [ $os = "centos" ]
+			then
+				chkconfig $HTTPDUSER-server off
+			else
+				rm -f /etc/rc2.d/S19$HTTPDUSER-server
+			fi		
 		fi
 
 	# ---- INSTALL CONTROL SCRIPTS -- END ----
@@ -1744,49 +1803,49 @@ ServerAdmin james@thumbwhere.com
 ServerName apache.thumbwhere.com:80
 DocumentRoot "$HTTPDROOT/htdocs"
 <Directory />
-    Options FollowSymLinks
-    AllowOverride None
-    Order deny,allow
-    Deny from all
+	Options FollowSymLinks
+	AllowOverride None
+	Order deny,allow
+	Deny from all
 </Directory>
 <Directory "$HTTPDROOT/htdocs">
-    Options Indexes FollowSymLinks
-    AllowOverride None
-    Order allow,deny
-    Allow from all
+	Options Indexes FollowSymLinks
+	AllowOverride None
+	Order allow,deny
+	Allow from all
 </Directory>
 <IfModule dir_module>
-    DirectoryIndex index.html
+	DirectoryIndex index.html
 </IfModule>
 <FilesMatch "^\.ht">
-    Order allow,deny
-    Deny from all
-    Satisfy All
+	Order allow,deny
+	Deny from all
+	Satisfy All
 </FilesMatch>
 ErrorLog "logs/error_log"
 LogLevel warn
 <IfModule log_config_module>
-    LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
-    LogFormat "%h %l %u %t \"%r\" %>s %b" common
-    <IfModule logio_module>
-      LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" combinedio
-    </IfModule>
-    CustomLog "logs/access_log" common
+	LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
+	LogFormat "%h %l %u %t \"%r\" %>s %b" common
+	<IfModule logio_module>
+	  LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" combinedio
+	</IfModule>
+	CustomLog "logs/access_log" common
 </IfModule>
 <IfModule alias_module>
-    ScriptAlias /cgi-bin/ "$HTTPDROOT/cgi-bin/"
+	ScriptAlias /cgi-bin/ "$HTTPDROOT/cgi-bin/"
 </IfModule>
 <Directory "$HTTPDROOT/cgi-bin">
-    AllowOverride None
-    Options None
-    Order allow,deny
-    Allow from all
+	AllowOverride None
+	Options None
+	Order allow,deny
+	Allow from all
 </Directory>
 DefaultType text/plain
 <IfModule mime_module>
-    TypesConfig conf/mime.types
-    AddType application/x-compress .Z
-    AddType application/x-gzip .gz .tgz
+	TypesConfig conf/mime.types
+	AddType application/x-compress .Z
+	AddType application/x-gzip .gz .tgz
 </IfModule>
 <IfModule ssl_module>
 SSLRandomSeed startup builtin
@@ -1805,8 +1864,8 @@ EOF
 	echo " - Setting permissions"
 	chown -R $HTTPDUSER.$GROUP $HOMEROOT/$HTTPDUSER/
 
-        echo " - Starting service"
-        /etc/init.d/$HTTPDUSER-server start
+	echo " - Starting service"
+	/etc/init.d/$HTTPDUSER-server start
 
 fi
 
@@ -1836,8 +1895,8 @@ then
 		fi
 	fi
 
-        if [[ $FTPD_TASK = *compile* ]]
-        then
+	if [[ $FTPD_TASK = *compile* ]]
+	then
 		cp $DOWNLOADS/$FTPDFILE $HOMEROOT/$FTPDUSER/
 		chown $FTPDUSER.$GROUP $HOMEROOT/$FTPDUSER
 		cd  $HOMEROOT/$FTPDUSER
@@ -1851,15 +1910,15 @@ then
 		make
 	fi
 
-        if [[ $FTPD_TASK = *install* ]]
-        then
+	if [[ $FTPD_TASK = *install* ]]
+		then
 		echo " - Installing"
 		make install
 	fi
 
 
 	if [[ $FTPD_TASK = *configure* ]]
-        then
+	then
 
 		echo " - Configuring"
 
@@ -1869,14 +1928,14 @@ then
 #!/bin/sh
 ### BEGIN INIT INFO
 # Provides:	  $FTPDUSER-server
-# Required-Start:    \$network \$syslog \$time
-# Required-Stop:     \$syslog
-# Should-Start:      \$local_fs
-# Should-Stop:       \$local_fs
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
+# Required-Start:	\$network \$syslog \$time
+# Required-Stop:	 \$syslog
+# Should-Start:	  \$local_fs
+# Should-Stop:	   \$local_fs
+# Default-Start:	 2 3 4 5
+# Default-Stop:	  0 1 6
 # Short-Description: Controls the ftpd server
-# Description:       Controls the ftpd server.
+# Description:	   Controls the ftpd server.
 ### END INIT INFO
 # GPL Licensed
 
@@ -1915,32 +1974,32 @@ start_ftpd()
 	then 	
 		if \$DAEMON
  		then
-                        echo " ${cc_green}OK${cc_normal}"
-                else
-                        echo -n " ${cc_red}FAIL${cc_normal} ("
+						echo " ${cc_green}OK${cc_normal}"
+				else
+						echo -n " ${cc_red}FAIL${cc_normal} ("
 
-                        if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
-                        then
-                                echo -n "${cc_yellow}Seems \$PROCESSNAME is already running.${cc_normal}"
+						if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+						then
+								echo -n "${cc_yellow}Seems \$PROCESSNAME is already running.${cc_normal}"
 
-                                # and just to be sure the pids are not out of whack
-                                killall -2 \$PROCESSNAME 2> /dev/null
-                        else
-                                echo -n "${cc_yellow}Looks like \$PROCESSNAME is not already running.${cc_normal}"
-                        fi
+								# and just to be sure the pids are not out of whack
+								killall -2 \$PROCESSNAME 2> /dev/null
+						else
+								echo -n "${cc_yellow}Looks like \$PROCESSNAME is not already running.${cc_normal}"
+						fi
 			echo -n ")"
 
-                        exit 1
-                fi
+						exit 1
+				fi
 	elif [ "\$os" = "debian" ]
 	then
 		if  start-stop-daemon --start --quiet --oknodo --pidfile "\$PIDFILE" --exec "\$DAEMON" 
 		then
-                        echo " ${cc_green}OK${cc_normal}"
-                else
-                        echo " ${cc_red}FAIL${cc_normal} (is it already running?)"
-                        exit 1
-                fi
+						echo " ${cc_green}OK${cc_normal}"
+				else
+						echo " ${cc_red}FAIL${cc_normal} (is it already running?)"
+						exit 1
+				fi
 
 	fi
 }
@@ -1951,18 +2010,18 @@ stop_ftpd()
 	# Stop  based on OS
 	if [ "\$os" = "centos" ]
 	then 
-             	if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
-                then
-                        if killall -2 \$PROCESSNAME 2> /dev/null
-                        then
-                                 echo " ${cc_green}OK${cc_normal}"
-                        else
-                                 echo " ${cc_red}FAIL${cc_normal}"
-                        fi
-                else
-                        echo -n " ${cc_red}FAIL${cc_normal}"
-                        echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
-                fi
+			 	if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+				then
+						if killall -2 \$PROCESSNAME 2> /dev/null
+						then
+								 echo " ${cc_green}OK${cc_normal}"
+						else
+								 echo " ${cc_red}FAIL${cc_normal}"
+						fi
+				else
+						echo -n " ${cc_red}FAIL${cc_normal}"
+						echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
+				fi
 
 	elif [ "\$os" = "debian" ]
 	then
@@ -1970,18 +2029,18 @@ stop_ftpd()
 		then
 			echo " ${cc_green}OK${cc_normal}"
 
-        		# and just to be sure the pids are not out of whack
-        		killall -2 \$PROCESSNAME 2> /dev/null
+				# and just to be sure the pids are not out of whack
+				killall -2 \$PROCESSNAME 2> /dev/null
 		else
 			echo -n " ${cc_red}FAIL${cc_normal} ("
 
  			if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
 	 		then
-                                echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
+								echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
 
-                                # and just to be sure the pids are not out of whack
-                                killall -2 \$PROCESSNAME 2> /dev/null
-                        else
+								# and just to be sure the pids are not out of whack
+								killall -2 \$PROCESSNAME 2> /dev/null
+						else
 				echo -n "${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
 			fi
 
@@ -1993,8 +2052,8 @@ stop_ftpd()
 	# 5 seconds grace
 	sleep 5
 
-        # And finally, to ensure there are no issues
-        killall -9 \$PROCESSNAME 2> /dev/null
+		# And finally, to ensure there are no issues
+		killall -9 \$PROCESSNAME 2> /dev/null
 
 	rm -f "\$PIDFILE"
 	return 0
@@ -2040,33 +2099,51 @@ case "\$1" in
 esac
 EOF
 
-chmod +x /etc/init.d/$FTPDUSER-server 2> /dev/null
-chown root.root /etc/init.d/$FTPDUSER-server 2> /dev/null
+	chmod +x /etc/init.d/$FTPDUSER-server 2> /dev/null
+	chown root.root /etc/init.d/$FTPDUSER-server 2> /dev/null
 
-if [ $os = "debian" ]
-then
-	insserv /etc/init.d/$FTPDUSER-server 2> /dev/null
-elif [ $os = "centos" ]
-then
-        chkconfig $FTPDUSER-server on 2> /dev/null
-else
-	ln -fs /etc/init.d/$FTPDUSER-server /etc/rc2.d/S19$FTPDUSER-server 2> /dev/null
-fi
+	
+		
+
+	if [[ $FTPD_TASK = *enable* ]]
+	then
+		if [ $os = "debian" ]
+		then
+			insserv /etc/init.d/$FTPDUSER-server 2> /dev/null
+		elif [ $os = "centos" ]
+		then
+			chkconfig $FTPDUSER-server on 2> /dev/null
+		else
+			ln -fs /etc/init.d/$FTPDUSER-server /etc/rc2.d/S19$FTPDUSER-server 2> /dev/null
+		fi
+	else
+		if [ $os = "debian" ]
+		then
+			insserv -r /etc/init.d/$FTPDUSER-server 2> /dev/null
+		elif [ $os = "centos" ]
+		then
+			chkconfig $FTPDUSER-server off 2> /dev/null
+		else
+			rm -r /etc/rc2.d/S19$FTPDUSER-server 2> /dev/null
+		fi	
+	fi
+	
+	
 	# ---- INSTALL CONTROL SCRIPTS -- END ----
 
 	# ---- INSTALL CONFIG -- START --
 	cat > $FTPDCONFIG << EOF
-ServerName                      "ThumbWhere FTP"
-ServerType                      standalone
-DefaultServer                   on
-Port                            21
-UseIPv6                         off
-Umask                           022
-MaxInstances                    30
-User                            tw-ftpd
-Group                           thumbwhere
-DefaultRoot                     ~
-AllowOverwrite                  on
+ServerName					  "ThumbWhere FTP"
+ServerType					  standalone
+DefaultServer				   on
+Port							21
+UseIPv6						 off
+Umask						   022
+MaxInstances					30
+User							tw-ftpd
+Group						   thumbwhere
+DefaultRoot					 ~
+AllowOverwrite				  on
 <Limit SITE_CHMOD>
   DenyAll
 </Limit>
@@ -2079,8 +2156,8 @@ EOF
 	echo " - Setting permissions"
 	chown -R $FTPDUSER.$GROUP $HOMEROOT/$FTPDUSER/ 2> /dev/null
 
-        echo " - Starting service"
-        /etc/init.d/$FTPDUSER-server start
+	echo " - Starting service"
+	/etc/init.d/$FTPDUSER-server start
 fi
 
 #
