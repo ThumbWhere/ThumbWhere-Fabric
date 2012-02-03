@@ -14,13 +14,13 @@ set -e
 # If enable is not part of the string, then the service is deemed to be 'disabled'
 #
 
-IRCD_TASK="disable"
-REDIS_TASK="disable"
-NODEJS_TASK="disable"
-VARNISH_TASK="disable"
-NGINX_TASK="disable"
-HTTPD_TASK="disable"
-FTPD_TASK="disable"
+IRCD_TASK="download,compile,install,configure,enable"
+REDIS_TASK="download,compile,install,configure,enable"
+NODEJS_TASK="download,compile,install,configure,enable"
+VARNISH_TASK="download,compile,install,configure,enable"
+NGINX_TASK="download,compile,install,configure,enable"
+HTTPD_TASK="download,compile,install,configure,enable"
+FTPD_TASK="download,compile,install,configure,enable"
 
 IRCDURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
 REDISURL=http://redis.googlecode.com/files/redis-2.4.6.tar.gz
@@ -1051,8 +1051,9 @@ stop_varnishd() {
 				echo " ${cc_red}FAIL${cc_normal}"
 			fi
 		else
-			echo " ${cc_red}FAIL${cc_normal} (varnishd is not running)"
-		fi
+				echo -n " ${cc_red}FAIL${cc_normal}"
+				echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
+		fi				
 	elif [ "\$os" = "debian" ]
 	then
 		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
@@ -1066,11 +1067,11 @@ stop_varnishd() {
 
  			if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
 	 		then
-								echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
+				echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
 
-								# and just to be sure the pids are not out of whack
-								killall -2 \$PROCESSNAME 2> /dev/null
-						else
+				# and just to be sure the pids are not out of whack
+				killall -2 \$PROCESSNAME 2> /dev/null
+			else
 				echo -n "${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
 			fi
 
@@ -1314,7 +1315,8 @@ stop_nginxd() {
 				echo " ${cc_red}FAIL${cc_normal}"
 			fi
 		else
-			echo " ${cc_red}FAIL${cc_normal} ($NGINXPROCESS is not running)"
+				echo -n " ${cc_red}FAIL${cc_normal}"
+				echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"						
 		fi
 	elif [ "\$os" = "debian" ]
 	then
@@ -1961,19 +1963,18 @@ stop_ftpd()
 	# Stop  based on OS
 	if [ "\$os" = "centos" ]
 	then 
-			 	if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+		if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+		then
+				if killall -2 \$PROCESSNAME 2> /dev/null
 				then
-						if killall -2 \$PROCESSNAME 2> /dev/null
-						then
-								 echo " ${cc_green}OK${cc_normal}"
-						else
-								 echo " ${cc_red}FAIL${cc_normal}"
-						fi
+						 echo " ${cc_green}OK${cc_normal}"
 				else
-						echo -n " ${cc_red}FAIL${cc_normal}"
-						echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
+						 echo " ${cc_red}FAIL${cc_normal}"
 				fi
-
+		else
+				echo -n " ${cc_red}FAIL${cc_normal}"
+				echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"						
+		fi
 	elif [ "\$os" = "debian" ]
 	then
 		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
@@ -1987,11 +1988,11 @@ stop_ftpd()
 
  			if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
 	 		then
-								echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
+				echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
 
-								# and just to be sure the pids are not out of whack
-								killall -2 \$PROCESSNAME 2> /dev/null
-						else
+				# and just to be sure the pids are not out of whack
+				killall -2 \$PROCESSNAME 2> /dev/null
+			else
 				echo -n "${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
 			fi
 
