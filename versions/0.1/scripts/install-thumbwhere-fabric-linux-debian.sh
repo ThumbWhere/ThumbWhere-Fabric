@@ -16,37 +16,37 @@ set -e
 
 if ["$IRCD_TASK" = ""] 
 then
-	IRCD_TASK="download,compile,install,configure,enable"
+	IRCD_TASK="enable"
 fi
 
 if ["$REDIS_TASK" = ""] 
 then
-	REDIS_TASK="download,compile,install,configure,enable"
+	REDIS_TASK="enable"
 fi
 
 if ["$NODEJS_TASK" = ""] 
 then
-	NODEJS_TASK="download,compile,install,configure,enable"
+	NODEJS_TASK="enable"
 fi
 
 if ["$VARNISH_TASK" = ""] 
 then
-	VARNISH_TASK="download,compile,install,configure,enable"
+	VARNISH_TASK="disable"
 fi
 
 if ["$NGINX_TASK" = ""] 
 then
-	NGINX_TASK="download,compile,install,configure,enable"
+	NGINX_TASK="enable"
 fi
 
 if ["$HTTPD_TASK" = ""] 
 then
-	HTTPD_TASK="download,compile,install,configure,enable"
+	HTTPD_TASK="enable"
 fi
 
 if ["$FTPD_TASK" = ""] 
 then
-	FTPD_TASK="download,compile,install,configure,enable"
+	FTPD_TASK="enable"
 fi
 
 IRCDURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
@@ -278,21 +278,21 @@ if [[ $REDIS_TASK = *download* ]]
 then
 	[ -f $REDISFILE ] && echo " - $REDISFILE exists" || wget $REDISURL
 else
-		echo " - ${cc_yellow}Skipping $REDISFILE${cc_normal}"
+	echo " - ${cc_yellow}Skipping $REDISFILE${cc_normal}"
 fi
 
 if [[ $NODEJS_TASK = *download* ]] 
 then
 	[ -f $NODEJSFILE ] && echo " - $NODEJSFILE exists" || wget $NODEJSURL
 else
-		echo " - ${cc_yellow}Skipping $NODEJSFILE${cc_normal}"
+	echo " - ${cc_yellow}Skipping $NODEJSFILE${cc_normal}"
 fi
 
 if [[ $VARNISH_TASK = *download* ]] 
 then
 	[ -f $VARNISHFILE ] && echo " - $VARNISHFILE exists" || wget $VARNISHURL
 else
-		echo " - ${cc_yellow}Skipping $VARNISHFILE${cc_normal}"
+	echo " - ${cc_yellow}Skipping $VARNISHFILE${cc_normal}"
 fi
 
 
@@ -300,7 +300,7 @@ if [[ $NGINX_TASK = *download* ]]
 then
 	[ -f $NGINXFILE ] && echo " - $NGINXFILE exists" || wget $NGINXURL
 else
-		echo " - ${cc_yellow}Skipping $NGINXFILE${cc_normal}"
+	echo " - ${cc_yellow}Skipping $NGINXFILE${cc_normal}"
 fi
 
 
@@ -308,14 +308,14 @@ if [[ $HTTPD_TASK = *download* ]]
 then
 	[ -f $HTTPDFILE ] && echo " - $HTTPDFILE exists" || wget $HTTPDURL
 else
-		echo " - ${cc_yellow}Skipping $HTTPDFILE${cc_normal}"
+	echo " - ${cc_yellow}Skipping $HTTPDFILE${cc_normal}"
 fi
 
 if [[ $FTPD_TASK = *download* ]] 
 then
 	[ -f $FTPDFILE ] && echo " - $FTPDFILE exists" || wget $FTPDURL
 else
-		echo " - ${cc_yellow}Skipping $IRCDFILE${cc_normal}"
+	echo " - ${cc_yellow}Skipping $IRCDFILE${cc_normal}"
 fi
 
 cd ..
