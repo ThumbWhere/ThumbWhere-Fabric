@@ -14,37 +14,37 @@ set -e
 # If enable is not part of the string, then the service is deemed to be 'disabled'
 #
 
-if ("$IRCD_TASK" = "") 
+if ["$IRCD_TASK" = ""] 
 then
 	IRCD_TASK="download,compile,install,configure,enable"
 fi
 
-if ("$REDIS_TASK" = "") 
+if ["$REDIS_TASK" = ""] 
 then
 	REDIS_TASK="download,compile,install,configure,enable"
 fi
 
-if ("$NODEJS_TASK" = "") 
+if ["$NODEJS_TASK" = ""] 
 then
 	NODEJS_TASK="download,compile,install,configure,enable"
 fi
 
-if ("$VARNISH_TASK" = "") 
+if ["$VARNISH_TASK" = ""] 
 then
 	VARNISH_TASK="download,compile,install,configure,enable"
 fi
 
-if ("$NGINX_TASK" = "") 
+if ["$NGINX_TASK" = ""] 
 then
 	NGINX_TASK="download,compile,install,configure,enable"
 fi
 
-if ("$HTTPD_TASK" = "") 
+if ["$HTTPD_TASK" = ""] 
 then
 	HTTPD_TASK="download,compile,install,configure,enable"
 fi
 
-if ("$FTPD_TASK" = "") 
+if ["$FTPD_TASK" = ""] 
 then
 	FTPD_TASK="download,compile,install,configure,enable"
 fi
