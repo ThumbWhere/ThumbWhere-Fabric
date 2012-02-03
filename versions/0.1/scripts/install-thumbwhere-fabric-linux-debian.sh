@@ -14,13 +14,40 @@ set -e
 # If enable is not part of the string, then the service is deemed to be 'disabled'
 #
 
-IRCD_TASK="download,compile,install,configure,enable"
-REDIS_TASK="download,compile,install,configure,enable"
-NODEJS_TASK="download,compile,install,configure,enable"
-VARNISH_TASK="download,compile,install,configure,enable"
-NGINX_TASK="download,compile,install,configure,enable"
-HTTPD_TASK="download,compile,install,configure,enable"
-FTPD_TASK="download,compile,install,configure,enable"
+if ("$IRCD_TASK" = "") 
+then
+	IRCD_TASK="download,compile,install,configure,enable"
+if
+
+if ("$REDIS_TASK" = "") 
+then
+	REDIS_TASK="download,compile,install,configure,enable"
+fi
+
+if ("$NODEJS_TASK" = "") 
+then
+	NODEJS_TASK="download,compile,install,configure,enable"
+fi
+
+if ("$VARNISH_TASK" = "") 
+then
+	VARNISH_TASK="download,compile,install,configure,enable"
+fi
+
+if ("$NGINX_TASK" = "") 
+then
+	NGINX_TASK="download,compile,install,configure,enable"
+fi
+
+if ("$HTTPD_TASK" = "") 
+then
+	HTTPD_TASK="download,compile,install,configure,enable"
+fi
+
+if ("$FTPD_TASK" = "") 
+then
+	FTPD_TASK="download,compile,install,configure,enable"
+fi
 
 IRCDURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
 REDISURL=http://redis.googlecode.com/files/redis-2.4.6.tar.gz
@@ -527,20 +554,18 @@ stop_ircd()
 	# Stop based on OS type
 	if [ "\$os" = "centos" ]
 	then
-
  		if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
 		then
 			if killall -2 \$PROCESSNAME 2> /dev/null
 			then
 				 echo " ${cc_green}OK${cc_normal}"
 			else
-				 echo " ${cc_red}FAIL${cc_normal}"
+				 echo " ${cc_cyan}WARN${cc_normal}"
 			fi
 		else
-			echo -n " ${cc_red}FAIL${cc_normal}"
+			echo -n " ${cc_cyan}WARN${cc_normal}"
 			echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
 		fi
-
 	elif [ "\$os" = "debian" ]
 	then
 
@@ -550,7 +575,7 @@ stop_ircd()
 	   		# and just to be sure the pids are not out of whack
 	   		killall -2 \$PROCESSNAME 2> /dev/null
 		else
-			echo -n " ${cc_red}FAIL${cc_normal} ("
+			echo -n " ${cc_cyan}WARN${cc_normal} ("
  			if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
  			then
 				echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
@@ -1051,7 +1076,7 @@ stop_varnishd() {
 				echo " ${cc_red}FAIL${cc_normal}"
 			fi
 		else
-				echo -n " ${cc_red}FAIL${cc_normal}"
+				echo -n " ${cc_cyan}WARN${cc_normal}"
 				echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
 		fi				
 	elif [ "\$os" = "debian" ]
@@ -1060,10 +1085,10 @@ stop_varnishd() {
 		then		
 			echo " ${cc_green}OK${cc_normal}"
 
-				# and just to be sure the pids are not out of whack
-				killall -2 \$PROCESSNAME 2> /dev/null
+			# and just to be sure the pids are not out of whack
+			killall -2 \$PROCESSNAME 2> /dev/null
 		else
-			echo -n " ${cc_red}FAIL${cc_normal} ("
+			echo -n " ${cc_cyan}WARN${cc_normal} ("
 
  			if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
 	 		then
@@ -1315,8 +1340,8 @@ stop_nginxd() {
 				echo " ${cc_red}FAIL${cc_normal}"
 			fi
 		else
-				echo -n " ${cc_red}FAIL${cc_normal}"
-				echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"						
+			echo -n " ${cc_cyan}WARN${cc_normal}"
+			echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"						
 		fi
 	elif [ "\$os" = "debian" ]
 	then
@@ -1327,15 +1352,14 @@ stop_nginxd() {
 				# and just to be sure the pids are not out of whack
 				killall -2 \$PROCESSNAME 2> /dev/null
 		else
-			echo -n " ${cc_red}FAIL${cc_normal} ("
+			echo -n " ${cc_cyan}WARN${cc_normal} ("
 
  			if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
 	 		then
-								echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
-
-								# and just to be sure the pids are not out of whack
-								killall -2 \$PROCESSNAME 2> /dev/null
-						else
+				echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
+				# and just to be sure the pids are not out of whack
+				killall -2 \$PROCESSNAME 2> /dev/null
+			else
 				echo -n "${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
 			fi
 
@@ -1965,15 +1989,15 @@ stop_ftpd()
 	then 
 		if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
 		then
-				if killall -2 \$PROCESSNAME 2> /dev/null
-				then
-						 echo " ${cc_green}OK${cc_normal}"
-				else
-						 echo " ${cc_red}FAIL${cc_normal}"
-				fi
+			if killall -2 \$PROCESSNAME 2> /dev/null
+			then
+				echo " ${cc_green}OK${cc_normal}"
+			else
+				echo " ${cc_red}FAIL${cc_normal}"
+			fi
 		else
-				echo -n " ${cc_red}FAIL${cc_normal}"
-				echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"						
+			echo -n " ${cc_red}FAIL${cc_normal}"
+			echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"						
 		fi
 	elif [ "\$os" = "debian" ]
 	then
@@ -1981,10 +2005,10 @@ stop_ftpd()
 		then
 			echo " ${cc_green}OK${cc_normal}"
 
-				# and just to be sure the pids are not out of whack
-				killall -2 \$PROCESSNAME 2> /dev/null
+			# and just to be sure the pids are not out of whack
+			killall -2 \$PROCESSNAME 2> /dev/null
 		else
-			echo -n " ${cc_red}FAIL${cc_normal} ("
+			echo -n " ${cc_cyan}FAIL${cc_normal} ("
 
  			if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
 	 		then
