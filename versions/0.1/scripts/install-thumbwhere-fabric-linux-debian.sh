@@ -165,7 +165,9 @@ create_user_and_stop_service()
 			if killall -0 ${p_process}
 			then
 				echo " - Stopping service"
+				echo "--------- start ----------"
 				/etc/init.d/${p_user}-server stop
+				echo "---------- end -----------"
 			fi
 		else
 			echo " - Killing service (control script not found at /etc/init.d/${p_user}-server)"
@@ -205,7 +207,9 @@ enable_disable()
 			fi
 			
 			echo " - Starting service."
-			/etc/init.d/${p_user}-server start		
+			echo "--------- start ----------"
+			/etc/init.d/${p_user}-server start	
+			echo "---------- end -----------"			
 		else
 			echo " - Disabling service."
 		
@@ -904,25 +908,7 @@ if [ "$VARNISH_TASK" != "" ]
 then
 	echo "*** ${cc_cyan}Installing VARNISH ($VARNISHFOLDER)${cc_normal}"
 
-	if [ "`id -un $VARNISHUSER`" != "$VARNISHUSER" ]
-	then
-		echo " - Adding user $VARNISHUSER"
-		useradd $VARNISHUSER -m -g $GROUP
-	else
-
-		if [ -f /etc/init.d/$VARNISHUSER-server ]
-		then
-			echo " - Stopping service"
-			/etc/init.d/$VARNISHUSER-server stop
-		else
-			echo " - Killing service (control script not found at /etc/init.d/$VARNISHUSER-server)"
-			for i in `ps ax | grep varnishd | grep -v grep | cut -d ' ' -f 1`
-			do
-				kill -2 $i
-			done
-
-		fi
-	fi
+	create_user_and_stop_service $VARNISHUSER $VARNISHPROCESS
 
 	if [[ $VARNISH_TASK = *compile* ]]
 	then
