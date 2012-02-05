@@ -16,37 +16,37 @@ set -e
 
 if ["$IRCD_TASK" = ""] 
 then
-	IRCD_TASK="enable"
+	IRCD_TASK="download,compile,install,configure,enable"
 fi
 
 if ["$REDIS_TASK" = ""] 
 then
-	REDIS_TASK="enable"
+	REDIS_TASK="download,compile,install,configure,enable"
 fi
 
 if ["$NODEJS_TASK" = ""] 
 then
-	NODEJS_TASK="enable"
+	NODEJS_TASK="download,compile,install,configure,enable"
 fi
 
 if ["$VARNISH_TASK" = ""] 
 then
-	VARNISH_TASK="disable"
+	VARNISH_TASK="download,compile,install,configure,enable"
 fi
 
 if ["$NGINX_TASK" = ""] 
 then
-	NGINX_TASK="enable"
+	NGINX_TASK="download,compile,install,configure,enable"
 fi
 
 if ["$HTTPD_TASK" = ""] 
 then
-	HTTPD_TASK="enable"
+	HTTPD_TASK="download,compile,install,configure,enable"
 fi
 
 if ["$FTPD_TASK" = ""] 
 then
-	FTPD_TASK="enable"
+	FTPD_TASK="download,compile,install,configure,enable"
 fi
 
 IRCDURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
@@ -97,7 +97,7 @@ IRCDPID=$HOMEROOT/$IRCDUSER/inspircd.pid
 REDISCONFIG=$HOMEROOT/$REDISUSER/redis.conf
 REDISLOGS=$HOMEROOT/$REDISUSER
 REDISPID=$HOMEROOT/$REDISUSER/redis.pid
-REDISPROCESS=redis
+REDISPROCESS=redis-server
 
 VARNISHCONFIG=$HOMEROOT/$VARNISHUSER/thumbwhere.vcl
 VARNISHPROCESS=varnishd
@@ -226,6 +226,12 @@ enable_disable()
 		fi
 	else
 		echo " - Service is not configured."
+		if [[ ${p_task} = *enable* ]]
+		then
+			echo " - CRITICAL ${cc_red}FAIL${cc_normal} We want the service enabled, but there are no control scripts. Service needs to be configured."
+			exit 1
+		fi
+
 	fi
 }
 
@@ -769,23 +775,11 @@ case "\$1" in
   stop)
 	echo -n "Stopping \$DESC (\$PROCESSNAME): "
 
-	if [ "\$os" = "centos" ]
-	then 	
-		if redis-cli shutdown  2> /dev/null
-		then
-			echo " ${cc_green}OK${cc_normal}"
-		else
-			echo " ${cc_red}FAIL${cc_normal}"
-		fi
-	elif [ "\$os" = "debian" ]
+	if redis-cli shutdown  2> /dev/null
 	then
-		if redis-cli shutdown  2> /dev/null
-		then		
-			log_end_msg 0
-		else
-			log_end_msg 1
-		fi
-		#start-stop-daemon --stop --retry 10 --quiet --oknodo --pidfile \$PIDFILE --exec \$DAEMON  2> /dev/null
+		echo " ${cc_green}OK${cc_normal}"
+	else
+		echo " ${cc_red}FAIL${cc_normal}"
 	fi
 	rm -f \$PIDFILE
 	;;
