@@ -31,7 +31,7 @@ fi
 
 if ["$VARNISH_TASK" = ""] 
 then
-	VARNISH_TASK="download,compile,install,configure,enable"
+	VARNISH_TASK="disable"
 fi
 
 if ["$NGINX_TASK" = ""] 
@@ -160,21 +160,22 @@ create_user_and_stop_service()
 		useradd ${p_user} -m -g $GROUP
 	else
 
-		if [ -f /etc/init.d/${p_user}-server ]
+		if killall -0 ${p_process}
 		then
-			if killall -0 ${p_process}
+			if [ -f /etc/init.d/${p_user}-server ]
 			then
 				echo " - Stopping service"
 				echo "--------- start ----------"
 				/etc/init.d/${p_user}-server stop
 				echo "---------- end -----------"
+			else
+				echo " - Killing service (control script not found at /etc/init.d/${p_user}-server)"
+				killall -2 ${p_process}
+				#for i in `ps ax | grep ${p_process} | grep -v grep | cut -d ' ' -f 1`
+				#do
+				#	kill -2 $i
+				#done
 			fi
-		else
-			echo " - Killing service (control script not found at /etc/init.d/${p_user}-server)"
-			for i in `ps ax | grep ${p_process} | grep -v grep | cut -d ' ' -f 1`
-			do
-				kill -2 $i
-			done
 		fi
 	fi
 }
