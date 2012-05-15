@@ -3,7 +3,9 @@
 # This will setup ThumbWhere Fabric node on a Linux Box
 #
 # Although this script can be run manually, in will generally
-# be executed as part of an automated install.
+# be executed as part of an automated install if thumbwhere is 
+# configured with credentials of the target host that can perform 
+# tasks as root or use sudo.
 
 # We want the script to fail on any errors... so..
 set -e
@@ -16,7 +18,7 @@ set -e
 
 if ["$IRCD_TASK" = ""] 
 then
-	IRCD_TASK="enable"
+	IRCD_TASK="disable"
 fi
 
 if ["$REDIS_TASK" = ""] 
