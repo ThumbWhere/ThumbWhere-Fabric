@@ -6,6 +6,21 @@
 # be executed as part of an automated install if thumbwhere is 
 # configured with credentials of the target host that can perform 
 # tasks as root or use sudo.
+#
+# Bootstrapping
+# -------------
+#
+# This cript can be downloaded using teh following command
+# 
+# For systems with wget, run this line.
+#
+# rm install-thumbwhere-fabric-linux-debian.sh; wget -nc https://raw.github.com/ThumbWhere/ThumbWhere-Fabric/master/versions/0.1/scripts/install-thumbwhere-fabric-linux-debian.sh; chmod +x install-thumbwhere-fabric-linux-debian.sh
+#
+# For systems with curl, run this line
+#
+# curl -O https://raw.github.com/ThumbWhere/ThumbWhere-Fabric/master/versions/0.1/scripts/install-thumbwhere-fabric-linux-debian.sh; chmod +x install-thumbwhere-fabric-linux-debian.sh
+# 
+#
 
 # We want the script to fail on any errors... so..
 set -e
