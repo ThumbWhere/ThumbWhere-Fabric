@@ -275,6 +275,12 @@ then
 	os="debian"
 fi
 
+if [ "`grep ubuntu /proc/version -c`" != "0" ]
+then
+        os="debian"
+fi
+
+
 if [ "$os" = "" ] 
 then
 	echo "Unable to determine os from `cat /proc/version -c`"
