@@ -102,7 +102,7 @@ VARNISHUSER=tw-varnish
 NGINXUSER=tw-nginx
 HTTPDUSER=tw-httpd
 FTPDUSER=tw-ftpd
-MYSQLDUSER=tw-sqld
+MYSQLDUSER=tw-mysqld
 
 IRCDFILE=`echo $IRCDURL | rev | cut -d\/ -f1 | rev`
 REDISFILE=`echo $REDISURL | rev | cut -d\/ -f1 | rev`
@@ -150,10 +150,10 @@ FTPDCONFIG=$FTPDROOT/etc/proftpd.conf
 FTPDPID=$FTPDROOT/var/proftpd.pid
 FTPDPROCESS=proftpd
 
-MYSQLDROOT=$HOMEROOT/$MYSQLDUSER/sqld
-MYSQLDCONFIG=$MYSQLDROOT/etc/sqld.conf
-MYSQLDPID=$MYSQLDROOT/var/sqld.pid
-MYSQLDPROCESS=sqld
+MYSQLDROOT=$HOMEROOT/$MYSQLDUSER/mysqld
+MYSQLDCONFIG=$MYSQLDROOT/etc/mysqld.conf
+MYSQLDPID=$MYSQLDROOT/var/mysqld.pid
+MYSQLDPROCESS=mysqld
 
 
 groupadd -f thumbwhere
