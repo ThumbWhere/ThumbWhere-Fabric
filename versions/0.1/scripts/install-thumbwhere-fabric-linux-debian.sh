@@ -216,7 +216,7 @@ enable_disable()
 		if [[ ${p_task} = *enable* ]]
 		then
 			# If we are enabling...
-			echo " - Enabling service. $os"
+			echo " - Enabling service."
 			if [[ $os = "debian" ]]
 			then
 				insserv /etc/init.d/${p_user}-server 2> /dev/null
@@ -281,6 +281,12 @@ fi
 if [ "`grep ubuntu /proc/version -c`" != "0" ]
 then
 	os="ubuntu"
+	
+	if [ ! -f /sbin/insserv ]
+	then
+		ln -s /usr/lib/insserv/insserv /sbin/insserv
+	fi
+	
 fi
 
 
