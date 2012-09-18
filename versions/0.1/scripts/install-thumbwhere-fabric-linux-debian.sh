@@ -216,8 +216,8 @@ enable_disable()
 		if [[ ${p_task} = *enable* ]]
 		then
 			# If we are enabling...
-			echo " - Enabling service."
-			if [ $os = "debian" ]
+			echo " - Enabling service. $os"
+			if [[ $os = "debian" ]]
 			then
 				insserv /etc/init.d/${p_user}-server 2> /dev/null
 			elif [[ $os = "centos" ]] || [[ $os = "ubuntu" ]]
