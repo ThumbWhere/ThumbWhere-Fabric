@@ -14,11 +14,11 @@
 # 
 # For systems with wget, run this line.
 #
-# rm install-thumbwhere-fabric-linux-debian.sh; wget -nc https://raw.github.com/ThumbWhere/ThumbWhere-Fabric/master/versions/0.1/scripts/install-thumbwhere-fabric-linux-debian.sh; chmod +x install-thumbwhere-fabric-linux-debian.sh ; sudo bash ./install-thumbwhere-fabric-linux-debian.sh
+# rm install-thumbwhere-fabric-linux-debian.sh; wget -nc https://raw.github.com/ThumbWhere/ThumbWhere-Fabric/master/versions/0.1/scripts/install-thumbwhere-fabric-linux-debian.sh; chmod +x install-thumbwhere-fabric-linux-debian.sh ; sudo -E bash ./install-thumbwhere-fabric-linux-debian.sh
 #
 # For systems with curl, run this line
 #
-# curl -O https://raw.github.com/ThumbWhere/ThumbWhere-Fabric/master/versions/0.1/scripts/install-thumbwhere-fabric-linux-debian.sh; chmod +x install-thumbwhere-fabric-linux-debian.sh; sudo bash ./install-thumbwhere-fabric-linux-debian.sh
+# curl -O https://raw.github.com/ThumbWhere/ThumbWhere-Fabric/master/versions/0.1/scripts/install-thumbwhere-fabric-linux-debian.sh; chmod +x install-thumbwhere-fabric-linux-debian.sh; sudo -E bash ./install-thumbwhere-fabric-linux-debian.sh
 # 
 #
 
