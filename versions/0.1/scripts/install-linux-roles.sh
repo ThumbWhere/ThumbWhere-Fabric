@@ -102,7 +102,7 @@ VARNISHUSER=tw-varnish
 NGINXUSER=tw-nginx
 HTTPDUSER=tw-httpd
 FTPDUSER=tw-ftpd
-MYSQLDUSER=tw-ftpd
+MYSQLDUSER=tw-sqld
 
 IRCDFILE=`echo $IRCDURL | rev | cut -d\/ -f1 | rev`
 REDISFILE=`echo $REDISURL | rev | cut -d\/ -f1 | rev`
