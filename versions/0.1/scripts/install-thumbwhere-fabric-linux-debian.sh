@@ -31,44 +31,47 @@ set -e
 # If enable is not part of the string, then the service is deemed to be 'disabled'
 #
 
-if ["$IRCD_TASK" = ""] 
-then
-	IRCD_TASK="disable"
-fi
-
-if ["$REDIS_TASK" = ""] 
-then
-	REDIS_TASK="download,compile,install,configure,enable"
-fi
-
-if ["$NODEJS_TASK" = ""] 
-then
-	NODEJS_TASK="download,compile,install,configure,enable"
-fi
-
-if ["$VARNISH_TASK" = ""] 
-then
-	VARNISH_TASK="disable"
-fi
-
-if ["$NGINX_TASK" = ""] 
-then
-	NGINX_TASK="download,compile,install,configure,enable"
-fi
-
-if ["$HTTPD_TASK" = ""] 
-then
-	HTTPD_TASK="download,compile,install,configure,enable"
-fi
-
-if ["$FTPD_TASK" = ""] 
-then
-	FTPD_TASK="download,compile,install,configure,enable"
-fi
+#if ["$IRCD_TASK" = ""] 
+#then
+#	IRCD_TASK="disable"
+#fi
+#
+#if ["$REDIS_TASK" = ""] 
+#then
+#	REDIS_TASK="download,compile,install,configure,enable"
+#fi
+#
+#if ["$NODEJS_TASK" = ""] 
+#then
+#	NODEJS_TASK="download,compile,install,configure,enable"
+#fi
+#
+#if ["$VARNISH_TASK" = ""] 
+#then
+#	VARNISH_TASK="disable"
+#fi
+#
+#if ["$NGINX_TASK" = ""] 
+#then
+#	NGINX_TASK="download,compile,install,configure,enable"
+#fi
+#
+#if ["$HTTPD_TASK" = ""] 
+#then
+#	HTTPD_TASK="download,compile,install,configure,enable"
+#fi
+#
+#if ["$FTPD_TASK" = ""] 
+#then
+#	FTPD_TASK="download,compile,install,configure,enable"
+#fi
 
 IRCDURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
 REDISURL=http://redis.googlecode.com/files/redis-2.4.6.tar.gz
-NODEJSURL=http://nodejs.org/dist/v0.6.8/node-v0.6.8.tar.gz
+NODEJSURL=http://nodejs.org/dist/v0.9.1/node-v0.9.1.tar.gz
+
+# NODEJSURL=http://nodejs.org/dist/v0.6.8/node-v0.6.8.tar.gz
+
 VARNISHURL=http://repo.varnish-cache.org/source/varnish-3.0.2.tar.gz
 NGINXURL=http://nginx.org/download/nginx-1.0.11.tar.gz
 HTTPDURL=http://apache.mirror.aussiehq.net.au/httpd/httpd-2.2.22.tar.gz
@@ -895,7 +898,7 @@ then
 		tar -xzf $NODEJSFILE
 		echo " - Building"
 		cd $NODEJSFOLDER
-		./configure --shared-zlib --shared-cares
+		./configure --shared-zlib #--shared-cares
 		make
 		#echo " - Testing"
 		#make test
