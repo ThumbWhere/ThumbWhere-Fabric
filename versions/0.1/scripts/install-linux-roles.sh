@@ -14,11 +14,11 @@
 # 
 # For systems with wget, run this line.
 #
-# rm install-thumbwhere-fabric-linux-debian.sh; wget -nc https://raw.github.com/ThumbWhere/ThumbWhere-Fabric/master/versions/0.1/scripts/install-thumbwhere-fabric-linux-debian.sh; chmod +x install-thumbwhere-fabric-linux-debian.sh ; sudo -E bash ./install-thumbwhere-fabric-linux-debian.sh
+# rm install-linux-roles.sh; wget -nc https://raw.github.com/ThumbWhere/ThumbWhere-Fabric/master/versions/0.1/scripts/install-linux-roles.sh; chmod +x install-linux-roles.sh ; sudo -E bash ./install-linux-roles.sh
 #
 # For systems with curl, run this line
 #
-# curl -O https://raw.github.com/ThumbWhere/ThumbWhere-Fabric/master/versions/0.1/scripts/install-thumbwhere-fabric-linux-debian.sh; chmod +x install-thumbwhere-fabric-linux-debian.sh; sudo -E bash ./install-thumbwhere-fabric-linux-debian.sh
+# curl -O https://raw.github.com/ThumbWhere/ThumbWhere-Fabric/master/versions/0.1/scripts/install-linux-roles.sh; chmod +x install-linux-roles.sh; sudo -E bash ./install-linux-roles.sh
 # 
 #
 
@@ -31,51 +31,49 @@ set -e
 # If enable is not part of the string, then the service is deemed to be 'disabled'
 #
 
-#if ["$IRCD_TASK" = ""] 
+#if ["$IRCD_ROLE" = ""] 
 #then
-#	IRCD_TASK="disable"
+#	IRCD_ROLE="disable"
 #fi
 #
-#if ["$REDIS_TASK" = ""] 
+#if ["$REDIS_ROLE" = ""] 
 #then
-#	REDIS_TASK="download,compile,install,configure,enable"
+#	REDIS_ROLE="download,compile,install,configure,enable"
 #fi
 #
-#if ["$NODEJS_TASK" = ""] 
+#if ["$NODEJS_ROLE" = ""] 
 #then
-#	NODEJS_TASK="download,compile,install,configure,enable"
+#	NODEJS_ROLE="download,compile,install,configure,enable"
 #fi
 #
-#if ["$VARNISH_TASK" = ""] 
+#if ["$VARNISH_ROLE" = ""] 
 #then
-#	VARNISH_TASK="disable"
+#	VARNISH_ROLE="disable"
 #fi
 #
-#if ["$NGINX_TASK" = ""] 
+#if ["$NGINX_ROLE" = ""] 
 #then
-#	NGINX_TASK="download,compile,install,configure,enable"
+#	NGINX_ROLE="download,compile,install,configure,enable"
 #fi
 #
-#if ["$HTTPD_TASK" = ""] 
+#if ["$HTTPD_ROLE" = ""] 
 #then
-#	HTTPD_TASK="download,compile,install,configure,enable"
+#	HTTPD_ROLE="download,compile,install,configure,enable"
 #fi
 #
-#if ["$FTPD_TASK" = ""] 
+#if ["$FTPD_ROLE" = ""] 
 #then
-#	FTPD_TASK="download,compile,install,configure,enable"
+#	FTPD_ROLE="download,compile,install,configure,enable"
 #fi
 
 IRCDURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
 REDISURL=http://redis.googlecode.com/files/redis-2.4.6.tar.gz
 NODEJSURL=http://nodejs.org/dist/v0.9.1/node-v0.9.1.tar.gz
-
-# NODEJSURL=http://nodejs.org/dist/v0.6.8/node-v0.6.8.tar.gz
-
 VARNISHURL=http://repo.varnish-cache.org/source/varnish-3.0.2.tar.gz
 NGINXURL=http://nginx.org/download/nginx-1.0.11.tar.gz
 HTTPDURL=http://apache.mirror.aussiehq.net.au/httpd/httpd-2.2.22.tar.gz
 FTPDURL=ftp://ftp.proftpd.org/distrib/source/proftpd-1.3.4a.tar.gz
+MYSQLDURL=http://downloads.mysql.com/archives/mysql-5.6/mysql-5.6.6-m9-linux2.6-x86_64.tar.gz
 
 ###############################################################################
 #
@@ -93,6 +91,7 @@ VARNISHUSER=tw-varnish
 NGINXUSER=tw-nginx
 HTTPDUSER=tw-httpd
 FTPDUSER=tw-ftpd
+MYSQLDUSER=tw-ftpd
 
 IRCDFILE=`echo $IRCDURL | rev | cut -d\/ -f1 | rev`
 REDISFILE=`echo $REDISURL | rev | cut -d\/ -f1 | rev`
@@ -101,6 +100,7 @@ VARNISHFILE=`echo $VARNISHURL | rev | cut -d\/ -f1 | rev`
 NGINXFILE=`echo $NGINXURL | rev | cut -d\/ -f1 | rev`
 HTTPDFILE=`echo $HTTPDURL | rev | cut -d\/ -f1 | rev`
 FTPDFILE=`echo $FTPDURL | rev | cut -d\/ -f1 | rev`
+MYSQLDFILE=`echo $MYSQLDURL | rev | cut -d\/ -f1 | rev`
 
 IRCDFOLDER=`echo $IRCDFILE | rev | cut -d\. -f3- | rev`
 REDISFOLDER=`echo $REDISFILE | rev | cut -d\. -f3- | rev`
@@ -109,6 +109,7 @@ VARNISHFOLDER=`echo $VARNISHFILE | rev | cut -d\. -f3- | rev`
 NGINXFOLDER=`echo $NGINXFILE | rev | cut -d\. -f3- | rev`
 HTTPDFOLDER=`echo $HTTPDFILE | rev | cut -d\. -f3- | rev`
 FTPDFOLDER=`echo $FTPDFILE | rev | cut -d\. -f3- | rev`
+MYSQLDFOLDER=`echo $MYSQLDFILE | rev | cut -d\. -f3- | rev`
 
 IRCDPROCESS=inspircd
 IRCDCONFIG=/etc/inspircd/inspircd.conf
@@ -137,6 +138,12 @@ FTPDROOT=$HOMEROOT/$FTPDUSER/ftpd
 FTPDCONFIG=$FTPDROOT/etc/proftpd.conf
 FTPDPID=$FTPDROOT/var/proftpd.pid
 FTPDPROCESS=proftpd
+
+MYSQLDROOT=$HOMEROOT/$MYSQLDUSER/ftpd
+MYSQLDCONFIG=$MYSQLDROOT/etc/proftpd.conf
+MYSQLDPID=$MYSQLDROOT/var/proftpd.pid
+MYSQLDPROCESS=proftpd
+
 
 groupadd -f thumbwhere
 
@@ -313,55 +320,60 @@ echo "*** ${cc_cyan}Downloading source packages${cc_normal}"
 mkdir -p $DOWNLOADS
 cd $DOWNLOADS
 
-if [[ $IRCD_TASK = *download* ]] 
+if [[ $IRCD_ROLE = *download* ]] 
 then
 	[ -f $IRCDFILE ] && echo " - $IRCDFILE exists" || wget $IRCDURL
 else
 	echo " - ${cc_yellow}Skipping $IRCDFILE${cc_normal}"
 fi
 
-if [[ $REDIS_TASK = *download* ]] 
+if [[ $REDIS_ROLE = *download* ]] 
 then
 	[ -f $REDISFILE ] && echo " - $REDISFILE exists" || wget $REDISURL
 else
 	echo " - ${cc_yellow}Skipping $REDISFILE${cc_normal}"
 fi
 
-if [[ $NODEJS_TASK = *download* ]] 
+if [[ $NODEJS_ROLE = *download* ]] 
 then
 	[ -f $NODEJSFILE ] && echo " - $NODEJSFILE exists" || wget $NODEJSURL
 else
 	echo " - ${cc_yellow}Skipping $NODEJSFILE${cc_normal}"
 fi
 
-if [[ $VARNISH_TASK = *download* ]] 
+if [[ $VARNISH_ROLE = *download* ]] 
 then
 	[ -f $VARNISHFILE ] && echo " - $VARNISHFILE exists" || wget $VARNISHURL
 else
 	echo " - ${cc_yellow}Skipping $VARNISHFILE${cc_normal}"
 fi
 
-
-if [[ $NGINX_TASK = *download* ]] 
+if [[ $NGINX_ROLE = *download* ]] 
 then
 	[ -f $NGINXFILE ] && echo " - $NGINXFILE exists" || wget $NGINXURL
 else
 	echo " - ${cc_yellow}Skipping $NGINXFILE${cc_normal}"
 fi
 
-
-if [[ $HTTPD_TASK = *download* ]] 
+if [[ $HTTPD_ROLE = *download* ]] 
 then
 	[ -f $HTTPDFILE ] && echo " - $HTTPDFILE exists" || wget $HTTPDURL
 else
 	echo " - ${cc_yellow}Skipping $HTTPDFILE${cc_normal}"
 fi
 
-if [[ $FTPD_TASK = *download* ]] 
+if [[ $FTPD_ROLE = *download* ]] 
 then
 	[ -f $FTPDFILE ] && echo " - $FTPDFILE exists" || wget $FTPDURL
 else
-	echo " - ${cc_yellow}Skipping $IRCDFILE${cc_normal}"
+	echo " - ${cc_yellow}Skipping $FTPDFILE${cc_normal}"
+fi
+
+if [[ $MYSQLD_ROLE = *download* ]] 
+then
+	[ -f $MYSQLDFILE ] && echo " - $MYSQLDFILE exists" || wget $MYSQLDURL
+else
+	echo " - ${cc_yellow}Skipping $MYSQLDFILE${cc_normal}"
 fi
 
 cd ..
@@ -371,13 +383,13 @@ cd ..
 # Install IRCD
 # 
 
-if [ "$IRCD_TASK" != "" ]
+if [ "$IRCD_ROLE" != "" ]
 then
 	echo "$*** ${cc_cyan}Installing IRCD ($IRCDFOLDER)${cc_normal}"
 	
 	create_user_and_stop_service $IRCDUSER $IRCDPROCESS
 
-	if [[ $IRCD_TASK = *compile* ]]
+	if [[ $IRCD_ROLE = *compile* ]]
 	then
 		cp $DOWNLOADS/$IRCDFILE $HOMEROOT/$IRCDUSER/
 		chown $IRCDUSER.$GROUP $HOMEROOT/$IRCDUSER
@@ -392,7 +404,7 @@ then
 		cd $IRCDFOLDER
 		./configure  --uid=$IRCDUSER --disable-interactive
 		make
-		if [[ $IRCD_TASK = *install* ]]
+		if [[ $IRCD_ROLE = *install* ]]
 		then
 			echo " - Installing"
 			make install
@@ -403,7 +415,7 @@ then
 	# Generate configure scripts
 	#
 	
-	if [[ $IRCD_TASK = *configure* ]]
+	if [[ $IRCD_ROLE = *configure* ]]
 	then
 		# ---- IRCD CONFIG -- START ----	
 		
@@ -683,7 +695,7 @@ EOF
 	chown -R $IRCDUSER.$GROUP $HOMEROOT/$IRCDUSER/
 	
 	# Enable or disable...
-	enable_disable $IRCDUSER $IRCD_TASK
+	enable_disable $IRCDUSER $IRCD_ROLE
 
 fi
 
@@ -693,13 +705,13 @@ fi
 # Install Redis
 #
 
-if [ "$REDIS_TASK" != "" ]
+if [ "$REDIS_ROLE" != "" ]
 then
 	echo "*** ${cc_cyan}Installing REDIS ($REDISFILE)${cc_normal}"
 
 	create_user_and_stop_service $REDISUSER $REDISPROCESS
 
-	if [[ $REDIS_TASK = *compile* ]]
+	if [[ $REDIS_ROLE = *compile* ]]
 	then
 
 		cp $DOWNLOADS/$REDISFILE $HOMEROOT/$REDISUSER/
@@ -712,12 +724,12 @@ then
 		echo " - Building"
 		cd $REDISFOLDER
 		make
-		if [[ $REDIS_TASK = *test* ]]
+		if [[ $REDIS_ROLE = *test* ]]
 			then
 			echo " - Testing"
 			make test
 		fi
-		if [[ $REDIS_TASK = *install* ]]
+		if [[ $REDIS_ROLE = *install* ]]
 		then		
 			echo " - Installing"
 			make install
@@ -726,7 +738,7 @@ then
 
 
 
-	if [[ $REDIS_TASK = *configure* ]]
+	if [[ $REDIS_ROLE = *configure* ]]
 	then
 
 		# 
@@ -874,7 +886,7 @@ EOF
 	chown -R $REDISUSER.$GROUP $HOMEROOT/$REDISUSER/
 	
 	# Enable or disable...
-	enable_disable $REDISUSER $REDIS_TASK
+	enable_disable $REDISUSER $REDIS_ROLE
 
 fi
 
@@ -883,7 +895,7 @@ fi
 # Install NODEJS
 #
 
-if [ "$NODEJS_TASK" != '' ]
+if [ "$NODEJS_ROLE" != '' ]
 then
 	echo "*** ${cc_cyan}Installing NODEJS ($NODEJSFOLDER)${cc_normal}"
 
@@ -893,7 +905,7 @@ then
 		useradd $NODEJSUSER -m -g $GROUP
 	fi
 
-	if [[ $NODEJS_TASK = *compile* ]]
+	if [[ $NODEJS_ROLE = *compile* ]]
 	then
 		cp $DOWNLOADS/$NODEJSFILE $HOMEROOT/$NODEJSUSER/
 		chown $NODEJSUSER.$GROUP $HOMEROOT/$NODEJSUSER
@@ -910,13 +922,13 @@ then
 		#make test
 	fi
 
-	if [[ $NODEJS_TASK = *install* ]]
+	if [[ $NODEJS_ROLE = *install* ]]
 	then
 		echo " - Installing"
 		make install
 	fi
 
-	if [[ $NODEJS_TASK = *configure* ]]
+	if [[ $NODEJS_ROLE = *configure* ]]
 	then
 		echo " - Configuring"
 	fi
@@ -931,13 +943,13 @@ fi
 # Install VARNISH
 #
 
-if [ "$VARNISH_TASK" != "" ]
+if [ "$VARNISH_ROLE" != "" ]
 then
 	echo "*** ${cc_cyan}Installing VARNISH ($VARNISHFOLDER)${cc_normal}"
 
 	create_user_and_stop_service $VARNISHUSER $VARNISHPROCESS
 
-	if [[ $VARNISH_TASK = *compile* ]]
+	if [[ $VARNISH_ROLE = *compile* ]]
 	then
 		cp $DOWNLOADS/$VARNISHFILE $HOMEROOT/$VARNISHUSER/
 		chown $VARNISHUSER.$GROUP $HOMEROOT/$VARNISHUSER
@@ -951,14 +963,14 @@ then
 		./configure 
 		make
 	
-		if [[ $VARNISH_TASK = *install* ]]
+		if [[ $VARNISH_ROLE = *install* ]]
 			then
 			echo " - Installing"
 			make install
 		fi
 	fi
 
-	if [[ $VARNISH_TASK = *configure* ]]
+	if [[ $VARNISH_ROLE = *configure* ]]
 		then
 
 		echo " - Configuring"
@@ -1164,7 +1176,7 @@ EOF
 	chown -R $VARNISHUSER.$GROUP $HOMEROOT/$VARNISHUSER/
 
 	# Enable or disable...
-	enable_disable $VARNISHUSER $VARNISH_TASK
+	enable_disable $VARNISHUSER $VARNISH_ROLE
 
 fi
 
@@ -1175,13 +1187,13 @@ fi
 # Install NGINX
 #
 
-if [ "$NGINX_TASK" != "" ]
+if [ "$NGINX_ROLE" != "" ]
 then
 	echo "*** ${cc_cyan}Installing NGINX ($NGINXFOLDER)${cc_normal}"
 
 	create_user_and_stop_service $NGINXUSER $NGINXPROCESS
 
-	if [[ $NGINX_TASK = *compile* ]]
+	if [[ $NGINX_ROLE = *compile* ]]
 		then
 		cp $DOWNLOADS/$NGINXFILE $HOMEROOT/$NGINXUSER/
 		chown $NGINXUSER.$GROUP $HOMEROOT/$NGINXUSER
@@ -1195,7 +1207,7 @@ then
 		./configure --prefix=$NGINXROOT
 		make
 	
-		if [[ $NGINX_TASK = *install* ]]
+		if [[ $NGINX_ROLE = *install* ]]
 			then
 			echo " - Installing"
 			make install
@@ -1203,7 +1215,7 @@ then
 	fi
 
 
-	if [[ $NGINX_TASK = *configure* ]]
+	if [[ $NGINX_ROLE = *configure* ]]
 	then
 
 		echo " - Configuring"
@@ -1526,7 +1538,7 @@ EOF
 	
 	
 	# Enable or disable...
-	enable_disable $NGINXUSER $NGINX_TASK
+	enable_disable $NGINXUSER $NGINX_ROLE
 
 fi
 
@@ -1535,13 +1547,13 @@ fi
 # Install HTTPD
 #
 
-if [ "$HTTPD_TASK" != "" ]
+if [ "$HTTPD_ROLE" != "" ]
 then
 	echo "*** ${cc_cyan}Installing HTTPD ($HTTPDFOLDER)${cc_normal}"
 	
 	create_user_and_stop_service $HTTPDUSER $HTTPDPROCESS
 
-	if [[ $HTTPD_TASK = *compile* ]]
+	if [[ $HTTPD_ROLE = *compile* ]]
 	then
 
 		cp $DOWNLOADS/$HTTPDFILE $HOMEROOT/$HTTPDUSER/
@@ -1557,14 +1569,14 @@ then
 		make
 	fi
 
-	if [[ $HTTPD_TASK = *install* ]]
+	if [[ $HTTPD_ROLE = *install* ]]
 	then
 		echo " - Installing"
 		make install
 	fi
 
 
-	if [[ $HTTPD_TASK = *configure* ]]
+	if [[ $HTTPD_ROLE = *configure* ]]
 	then
 		echo " - Configuring"
 
@@ -1789,7 +1801,7 @@ EOF
 	chown -R $HTTPDUSER.$GROUP $HOMEROOT/$HTTPDUSER/
 		
 	# Enable or disable...
-	enable_disable $HTTPDUSER $HTTPD_TASK
+	enable_disable $HTTPDUSER $HTTPD_ROLE
 
 fi
 
@@ -1797,13 +1809,13 @@ fi
 # Install FTPD
 #
 
-if [ "$FTPD_TASK" != "" ]
+if [ "$FTPD_ROLE" != "" ]
 then
 	echo "*** ${cc_cyan}Installing FTPD ($FTPDFOLDER)${cc_normal}"
 	
 	create_user_and_stop_service $FTPDUSER $FTPDPROCESS
 
-	if [[ $FTPD_TASK = *compile* ]]
+	if [[ $FTPD_ROLE = *compile* ]]
 	then
 		cp $DOWNLOADS/$FTPDFILE $HOMEROOT/$FTPDUSER/
 		chown $FTPDUSER.$GROUP $HOMEROOT/$FTPDUSER
@@ -1818,14 +1830,14 @@ then
 		make
 	fi
 
-	if [[ $FTPD_TASK = *install* ]]
+	if [[ $FTPD_ROLE = *install* ]]
 		then
 		echo " - Installing"
 		make install
 	fi
 
 
-	if [[ $FTPD_TASK = *configure* ]]
+	if [[ $FTPD_ROLE = *configure* ]]
 	then
 
 		echo " - Configuring"
@@ -2039,9 +2051,262 @@ EOF
 	chown -R $FTPDUSER.$GROUP $HOMEROOT/$FTPDUSER/ 2> /dev/null
 
 	# Enable or disable...
-	enable_disable $FTPDUSER $FTPD_TASK
+	enable_disable $FTPDUSER $FTPD_ROLE
 
 fi
+
+
+#
+# Install MYSQLD
+#
+
+if [ "$MYSQLD_ROLE" != "" ]
+then
+	echo "*** ${cc_cyan}Installing MYSQLD ($MYSQLDFOLDER)${cc_normal}"
+	
+	create_user_and_stop_service $MYSQLDUSER $MYSQLDPROCESS
+
+	if [[ $MYSQLD_ROLE = *compile* ]]
+	then
+		cp $DOWNLOADS/$MYSQLDFILE $HOMEROOT/$MYSQLDUSER/
+		chown $MYSQLDUSER.$GROUP $HOMEROOT/$MYSQLDUSER
+		cd  $HOMEROOT/$MYSQLDUSER
+		echo " - Deleting old instance"
+		rm -rf $MYSQLDFOLDER
+		echo " - Uncompressing"
+		tar -xzf $MYSQLDFILE
+		echo " - Building"
+		cd $MYSQLDFOLDER
+		./configure  --prefix=$MYSQLDROOT  --enable-ctrls
+		make
+	fi
+
+	if [[ $MYSQLD_ROLE = *install* ]]
+		then
+		echo " - Installing"
+		make install
+	fi
+
+
+	if [[ $MYSQLD_ROLE = *configure* ]]
+	then
+
+		echo " - Configuring"
+
+		# ---- INSTALL CONTROL SCRIPTS -- START ----
+
+		echo " - Creating control script."
+		cat > /etc/init.d/$MYSQLDUSER-server << EOF
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:	  $MYSQLDUSER-server
+# Required-Start:	\$network \$syslog \$time
+# Required-Stop:	 \$syslog
+# Should-Start:	  \$local_fs
+# Should-Stop:	   \$local_fs
+# Default-Start:	 2 3 4 5
+# Default-Stop:	  0 1 6
+# Short-Description: Controls the mysqld server
+# Description:	   Controls the mysqld server.
+### END INIT INFO
+# GPL Licensed
+
+# Source function library
+. /lib/lsb/init-functions
+
+DAEMON="$MYSQLDROOT/sbin/promysqld"
+PIDFILE="$MYSQLDPID"
+MYSQLDLOG="/var/log/mysqld.log"
+MYSQLDCONFIG="$MYSQLDCONFIG"
+USER="$MYSQLDUSER"
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+PROCESSNAME="promysqld"
+DESC="MYSQL Server"
+
+os="$os"
+
+if [ "\$os" = "centos" ]
+then
+	# source function library
+	. /etc/rc.d/init.d/functions
+fi
+
+# Does the executable exist?
+if [ ! -x "\$DAEMON" ]; then echo "could not locate \$DAEMON - exiting." ; exit 0; fi
+
+# Get the pid file
+if [ -f "\$PIDFILE" ]; then
+	PIDN="\`cat \"\$PIDFILE\" 2> /dev/null\`"
+fi
+
+start_mysqld()
+{
+	# Start based on OS type
+	if [ "\$os" = "centos" ]
+	then 	
+		if \$DAEMON
+ 		then
+						echo " ${cc_green}OK${cc_normal}"
+				else
+						echo -n " ${cc_red}FAIL${cc_normal} ("
+
+						if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+						then
+								echo -n "${cc_yellow}Seems \$PROCESSNAME is already running.${cc_normal}"
+
+								# and just to be sure the pids are not out of whack
+								killall -2 \$PROCESSNAME 2> /dev/null
+						else
+								echo -n "${cc_yellow}Looks like \$PROCESSNAME is not already running.${cc_normal}"
+						fi
+			echo -n ")"
+
+						exit 1
+				fi
+	elif [ "\$os" = "debian" ] || [ "\$os" = "ubuntu" ]
+	then
+		if  start-stop-daemon --start --quiet --oknodo --pidfile "\$PIDFILE" --exec "\$DAEMON" 
+		then
+						echo " ${cc_green}OK${cc_normal}"
+				else
+						echo " ${cc_red}FAIL${cc_normal} (is it already running?)"
+						exit 1
+				fi
+
+	fi
+}
+
+stop_mysqld()
+{
+
+	# Stop  based on OS
+	if [ "\$os" = "centos" ]
+	then 
+		if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+		then
+			if killall -2 \$PROCESSNAME 2> /dev/null
+			then
+				echo " ${cc_green}OK${cc_normal}"
+			else
+				echo " ${cc_red}FAIL${cc_normal}"
+			fi
+		else
+			echo -n " ${cc_red}FAIL${cc_normal}"
+			echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"						
+		fi
+	elif [ "\$os" = "debian" ] || [ "\$os" = "ubuntu" ]
+	then
+		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
+		then
+			echo " ${cc_green}OK${cc_normal}"
+
+			# and just to be sure the pids are not out of whack
+			killall -2 \$PROCESSNAME 2> /dev/null
+		else
+			echo -n " ${cc_cyan}FAIL${cc_normal} ("
+
+ 			if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+	 		then
+				echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
+
+				# and just to be sure the pids are not out of whack
+				killall -2 \$PROCESSNAME 2> /dev/null
+			else
+				echo -n "${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
+			fi
+
+			echo ")"
+		fi
+
+	fi
+
+	# 5 seconds grace
+	sleep 5
+
+		# And finally, to ensure there are no issues
+		killall -9 \$PROCESSNAME 2> /dev/null
+
+	rm -f "\$PIDFILE"
+	return 0
+}
+
+reload_mysqld()
+{
+	if [ ! -z "\$PIDN" ] && kill -0 \$PIDN 2> /dev/null; then
+		kill -HUP \$PIDN >/dev/null 2>&1 || return 1
+		return 0
+	else
+		echo "Error: mysqld is not running."
+		return 1
+	fi
+}
+
+case "\$1" in
+  start)
+	echo -n "Starting \$DESC (\$PROCESSNAME): "
+	start_mysqld
+	;;
+  stop)
+	echo -n "Stopping \$DESC (\$PROCESSNAME): "
+	stop_mysqld 
+	;;
+  force-reload|reload)
+	echo -n "Reloading \$DESC (\$PROCESSNAME): "
+	reload_mysqld 
+	;;
+  restart)
+	echo "Restarting \$DESC (\$PROCESSNAME): "
+	\$0 stop
+	sleep 2s
+	\$0 start
+	;;
+  cron)
+	start_ircd || echo "Ftpd not running, starting it"
+	;;
+
+  *)
+	echo "Usage: \$0 {start|stop|restart|reload|force-reload|cron}"
+	exit 1
+esac
+EOF
+
+		# Set set permissions on the startup script
+		chmod +x /etc/init.d/$MYSQLDUSER-server 2> /dev/null
+		chown root.root /etc/init.d/$MYSQLDUSER-server 2> /dev/null
+	
+		# ---- INSTALL CONTROL SCRIPTS -- END ----
+
+		# ---- INSTALL CONFIG -- START --
+		cat > $MYSQLDCONFIG << EOF
+ServerName					  "ThumbWhere MYSQL"
+ServerType					  standalone
+DefaultServer				   on
+Port							21
+UseIPv6						 off
+Umask						   022
+MaxInstances					30
+User							tw-mysqld
+Group						   thumbwhere
+DefaultRoot					 ~
+AllowOverwrite				  on
+<Limit SITE_CHMOD>
+  DenyAll
+</Limit>
+EOF
+
+	fi
+
+	# ---- INSTALL CONFIG -- END --
+
+	echo " - Setting permissions"
+	chown -R $MYSQLDUSER.$GROUP $HOMEROOT/$MYSQLDUSER/ 2> /dev/null
+
+	# Enable or disable...
+	enable_disable $MYSQLDUSER $MYSQLD_ROLE
+
+fi
+
+
 
 #
 # And we are done..
