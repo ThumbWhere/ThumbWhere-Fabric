@@ -1,3 +1,6 @@
+#!/bin/bash
+# Proper header for a Bash script.
+
 ###############################################################################
 #
 # This will setup ThumbWhere Fabric node on a Linux Box
@@ -80,6 +83,7 @@ VARNISHURL=http://repo.varnish-cache.org/source/varnish-3.0.2.tar.gz
 NGINXURL=http://nginx.org/download/nginx-1.0.11.tar.gz
 HTTPDURL=http://apache.mirror.aussiehq.net.au/httpd/httpd-2.2.22.tar.gz
 FTPDURL=ftp://ftp.proftpd.org/distrib/source/proftpd-1.3.4a.tar.gz
+# See: http://downloads.mysql.com/archives.php?p=mysql-5.6&o=other
 MYSQLDURL=http://downloads.mysql.com/archives/mysql-5.6/mysql-5.6.6-m9-linux2.6-x86_64.tar.gz
 
 ###############################################################################

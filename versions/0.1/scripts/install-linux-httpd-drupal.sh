@@ -1,3 +1,6 @@
+#!/bin/bash
+# Proper header for a Bash script.
+
 ###############################################################################
 #
 # This will setup Drupal in ThumbWhere Fabric
