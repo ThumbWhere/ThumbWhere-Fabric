@@ -220,7 +220,7 @@ enable_disable()
 			if [ $os = "debian" ]
 			then
 				insserv /etc/init.d/${p_user}-server 2> /dev/null
-			elif [ $os = "centos" ] || [ $os = "ubuntu"] 
+			elif [[ $os = "centos" ]] || [[ $os = "ubuntu" ]]
 			then
 				chkconfig ${p_user}-server on 2> /dev/null
 			else
