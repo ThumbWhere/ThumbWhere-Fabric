@@ -217,7 +217,7 @@ enable_disable()
 			if [ $os = "debian" ]
 			then
 				insserv /etc/init.d/${p_user}-server 2> /dev/null
-			elif [ $os = "centos" ]
+			elif [ $os = "centos" || $os = "unbuntu"] 
 			then
 				chkconfig ${p_user}-server on 2> /dev/null
 			else
@@ -235,7 +235,7 @@ enable_disable()
 			if [ $os = "debian" ]
 			then
 				insserv -r /etc/init.d/${p_user}-server 2> /dev/null
-			elif [ $os = "centos" ]
+			elif [ $os = "centos" || $os = "unbuntu"] 
 			then
 				chkconfig ${p_user}-server off 2> /dev/null
 			else
@@ -277,7 +277,7 @@ fi
 
 if [ "`grep ubuntu /proc/version -c`" != "0" ]
 then
-        os="debian"
+	os="ubuntu"
 fi
 
 
@@ -287,7 +287,7 @@ then
 	exit 1
 fi
 
-if [ $os = "debian" ]
+if [ $os = "debian" || $os = "ubuntu" ]
 then
 	apt-get -y install wget bzip2 binutils g++ make tcl8.5 curl build-essential openssl libssl-dev libssh-dev pkg-config libpcre3 libpcre3-dev libpcre++0 xsltproc libncurses5-dev
 elif [ $os = "centos" ]
@@ -556,7 +556,7 @@ start_ircd()
 				fi
 
 		
-	elif [ "\$os" = "debian" ]
+	elif [ "\$os" = "debian" || "\$os" = "ubuntu" ]
 	then
 		if start-stop-daemon --start --quiet --oknodo --chuid "\$USER" --pidfile "\$PIDFILE" --exec "\$DAEMON" --  \$ARGS
 		then
@@ -587,7 +587,7 @@ stop_ircd()
 			echo -n " ${cc_cyan}WARN${cc_normal}"
 			echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
 		fi
-	elif [ "\$os" = "debian" ]
+	elif [ "\$os" = "debian" || "\$os" = "ubuntu" ]
 	then
 
 		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
@@ -785,7 +785,7 @@ case "\$1" in
 			echo " ${cc_red}FAIL${cc_normal}"
 			exit 1
 		fi
-	elif [ "\$os" = "debian" ]
+	elif [ "\$os" = "debian" || "\$os" = "ubuntu" ]
 	then	
 		if start-stop-daemon --start --quiet --umask 007 --pidfile \$PIDFILE --chuid $REDISUSER:$GROUP --exec \$DAEMON -- \$DAEMON_ARGS  2> /dev/null
  		then
@@ -1018,7 +1018,7 @@ start_varnishd() {
 			echo " ${cc_red}FAIL${cc_normal}"
 			exit 1
 		fi
-	elif [ "\$os" = "debian" ]
+	elif [ "\$os" = "debian" || "\$os" = "ubuntu" ]
 	then	
 		log_daemon_msg "Starting \$DESC" "\$PROCESSNAME"
 		if start-stop-daemon --start --quiet --pidfile \${PIDFILE} --exec \${DAEMON} -- \$DAEMON_ARGS
@@ -1053,7 +1053,7 @@ stop_varnishd() {
 				echo -n " ${cc_cyan}WARN${cc_normal}"
 				echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
 		fi				
-	elif [ "\$os" = "debian" ]
+	elif [ "\$os" = "debian" || "\$os" = "ubuntu" ]
 	then
 		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
 		then		
@@ -1263,7 +1263,7 @@ start_nginxd() {
 			echo " ${cc_red}FAIL${cc_normal}"
 			exit 1
 		fi
-	elif [ "\$os" = "debian" ]
+	elif [ "\$os" = "debian" || "\$os" = "ubuntu" ]
 	then	
 		log_daemon_msg "Starting \$DESC" "\$PROCESSNAME"
 		if start-stop-daemon --start --quiet --pidfile \${PIDFILE} --exec \${DAEMON} -- \$DAEMON_ARGS
@@ -1298,7 +1298,7 @@ stop_nginxd() {
 			echo -n " ${cc_cyan}WARN${cc_normal}"
 			echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"						
 		fi
-	elif [ "\$os" = "debian" ]
+	elif [ "\$os" = "debian" || "\$os" = "ubuntu" ]
 	then
 		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
 		then		
@@ -1891,7 +1891,7 @@ start_ftpd()
 
 						exit 1
 				fi
-	elif [ "\$os" = "debian" ]
+	elif [ "\$os" = "debian" || "\$os" = "ubuntu" ]
 	then
 		if  start-stop-daemon --start --quiet --oknodo --pidfile "\$PIDFILE" --exec "\$DAEMON" 
 		then
@@ -1922,7 +1922,7 @@ stop_ftpd()
 			echo -n " ${cc_red}FAIL${cc_normal}"
 			echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"						
 		fi
-	elif [ "\$os" = "debian" ]
+	elif [ "\$os" = "debian" || "\$os" = "ubuntu" ]
 	then
 		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
 		then
