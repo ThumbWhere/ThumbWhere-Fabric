@@ -66,6 +66,13 @@ set -e
 #	FTPD_ROLE="download,compile,install,configure,enable"
 #fi
 
+if ["$MYSQL_ROLE" = ""] 
+then
+	MYSQL_ROLE="download,compile,install,configure,enable"
+fi
+
+
+
 IRCDURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
 REDISURL=http://redis.googlecode.com/files/redis-2.4.6.tar.gz
 NODEJSURL=http://nodejs.org/dist/v0.9.1/node-v0.9.1.tar.gz
