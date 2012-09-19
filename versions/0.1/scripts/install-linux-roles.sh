@@ -151,9 +151,11 @@ FTPDPID=$FTPDROOT/var/proftpd.pid
 FTPDPROCESS=proftpd
 
 MYSQLDROOT=$HOMEROOT/$MYSQLDUSER/mysqld
-MYSQLDCONFIG=$MYSQLDROOT/etc/mysqld.conf
+MYSQLDCONFIG=$MYSQLDROOT/.my.cnf
 MYSQLDPID=$MYSQLDROOT/var/mysqld.pid
 MYSQLDPROCESS=mysqld
+MYSQLDDATAROOT=$HOMEROOT/$MYSQLDUSER/data
+MYSQLDPASSWORD=new-password
 
 
 groupadd -f thumbwhere
@@ -316,10 +318,10 @@ fi
 
 if [ $os = "debian" ] || [ $os = "ubuntu" ]
 then
-	apt-get -y install wget bzip2 binutils g++ make tcl8.5 curl build-essential openssl libssl-dev libssh-dev pkg-config libpcre3 libpcre3-dev libpcre++0 xsltproc libncurses5-dev cmake
+	apt-get -y install wget bzip2 binutils g++ make tcl8.5 curl build-essential openssl libssl-dev libssh-dev pkg-config libpcre3 libpcre3-dev libpcre++0 xsltproc libncurses5-dev cmake bison
 elif [ $os = "centos" ]
 then
-	yum -y install wget bzip2 binutils gcc-c++ make gcc tcl curl openssl pcre gnutls openssh openssl ncurses pcre-devel gnutls-devel openssl-devel ncurses-devel libxslt redhat-lsb cmake
+	yum -y install wget bzip2 binutils gcc-c++ make gcc tcl curl openssl pcre gnutls openssh openssl ncurses pcre-devel gnutls-devel openssl-devel ncurses-devel libxslt redhat-lsb cmake bison
 fi
 
 #
@@ -1816,6 +1818,7 @@ EOF
 
 fi
 
+#########################################################################################
 #
 # Install FTPD
 #
@@ -2066,7 +2069,7 @@ EOF
 
 fi
 
-
+#########################################################################################
 #
 # Install MYSQLD
 #
@@ -2088,18 +2091,50 @@ then
 		tar -xzf $MYSQLDFILE
 		echo " - Building"
 		cd $MYSQLDFOLDER
-				
-		cmake .
+
+		# Start with all the correct owners...
+		chown -R $MYSQLDUSER .
+		chgrp -R thumbwhere .		
+		
+		# make
+		cmake . -DCMAKE_INSTALL_PREFIX=$MYSQLDROOT -DMYSQL_DATADIR=$MYSQLDDATAROOT
 		make
+		
+	fi
+
+	if [[ $MYSQLD_ROLE = *install* ]]
+		then
+		echo " - Installing"
+		
+		# This will install it into $MYSQLDROOT
+		cd $MYSQLDFOLDER
 		make install
+		
 		# End of source-build specific instructions
 		# Postinstallation setup
-		cd /usr/local/mysql
+		cd $MYSQLDROOT
 		chown -R $MYSQLDUSER .
 		chgrp -R thumbwhere .
-		scripts/mysql_install_db --user=$MYSQLDUSER
-		chown -R root .
-		chown -R $MYSQLDUSER data
+				
+		# Now finish install
+		scripts/mysql_install_db --user=$MYSQLDUSER  --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --no-defaults
+		
+		# Start it safely
+		bin/mysqld_safe --no-defaults--user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT
+		 
+		# Start
+		#bin/mysqld --no-defaults --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT
+		
+		# Set passwords
+		bin/mysqladmin -u root password $MYSQLDPASSWORD
+		
+		# Stop it...
+		bin/mysqladmin --no-defaults --user=root --password=$MYSQLDPASSWORD shutdown
+		
+		# bin/mysqladmin -u root -h localhost password 'new-password'
+		
+		#chown -R root .
+		#chown -R $MYSQLDUSER data
 		# Next command is optional
 		#cp support-files/my-medium.cnf /etc/my.cnf
 		bin/mysqld_safe --user=$MYSQLDUSER &
@@ -2108,13 +2143,7 @@ then
 
 		# Previous install
 		#./configure  --prefix=$MYSQLDROOT  --enable-ctrls
-		make
-	fi
-
-	if [[ $MYSQLD_ROLE = *install* ]]
-		then
-		echo " - Installing"
-		make install
+		
 	fi
 
 
@@ -2144,13 +2173,13 @@ then
 # Source function library
 . /lib/lsb/init-functions
 
-DAEMON="$MYSQLDROOT/sbin/promysqld"
+DAEMON="$MYSQLDROOT/bin/mysqld"
 PIDFILE="$MYSQLDPID"
 MYSQLDLOG="/var/log/mysqld.log"
 MYSQLDCONFIG="$MYSQLDCONFIG"
 USER="$MYSQLDUSER"
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-PROCESSNAME="promysqld"
+PROCESSNAME="mysqld"
 DESC="MYSQL Server"
 
 os="$os"
@@ -2177,22 +2206,21 @@ start_mysqld()
 		if \$DAEMON
  		then
 						echo " ${cc_green}OK${cc_normal}"
-				else
-						echo -n " ${cc_red}FAIL${cc_normal} ("
+			else
+					echo -n " ${cc_red}FAIL${cc_normal} ("
 
-						if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
-						then
-								echo -n "${cc_yellow}Seems \$PROCESSNAME is already running.${cc_normal}"
+					if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+					then
+							echo -n "${cc_yellow}Seems \$PROCESSNAME is already running.${cc_normal}"
 
-								# and just to be sure the pids are not out of whack
-								killall -2 \$PROCESSNAME 2> /dev/null
-						else
-								echo -n "${cc_yellow}Looks like \$PROCESSNAME is not already running.${cc_normal}"
-						fi
-			echo -n ")"
-
-						exit 1
-				fi
+							# and just to be sure the pids are not out of whack
+							killall -2 \$PROCESSNAME 2> /dev/null
+					else
+							echo -n "${cc_yellow}Looks like \$PROCESSNAME is not already running.${cc_normal}"
+					fi
+		echo -n ")"
+		exit 1
+	fi
 	elif [ "\$os" = "debian" ] || [ "\$os" = "ubuntu" ]
 	then
 		if  start-stop-daemon --start --quiet --oknodo --pidfile "\$PIDFILE" --exec "\$DAEMON" 
@@ -2308,20 +2336,41 @@ EOF
 
 		# ---- INSTALL CONFIG -- START --
 		cat > $MYSQLDCONFIG << EOF
-ServerName					  "ThumbWhere MYSQL"
-ServerType					  standalone
-DefaultServer				   on
-Port							21
-UseIPv6						 off
-Umask						   022
-MaxInstances					30
-User							tw-mysqld
-Group						   thumbwhere
-DefaultRoot					 ~
-AllowOverwrite				  on
-<Limit SITE_CHMOD>
-  DenyAll
-</Limit>
+[client]
+port            = 3306
+socket          = /tmp/mysql.sock
+
+[mysqld]
+port            = 3306
+socket          = /tmp/mysql.sock
+skip-external-locking
+key_buffer_size = 16M
+max_allowed_packet = 1M
+table_open_cache = 64
+sort_buffer_size = 512K
+net_buffer_length = 8K
+read_buffer_size = 256K
+read_rnd_buffer_size = 512K
+myisam_sort_buffer_size = 8M
+log-bin=mysql-bin
+binlog_format=mixed
+server-id       = 1
+
+[mysqldump]
+quick
+max_allowed_packet = 16M
+
+[mysql]
+no-auto-rehash
+
+[myisamchk]
+key_buffer_size = 20M
+sort_buffer_size = 20M
+read_buffer = 2M
+write_buffer = 2M
+
+[mysqlhotcopy]
+interactive-timeout
 EOF
 
 	fi
