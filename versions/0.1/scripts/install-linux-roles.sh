@@ -2107,6 +2107,7 @@ then
 		echo " - Installing"
 		
 		# This will install it into $MYSQLDROOT
+ 		cd $HOMEROOT/$MYSQLDUSER
 		cd $MYSQLDFOLDER
 		make install
 		
@@ -2118,18 +2119,25 @@ then
 				
 		# Now finish install
 		scripts/mysql_install_db --user=$MYSQLDUSER  --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --no-defaults
-		
+	
+
+		echo "starting"
+	
 		# Start it safely
-		bin/mysqld_safe --no-defaults--user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT
-		 
-		# Start
-		#bin/mysqld --no-defaults --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT
+		bin/mysqld_safe --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT &
+
+
+		sleep 5
+		echo "setting password"
 		
 		# Set passwords
 		bin/mysqladmin -u root password $MYSQLDPASSWORD
-		
+	
+
+		echo "stopping"
+	
 		# Stop it...
-		bin/mysqladmin --no-defaults --user=root --password=$MYSQLDPASSWORD shutdown
+		bin/mysqladmin --user=root --password=$MYSQLDPASSWORD shutdown
 		
 		# bin/mysqladmin -u root -h localhost password 'new-password'
 		
@@ -2205,19 +2213,19 @@ start_mysqld()
 	then 	
 		if \$DAEMON
  		then
-						echo " ${cc_green}OK${cc_normal}"
+			echo " ${cc_green}OK${cc_normal}"
 			else
-					echo -n " ${cc_red}FAIL${cc_normal} ("
+				echo -n " ${cc_red}FAIL${cc_normal} ("
 
-					if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
-					then
-							echo -n "${cc_yellow}Seems \$PROCESSNAME is already running.${cc_normal}"
+				if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
+				then
+					echo -n "${cc_yellow}Seems \$PROCESSNAME is already running.${cc_normal}"
 
-							# and just to be sure the pids are not out of whack
-							killall -2 \$PROCESSNAME 2> /dev/null
-					else
-							echo -n "${cc_yellow}Looks like \$PROCESSNAME is not already running.${cc_normal}"
-					fi
+					# and just to be sure the pids are not out of whack
+					killall -2 \$PROCESSNAME 2> /dev/null
+				else
+					echo -n "${cc_yellow}Looks like \$PROCESSNAME is not already running.${cc_normal}"
+				fi
 		echo -n ")"
 		exit 1
 	fi
@@ -2225,11 +2233,11 @@ start_mysqld()
 	then
 		if  start-stop-daemon --start --quiet --oknodo --pidfile "\$PIDFILE" --exec "\$DAEMON" 
 		then
-						echo " ${cc_green}OK${cc_normal}"
-				else
-						echo " ${cc_red}FAIL${cc_normal} (is it already running?)"
-						exit 1
-				fi
+			echo " ${cc_green}OK${cc_normal}"
+		else
+			echo " ${cc_red}FAIL${cc_normal} (is it already running?)"
+			exit 1
+		fi
 
 	fi
 }
