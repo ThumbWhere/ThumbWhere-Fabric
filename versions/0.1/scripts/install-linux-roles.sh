@@ -2127,6 +2127,9 @@ then
 		# Start it safely
 		bin/mysqld_safe --no-defaults --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --pid-file=$MYSQLDPID --socket=$MYSQLDSOCKET &
 
+
+
+
 		echo "sleeping for 5 seconds to ensure mysqld is started"
 		
 		sleep 5
