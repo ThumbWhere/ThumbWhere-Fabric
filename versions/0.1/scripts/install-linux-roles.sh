@@ -2125,7 +2125,7 @@ then
 		echo "starting"
 	
 		# Start it safely
-		bin/mysqld_safe --no-defaults --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --socket=$MYSQLDSOCKET &
+		bin/mysqld_safe --no-defaults --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --pid-file=$MYSQLDPID --socket=$MYSQLDSOCKET &
 
 		echo "sleeping for 5 seconds to ensure mysqld is started"
 		
@@ -2184,8 +2184,8 @@ then
 . /lib/lsb/init-functions
 
 DAEMON="$MYSQLDROOT/bin/mysqld_safe"
-DAEMONSTARTOPTS="--no-defaults --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --socket=$MYSQLDSOCKET"
-DAEMONSTOPOPTS="--no-defaults --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --socket=$MYSQLDSOCKET"
+DAEMONSTARTOPTS="--no-defaults --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --pid-file=$MYSQLDPID --socket=$MYSQLDSOCKET "
+DAEMONSTOPOPTS="--no-defaults --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --pid-file=$MYSQLDPID --socket=$MYSQLDSOCKET "
 PIDFILE="$MYSQLDPID"
 MYSQLDLOG="/var/log/mysqld.log"
 MYSQLDCONFIG="$MYSQLDCONFIG"
@@ -2212,6 +2212,9 @@ fi
 
 start_mysqld()
 {
+
+	\$DAEMON \$DAEMONSTARTOPTS
+
 	# Start based on OS type
 	if [ "\$os" = "centos" ]
 	then 	
@@ -2266,7 +2269,7 @@ stop_mysqld()
 		fi
 	elif [ "\$os" = "debian" ] || [ "\$os" = "ubuntu" ]
 	then
-		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON -- "\$DAEMONSTARTOPTS" 2> /dev/null
+		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON -- "\$DAEMONSTOPOPTS" 2> /dev/null
 		then
 			echo " ${cc_green}OK${cc_normal}"
 
