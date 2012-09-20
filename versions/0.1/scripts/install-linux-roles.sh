@@ -156,6 +156,7 @@ MYSQLDPID=$MYSQLDROOT/var/mysqld.pid
 MYSQLDPROCESS=mysqld
 MYSQLDDATAROOT=$HOMEROOT/$MYSQLDUSER/data
 MYSQLDPASSWORD=new-password
+MYSQLDSOCKET=$HOMEROOT/$MYSQLDUSER/mysqld.sock
 
 
 groupadd -f thumbwhere
@@ -2124,7 +2125,7 @@ then
 		echo "starting"
 	
 		# Start it safely
-		bin/mysqld_safe --no-defaults --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --socket=$MYSQLDROOT/mysqld.sock &
+		bin/mysqld_safe --no-defaults --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --socket=$MYSQLDSOCKET &
 
 		echo "sleeping for 5 seconds to ensure mysqld is started"
 		
@@ -2133,12 +2134,12 @@ then
 		echo "setting password"
 		
 		# Set passwords
-		bin/mysqladmin -u root password $MYSQLDPASSWORD --socket=$MYSQLDROOT/mysqld.sock
+		bin/mysqladmin -u root password $MYSQLDPASSWORD --socket=$MYSQLDSOCKET
 
 		echo "stopping"
 	
 		# Stop it...
-		bin/mysqladmin --user=root --password=$MYSQLDPASSWORD shutdown --socket=$MYSQLDROOT/mysqld.sock
+		bin/mysqladmin --user=root --password=$MYSQLDPASSWORD shutdown --socket=$MYSQLDSOCKET
 		
 		# bin/mysqladmin -u root -h localhost password 'new-password'
 		
@@ -2182,7 +2183,9 @@ then
 # Source function library
 . /lib/lsb/init-functions
 
-DAEMON="$MYSQLDROOT/bin/mysqld"
+DAEMON="$MYSQLDROOT/bin/mysqld_safe"
+DAEMONSTARTOPTS="--no-defaults --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --socket=$MYSQLDSOCKET"
+DAEMONSTOPOPTS="--no-defaults --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --socket=$MYSQLDSOCKET"
 PIDFILE="$MYSQLDPID"
 MYSQLDLOG="/var/log/mysqld.log"
 MYSQLDCONFIG="$MYSQLDCONFIG"
@@ -2232,7 +2235,7 @@ start_mysqld()
 	fi
 	elif [ "\$os" = "debian" ] || [ "\$os" = "ubuntu" ]
 	then
-		if  start-stop-daemon --start --quiet --oknodo --pidfile "\$PIDFILE" --exec "\$DAEMON" 
+		if  start-stop-daemon --start --quiet --oknodo --pidfile "\$PIDFILE" --exec "\$DAEMON" -- "\$DAEMONSTARTOPTS" 
 		then
 			echo " ${cc_green}OK${cc_normal}"
 		else
@@ -2263,7 +2266,7 @@ stop_mysqld()
 		fi
 	elif [ "\$os" = "debian" ] || [ "\$os" = "ubuntu" ]
 	then
-		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON 2> /dev/null
+		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON -- "\$DAEMONSTARTOPTS" 2> /dev/null
 		then
 			echo " ${cc_green}OK${cc_normal}"
 
@@ -2347,11 +2350,11 @@ EOF
 		cat > $MYSQLDCONFIG << EOF
 [client]
 port            = 3306
-socket          = $MYSQLDROOT/mysqld.sock
+socket          = $MYSQLDSOCKET
 
 [mysqld]
 port            = 3306
-socket          = $MYSQLDROOT/mysqld.sock
+socket          = $MYSQLDSOCKET
 skip-external-locking
 key_buffer_size = 16M
 max_allowed_packet = 1M
