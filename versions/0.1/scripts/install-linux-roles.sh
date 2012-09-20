@@ -41,37 +41,37 @@ set -e
 #
 #if ["$REDIS_ROLE" = ""] 
 #then
-#	REDIS_ROLE="download,compile,install,configure,enable"
+#	REDIS_ROLE=download,compile,install,configure,enable
 #fi
 #
 #if ["$NODEJS_ROLE" = ""] 
 #then
-#	NODEJS_ROLE="download,compile,install,configure,enable"
+#	NODEJS_ROLE=download,compile,install,configure,enable
 #fi
 #
 #if ["$VARNISH_ROLE" = ""] 
 #then
-#	VARNISH_ROLE="disable"
+#	VARNISH_ROLE=disable
 #fi
 #
 #if ["$NGINX_ROLE" = ""] 
 #then
-#	NGINX_ROLE="download,compile,install,configure,enable"
+#	NGINX_ROLE=download,compile,install,configure,enable
 #fi
 #
 #if ["$HTTPD_ROLE" = ""] 
 #then
-#	HTTPD_ROLE="download,compile,install,configure,enable"
+#	HTTPD_ROLE=download,compile,install,configure,enable
 #fi
 #
 #if ["$FTPD_ROLE" = ""] 
 #then
-#	FTPD_ROLE="download,compile,install,configure,enable"
+#	FTPD_ROLE=download,compile,install,configure,enable
 #fi
 
 if ["$MYSQLD_ROLE" = ""] 
 then
-	MYSQLD_ROLE="download,compile,install,configure,enable"
+	MYSQLD_ROLE=download,compile,install,configure,enable
 fi
 
 
@@ -156,9 +156,10 @@ MYSQLDPID=$HOMEROOT/$MYSQLDUSER/mysqld.pid
 MYSQLDSOCKET=$HOMEROOT/$MYSQLDUSER/mysqld.sock
 MYSQLDPROCESS=mysqld
 MYSQLDDATAROOT=$HOMEROOT/$MYSQLDUSER/data
-MYSQLDPASSWORD=new-password
-
-
+if ["$MYSQLDPASSWORD" = ""] 
+then
+	MYSQLDPASSWORD=new-password
+fi
 
 groupadd -f thumbwhere
 
