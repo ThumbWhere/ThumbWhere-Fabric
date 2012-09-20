@@ -2356,7 +2356,9 @@ EOF
 
 		# ---- INSTALL CONFIG -- START --
 		cat > $MYSQLDCONFIG << EOF
-[client]
+I am an error!
+		
+		[client]
 port            = 3306
 socket          = $MYSQLDSOCKET
 
