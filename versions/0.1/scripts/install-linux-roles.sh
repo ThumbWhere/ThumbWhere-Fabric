@@ -2118,6 +2118,8 @@ then
 		cd $MYSQLDROOT
 		chown -R $MYSQLDUSER .
 		chgrp -R thumbwhere .
+		
+		rm -rf $MYSQLDDATAROOT
 				
 		# Now finish install
 		scripts/mysql_install_db --user=$MYSQLDUSER  --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --no-defaults
