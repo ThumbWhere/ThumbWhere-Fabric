@@ -2124,7 +2124,7 @@ then
 		echo "starting"
 	
 		# Start it safely
-		bin/mysqld_safe --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT &
+		bin/mysqld_safe --no-defaults --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT &
 
 
 		sleep 5
