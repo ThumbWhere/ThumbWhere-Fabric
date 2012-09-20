@@ -2187,14 +2187,13 @@ then
 . /lib/lsb/init-functions
 
 DAEMON="$MYSQLDROOT/bin/mysqld_safe"
-DAEMONSTARTOPTS="--no-defaults --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --pid-file=$MYSQLDPID --socket=$MYSQLDSOCKET "
-DAEMONSTOPOPTS="--no-defaults --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --pid-file=$MYSQLDPID --socket=$MYSQLDSOCKET "
+DAEMONOPTS=" --no-defaults --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --pid-file=$MYSQLDPID --socket=$MYSQLDSOCKET "
 PIDFILE="$MYSQLDPID"
 MYSQLDLOG="/var/log/mysqld.log"
 MYSQLDCONFIG="$MYSQLDCONFIG"
 USER="$MYSQLDUSER"
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-PROCESSNAME="mysqld"
+PROCESSNAME="mysqld_safe"
 DESC="MYSQL Server"
 
 os="$os"
@@ -2216,91 +2215,41 @@ fi
 start_mysqld()
 {
 
-	\$DAEMON \$DAEMONSTARTOPTS
-
-	# Start based on OS type
-	if [ "\$os" = "centos" ]
-	then 	
-		if \$DAEMON
- 		then
-			echo " ${cc_green}OK${cc_normal}"
-			else
-				echo -n " ${cc_red}FAIL${cc_normal} ("
-
-				if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
-				then
-					echo -n "${cc_yellow}Seems \$PROCESSNAME is already running.${cc_normal}"
-
-					# and just to be sure the pids are not out of whack
-					killall -2 \$PROCESSNAME 2> /dev/null
-				else
-					echo -n "${cc_yellow}Looks like \$PROCESSNAME is not already running.${cc_normal}"
-				fi
-		echo -n ")"
-		exit 1
-	fi
-	elif [ "\$os" = "debian" ] || [ "\$os" = "ubuntu" ]
+	if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
 	then
-		if  start-stop-daemon --start --quiet --oknodo --pidfile "\$PIDFILE" --exec "\$DAEMON" -- "\$DAEMONSTARTOPTS" 
-		then
-			echo " ${cc_green}OK${cc_normal}"
-		else
-			echo " ${cc_red}FAIL${cc_normal} (is it already running?)"
-			exit 1
-		fi
+		echo -n "${cc_yellow}Seems \$PROCESSNAME is already running.${cc_normal}"
 
+		# and just to be sure the pids are not out of whack
+		killall -2 \$PROCESSNAME 2> /dev/null
+	else
+		echo -n "${cc_yellow}Looks like \$PROCESSNAME is not already running.${cc_normal}"
 	fi
+
+	\$DAEMON \$DAEMONOPTS
+	
 }
 
 stop_mysqld()
 {
 
-	# Stop  based on OS
-	if [ "\$os" = "centos" ]
-	then 
-		if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
-		then
-			if killall -2 \$PROCESSNAME 2> /dev/null
-			then
-				echo " ${cc_green}OK${cc_normal}"
-			else
-				echo " ${cc_red}FAIL${cc_normal}"
-			fi
-		else
-			echo -n " ${cc_red}FAIL${cc_normal}"
-			echo " ${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"						
-		fi
-	elif [ "\$os" = "debian" ] || [ "\$os" = "ubuntu" ]
+	if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
 	then
-		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON -- "\$DAEMONSTOPOPTS" 2> /dev/null
-		then
-			echo " ${cc_green}OK${cc_normal}"
+		echo -n "${cc_yellow}Seems \$PROCESSNAME is already running.${cc_normal}"
 
-			# and just to be sure the pids are not out of whack
-			killall -2 \$PROCESSNAME 2> /dev/null
-		else
-			echo -n " ${cc_cyan}FAIL${cc_normal} ("
-
- 			if [ ! -z "\$PIDN" ] && killall -0 \$PROCESSNAME 2> /dev/null
-	 		then
-				echo -n "${cc_yellow}Seems \$PROCESSNAME is running but not as pid '\$PIDN' we were expecting. Killing all.${cc_normal}"
-
-				# and just to be sure the pids are not out of whack
-				killall -2 \$PROCESSNAME 2> /dev/null
-			else
-				echo -n "${cc_yellow}Looks like \$PROCESSNAME is not running.${cc_normal}"
-			fi
-
-			echo ")"
-		fi
-
+		# and just to be sure the pids are not out of whack
+		killall -2 \$PROCESSNAME 2> /dev/null
+	else
+		echo -n "${cc_yellow}Looks like \$PROCESSNAME is not already running.${cc_normal}"
 	fi
 
+	# send command to stop
+	$MYSQLDROOT/bin/mysqladmin --user=root --password=$MYSQLDPASSWORD shutdown --socket=$MYSQLDSOCKET
+	
 	# 5 seconds grace
 	sleep 5
 
-		# And finally, to ensure there are no issues
-		killall -9 \$PROCESSNAME 2> /dev/null
+	# And finally, to ensure there are no issues
+	killall -9 \$PROCESSNAME 2> /dev/null
 
 	rm -f "\$PIDFILE"
 	return 0
