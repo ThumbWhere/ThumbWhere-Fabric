@@ -2124,7 +2124,12 @@ then
 		echo "starting"
 	
 		# Start it safely
+		echo bin/mysqld_safe --no-defaults --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --socket=/var/run/mysqld/mysqld.sock &
+
 		bin/mysqld_safe --no-defaults --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --socket=/var/run/mysqld/mysqld.sock &
+
+
+
 
 		echo "sleeping for 5 seconds to ensure mysqld is started"
 		
@@ -2133,12 +2138,14 @@ then
 		echo "setting password"
 		
 		# Set passwords
+		echo bin/mysqladmin -u root password $MYSQLDPASSWORD --socket=/var/run/mysqld/mysqld.sock
 		bin/mysqladmin -u root password $MYSQLDPASSWORD --socket=/var/run/mysqld/mysqld.sock
 	
 
 		echo "stopping"
 	
 		# Stop it...
+		echo bin/mysqladmin --user=root --password=$MYSQLDPASSWORD shutdown --socket=/var/run/mysqld/mysqld.sock
 		bin/mysqladmin --user=root --password=$MYSQLDPASSWORD shutdown --socket=/var/run/mysqld/mysqld.sock
 		
 		# bin/mysqladmin -u root -h localhost password 'new-password'
