@@ -2124,20 +2124,22 @@ then
 		echo "starting"
 	
 		# Start it safely
-		bin/mysqld_safe --no-defaults --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT &
+		bin/mysqld_safe --no-defaults --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --socket=/var/run/mysqld/mysqld.sock &
 
-
+		echo "sleeping for 5 seconds to ensure mysqld is started"
+		
 		sleep 5
+		
 		echo "setting password"
 		
 		# Set passwords
-		bin/mysqladmin -u root password $MYSQLDPASSWORD
+		bin/mysqladmin -u root password $MYSQLDPASSWORD --socket=/var/run/mysqld/mysqld.sock
 	
 
 		echo "stopping"
 	
 		# Stop it...
-		bin/mysqladmin --user=root --password=$MYSQLDPASSWORD shutdown
+		bin/mysqladmin --user=root --password=$MYSQLDPASSWORD shutdown --socket=/var/run/mysqld/mysqld.sock
 		
 		# bin/mysqladmin -u root -h localhost password 'new-password'
 		
@@ -2145,7 +2147,7 @@ then
 		#chown -R $MYSQLDUSER data
 		# Next command is optional
 		#cp support-files/my-medium.cnf /etc/my.cnf
-		bin/mysqld_safe --user=$MYSQLDUSER &
+		#bin/mysqld_safe --user=$MYSQLDUSER &
 		# Next command is optional
 		#cp support-files/mysql.server /etc/init.d/mysql.server		
 
@@ -2346,11 +2348,11 @@ EOF
 		cat > $MYSQLDCONFIG << EOF
 [client]
 port            = 3306
-socket          = /tmp/mysql.sock
+socket          = /var/run/mysqld/mysqld.sock
 
 [mysqld]
 port            = 3306
-socket          = /tmp/mysql.sock
+socket          = /var/run/mysqld/mysqld.sock
 skip-external-locking
 key_buffer_size = 16M
 max_allowed_packet = 1M
