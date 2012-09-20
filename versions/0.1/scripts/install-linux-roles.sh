@@ -2240,7 +2240,7 @@ start_mysqld()
 	fi
 	elif [ "\$os" = "debian" ] || [ "\$os" = "ubuntu" ]
 	then
-		if  start-stop-daemon --start --quiet --oknodo --pidfile "\$PIDFILE" --exec "\$DAEMON" -- "\$DAEMONSTARTOPTS" 
+		if  start-stop-daemon --start --quiet -b --pidfile "\$PIDFILE" --exec "\$DAEMON" -- \$DAEMONSTARTOPTS 
 		then
 			echo " ${cc_green}OK${cc_normal}"
 		else
@@ -2271,7 +2271,7 @@ stop_mysqld()
 		fi
 	elif [ "\$os" = "debian" ] || [ "\$os" = "ubuntu" ]
 	then
-		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON -- "\$DAEMONSTOPOPTS" 2> /dev/null
+		if start-stop-daemon --stop --quiet --pidfile \$PIDFILE --retry 10 --exec \$DAEMON -- \$DAEMONSTOPOPTS 2> /dev/null
 		then
 			echo " ${cc_green}OK${cc_normal}"
 
@@ -2296,10 +2296,10 @@ stop_mysqld()
 	fi
 
 	# 5 seconds grace
-	sleep 5
+	# sleep 5
 
-		# And finally, to ensure there are no issues
-		killall -9 \$PROCESSNAME 2> /dev/null
+	# And finally, to ensure there are no issues
+	killall -9 \$PROCESSNAME 2> /dev/null
 
 	rm -f "\$PIDFILE"
 	return 0
