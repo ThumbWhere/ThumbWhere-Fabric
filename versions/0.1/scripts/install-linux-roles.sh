@@ -68,11 +68,11 @@ set -e
 #then
 #	FTPD_ROLE=download,compile,install,configure,enable
 #fi
-
-if ["$MYSQLD_ROLE" = ""] 
-then
-	MYSQLD_ROLE=download,compile,install,configure,enable
-fi
+#
+#if ["$MYSQLD_ROLE" = ""] 
+#then
+#	MYSQLD_ROLE=download,compile,install,configure,enable
+#fi
 
 
 
