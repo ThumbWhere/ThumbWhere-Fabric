@@ -2243,7 +2243,7 @@ start_mysqld()
 	fi
 	elif [ "\$os" = "debian" ] || [ "\$os" = "ubuntu" ]
 	then
-		if  start-stop-daemon --start --quiet -b --pidfile "\$PIDFILE" --exec "\$DAEMON" -- \$DAEMONSTARTOPTS 
+		if  start-stop-daemon --start --quiet --chuid \$USER -b --pidfile "\$PIDFILE" --exec "\$DAEMON" -- \$DAEMONSTARTOPTS 
 		then
 			echo " ${cc_green}OK${cc_normal}"
 		else
