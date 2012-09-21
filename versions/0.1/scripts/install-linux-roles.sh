@@ -89,7 +89,7 @@ HTTPDURL=http://apache.mirror.aussiehq.net.au/httpd/httpd-2.2.22.tar.gz
 FTPDURL=ftp://ftp.proftpd.org/distrib/source/proftpd-1.3.4a.tar.gz
 # See: http://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-5.5.27.tar.gz/from/http://cdn.mysql.com/
 MYSQLDURL=http://cdn.mysql.com/Downloads/MySQL-5.5/mysql-5.5.27.tar.gz
-PHPURL=http://au.php.net/get/php-5.4.7.tar.gz/from/this/mirror --output-file=php-5.4.X.tar.gz
+PHPURL="http://au.php.net/get/php-5.4.7.tar.gz/from/this/mirror --output-file=php-5.4.7.tar.gz"
 
 ###############################################################################
 #
@@ -411,6 +411,10 @@ then
 else
 	echo " - ${cc_yellow}Skipping $MYSQLDFILE${cc_normal}"
 fi
+
+
+echo $PHPFILE  
+
 
 if [[ $PHP_ROLE = *download* ]] 
 then
