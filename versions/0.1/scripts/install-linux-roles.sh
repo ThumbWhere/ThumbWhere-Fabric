@@ -118,7 +118,7 @@ NGINXFILE=`echo $NGINXURL | rev | cut -d\/ -f1 | rev`
 HTTPDFILE=`echo $HTTPDURL | rev | cut -d\/ -f1 | rev`
 FTPDFILE=`echo $FTPDURL | rev | cut -d\/ -f1 | rev`
 MYSQLDFILE=`echo $MYSQLDURL | rev | cut -d\/ -f1 | rev`
-MYPHPFILE=`echo $MYPHPURL | rev | cut -d\/ -f1 | rev`
+PHPFILE=`echo $PHPURL | rev | cut -d\/ -f1 | rev`
 
 IRCDFOLDER=`echo $IRCDFILE | rev | cut -d\. -f3- | rev`
 REDISFOLDER=`echo $REDISFILE | rev | cut -d\. -f3- | rev`
@@ -404,11 +404,11 @@ else
 	echo " - ${cc_yellow}Skipping $MYSQLDFILE${cc_normal}"
 fi
 
-if [[ $MYPHP_ROLE = *download* ]] 
+if [[ $PHP_ROLE = *download* ]] 
 then
-	[ -f $MYPHPFILE ] && echo " - $MYPHPFILE exists" || wget $MYPHPURL
+	[ -f $PHPFILE ] && echo " - $PHPFILE exists" || wget $PHPURL
 else
-	echo " - ${cc_yellow}Skipping $MYPHPFILE${cc_normal}"
+	echo " - ${cc_yellow}Skipping $PHPFILE${cc_normal}"
 fi
 
 
