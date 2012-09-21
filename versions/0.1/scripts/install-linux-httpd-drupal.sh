@@ -269,10 +269,15 @@ EOF
 		
 		# Now perform the install
 		#drush dl drupal-7.x --yes
+		
+		echo $PHPROOT/bin/php -c $PHPROOT/php.ini  /usr/bin/drush site-install standard --debug --verbose --account-name=admin --account-pass=wjpq6q --url=http://localhost:81 --db-url=mysql://root:$MYSQLDPASSWORD@localhost/drupal --config drushrc.php --yes
+		
 		$PHPROOT/bin/php -c $PHPROOT/php.ini  /usr/bin/drush site-install standard --debug --verbose --account-name=admin --account-pass=wjpq6q --url=http://localhost:81 --db-url=mysql://root:$MYSQLDPASSWORD@localhost/drupal --config drushrc.php --yes
 		
 		chmod 775 sites/default/files
 		chmod 775 sites/default/settings.php		
+		
+		$PHPROOT/bin/php -c $PHPROOT/php.ini  /usr/bin/drush site-install standard --debug --verbose --account-name=admin --account-pass=wjpq6q --url=http://localhost:81 --db-url=mysql://root:$MYSQLDPASSWORD@localhost/drupal --config drushrc.php --yes
 	fi
 
 	#
