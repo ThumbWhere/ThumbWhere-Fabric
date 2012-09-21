@@ -221,7 +221,7 @@ create_user_and_stop_service()
 	p_user=$1
 	p_process=$2
 
-	create_user($1)
+	create_user ${p_user}
 
 	if killall -0 ${p_process}
 	then
