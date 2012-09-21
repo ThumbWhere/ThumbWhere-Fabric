@@ -15,11 +15,12 @@
 # -------------
 #
 # Requires that the httpd role has already been installed using install-linux-roles.sh with HTTPD_ROLE="download,compile,install,configure,enable"
+# Requires that the mysqld role has already been installed using install-linux-roles.sh with HTTPD_ROLE="download,compile,install,configure,enable"
 #
 # Bootstrapping
 # -------------
 #
-# This script can be downloaded using teh following command
+# This script can be downloaded using the following command
 # 
 # For systems with wget, run this line.
 #
@@ -33,6 +34,19 @@
 
 # We want the script to fail on any errors... so..
 set -e
+
+#
+# Global config.
+#
+
+HOMEROOT=/home
+
+#
+# Drupal specific.
+#
+
+DRUPALUSER=tw-drupal
+DRUPALCONFIG=$HOMEROOT/$DRUPALUSER
 
 ###############################################################################
 #
@@ -48,26 +62,10 @@ DRUPALURL=http://ftp.drupal.org/files/projects/drupal-7.15.tar.gz
 #
 
 DOWNLOADS=~/tw-downloads
-HOMEROOT=/home
-
-GROUP=thumbwhere
-DRUPALUSER=tw-ircd
-REDISUSER=tw-redis
-NODEJSUSER=tw-nodejs
-VARNISHUSER=tw-varnish
-NGINXUSER=tw-nginx
-HTTPDUSER=tw-httpd
-FTPDUSER=tw-ftpd
 
 DRUPALFILE=`echo $DRUPALURL | rev | cut -d\/ -f1 | rev`
-
 DRUPALFOLDER=`echo $DRUPALFILE | rev | cut -d\. -f3- | rev`
 
-DRUPALPROCESS=inspircd
-DRUPALCONFIG=/etc/inspircd/inspircd.conf
-DRUPALPID=$HOMEROOT/$DRUPALUSER/inspircd.pid
-
-groupadd -f thumbwhere
 
 #
 # Some handy constants
@@ -133,20 +131,17 @@ fi
 if [ "`grep ubuntu /proc/version -c`" != "0" ]
 then
 	os="ubuntu"
-	
-	if [ ! -f /sbin/insserv ]
-	then
-		ln -s /usr/lib/insserv/insserv /sbin/insserv
-	fi
-	
 fi
-
 
 if [ "$os" = "" ] 
 then
 	echo "Unable to determine os from `cat /proc/version -c`"
 	exit 1
 fi
+
+#
+# What packages do we want?
+#
 
 if [ $os = "debian" ] || [ $os = "ubuntu" ]
 then
@@ -189,9 +184,14 @@ then
 	if [[ $DRUPAL_TASK = *install* ]]
 	then
 		echo " - Installing"
+
+		echo cd $HOMEROOT/$DRUPALUSER
+		echo drush dl drupal-7.x
+		echo drush site-install standard --account-name=admin --account-pass=wjpq6q --db-url=mysql://root:new-password@localhost/drupal
 		
+		cd $HOMEROOT/$DRUPALUSER
 		drush dl drupal-7.x
-		drush site-install standard --account-name=admin --account-pass=wjpq6q --db-url=mysql://YourMySQLUser:RandomPassword@localhost/YourMySQLDatabase
+		drush site-install standard --account-name=admin --account-pass=wjpq6q --db-url=mysql://root:new-password@localhost/drupal
 		
 	fi
 
