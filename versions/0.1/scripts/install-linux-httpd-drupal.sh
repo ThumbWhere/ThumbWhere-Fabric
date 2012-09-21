@@ -48,6 +48,7 @@ GROUP=thumbwhere
 
 DRUPALUSER=tw-drupal
 DRUPALCONFIG=$HOMEROOT/$DRUPALUSER/drupal.config
+DRUPALSITE=default
 
 ###############################################################################
 #
@@ -197,11 +198,13 @@ then
 	then
 		echo " - Installing"
 
-		echo cd $HOMEROOT/$DRUPALUSER
-		echo drush dl drupal-7.x
-		echo drush site-install standard --account-name=admin --account-pass=wjpq6q --db-url=mysql://root:new-password@localhost/drupal
-		
+				
 		cd $HOMEROOT/$DRUPALUSER
+		mkdir -p $DRUPALSITE
+		cd $DRUPALSITE
+		
+		tar -xjf $DRUPALFILE
+		
 		drush dl drupal-7.x
 		drush site-install standard --account-name=admin --account-pass=wjpq6q --db-url=mysql://root:new-password@localhost/drupal
 		
