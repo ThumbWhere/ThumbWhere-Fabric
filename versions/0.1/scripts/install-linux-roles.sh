@@ -1581,7 +1581,7 @@ then
 		tar -xzf $HTTPDFILE
 		echo " - Building"
 		cd $HTTPDFOLDER
-		./configure  --prefix=$HTTPDROOT
+		./configure  --prefix=$HTTPDROOT --enable-so --enable-cgi --enable-info --enable-rewrite --enable-speling --enable-usertrack --enable-deflate --enable-ssl --enable-mime-magic
 		make
 	fi
 
@@ -1754,6 +1754,15 @@ Group thumbwhere
 ServerAdmin james@thumbwhere.com
 ServerName apache.thumbwhere.com:80
 DocumentRoot "$HTTPDROOT/htdocs"
+
+LoadModule php5_module  modules/libphp5.so
+AddHandler php5-script  .php
+DirectoryIndex index.html index.php
+AddType text/html       .php
+AddType application/x-httpd-php-source phps
+ 
+
+
 <Directory />
 	Options FollowSymLinks
 	AllowOverride None
@@ -1803,6 +1812,36 @@ DefaultType text/plain
 SSLRandomSeed startup builtin
 SSLRandomSeed connect builtin
 </IfModule>
+
+<VirtualHost *:81>
+        ServerAdmin production@thumbwhere.com
+
+        DocumentRoot /home/tw-drupal/default
+        ServerName 10.0.2.38
+        ServerAlias *.my64k.com
+        <Directory />
+                Options FollowSymLinks
+                AllowOverride All
+                #RewriteEngine on
+                #RewriteBase /
+                #RewriteCond %{REQUEST_FILENAME} !-f
+                #RewriteCond %{REQUEST_FILENAME} !-d
+                #RewriteRule ^(.*)$ index.php?q=$1 [L,QSA]
+        </Directory>
+
+
+        #ErrorLog /home/tw-httpd/apache2/log/drupal-production-error.log
+
+        # Possible values include: debug, info, notice, warn, error, crit,
+        # alert, emerg.
+        LogLevel warn
+
+        #CustomLog /home/tw-httpd/apache2/log/drupal-production-access.log combined
+
+</VirtualHost>
+
+
+
 EOF
 
 	# ---- INSTALL CONFIG -- END --
@@ -2356,7 +2395,7 @@ EOF
 
 		# ---- INSTALL CONFIG -- START --
 		cat > $MYSQLDCONFIG << EOF
-		[client]
+[client]
 port            = 3306
 socket          = $MYSQLDSOCKET
 

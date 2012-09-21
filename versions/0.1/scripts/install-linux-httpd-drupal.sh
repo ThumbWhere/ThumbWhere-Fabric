@@ -50,13 +50,19 @@ DRUPALUSER=tw-drupal
 DRUPALCONFIG=$HOMEROOT/$DRUPALUSER/drupal.config
 DRUPALSITE=default
 
+# related to drupal..
+MYSQLDUSER=tw-mysqld
+MYSQLDSOCKET=$HOMEROOT/$MYSQLDUSER/mysqld.sock
+MYSQLDCONFIG=$HOMEROOT/$DRUPALUSER/.my.cnf
+
+
 ###############################################################################
 #
 # Config variables ; Each one can contain the following keywords "download,compile,install,configure,enable"
 # If enable is not part of the string, then the service is deemed to be 'disabled'
 #
 
-if ["$DRUPAL_ROLE" = ""] 
+if [$DRUPAL_ROLE = ""] 
 then
 	DRUPAL_ROLE=download,compile,install,configure,enable
 fi
@@ -197,17 +203,33 @@ then
 	if [[ $DRUPAL_ROLE = *install* ]]
 	then
 		echo " - Installing"
-
 				
 		cd $HOMEROOT/$DRUPALUSER
-		mkdir -p $DRUPALSITE
-		cd $DRUPALSITE
 		
 		cp $DOWNLOADS/$DRUPALFILE .
-		tar -xjf $DRUPALFILE
+		tar -xf $DRUPALFILE
+				
+		rm -rf $DRUPALSITE				
+		mv $DRUPALFOLDER $DRUPALSITE
+		cd $DRUPALSITE
 		
-		drush dl drupal-7.x
-		drush site-install standard --account-name=admin --account-pass=wjpq6q --db-url=mysql://root:new-password@localhost/drupal
+		# Need some local config for mysql
+		
+		# ---- INSTALL CONFIG -- START --
+		cat > $MYSQLDCONFIG << EOF
+[client]
+port            = 3306
+socket          = $MYSQLDSOCKET
+EOF
+		
+		# we want a version of this too...
+		cp $MYSQLDCONFIG ~
+		
+		# And we want SQL server started..
+		/etc/init.d/$MYSQLDUSER-server start
+			
+		drush dl drupal-7.x --yes
+		drush site-install standard --account-name=admin --account-pass=wjpq6q --db-url=mysql://root:new-password@localhost/drupal --yes
 		
 	fi
 
