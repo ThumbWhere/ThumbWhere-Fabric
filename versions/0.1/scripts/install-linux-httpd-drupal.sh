@@ -199,15 +199,17 @@ then
 		echo " - Installing"
 
 				
-		cd $HOMEROOT/$DRUPALUSER
-		mkdir -p $DRUPALSITE
-		cd $DRUPALSITE
-		
-		cp $DOWNLOADS/$DRUPALFILE .
-		tar -xjf $DRUPALFILE
-		
-		drush dl drupal-7.x
-		drush site-install standard --account-name=admin --account-pass=wjpq6q --db-url=mysql://root:new-password@localhost/drupal
+		#cd $HOMEROOT/$DRUPALUSER
+			
+		#cp $DOWNLOADS/$DRUPALFILE .
+		#tar -xf $DRUPALFILE
+
+		#rm -rf $DRUPALSITE		
+		#mv $DRUPALFOLDER $DRUPALSITE
+		#cd $DRUPALSITE
+	
+		drush dl drupal-7.x --yes
+		drush site-install standard --account-name=admin --account-pass=wjpq6q --db-url=mysql://root:new-password@localhost/drupal --yes
 		
 	fi
 
