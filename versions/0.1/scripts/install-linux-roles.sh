@@ -59,10 +59,10 @@ set -e
 #	NGINX_ROLE=download,compile,install,configure,enable
 #fi
 #
-if ["$HTTPD_ROLE" = ""] 
-then
-	HTTPD_ROLE=download,compile,install,configure,enable
-fi
+#if ["$HTTPD_ROLE" = ""] 
+#then
+#	HTTPD_ROLE=download,compile,install,configure,enable
+#fi
 #
 #if ["$FTPD_ROLE" = ""] 
 #then
@@ -74,6 +74,10 @@ fi
 #	MYSQLD_ROLE=download,compile,install,configure,enable
 #fi
 
+if ["$PHP_ROLE" = ""] 
+then
+	PHP_ROLE=download,compile,install,configure,enable
+fi
 
 
 IRCDURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
