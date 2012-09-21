@@ -85,6 +85,7 @@ HTTPDURL=http://apache.mirror.aussiehq.net.au/httpd/httpd-2.2.22.tar.gz
 FTPDURL=ftp://ftp.proftpd.org/distrib/source/proftpd-1.3.4a.tar.gz
 # See: http://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-5.5.27.tar.gz/from/http://cdn.mysql.com/
 MYSQLDURL=http://cdn.mysql.com/Downloads/MySQL-5.5/mysql-5.5.27.tar.gz
+PHPURL=http://au.php.net/get/php-5.4.7.tar.gz/from/this/mirror
 
 ###############################################################################
 #
@@ -103,6 +104,7 @@ NGINXUSER=tw-nginx
 HTTPDUSER=tw-httpd
 FTPDUSER=tw-ftpd
 MYSQLDUSER=tw-mysqld
+PHPUSER=tw-php
 
 IRCDFILE=`echo $IRCDURL | rev | cut -d\/ -f1 | rev`
 REDISFILE=`echo $REDISURL | rev | cut -d\/ -f1 | rev`
@@ -112,6 +114,7 @@ NGINXFILE=`echo $NGINXURL | rev | cut -d\/ -f1 | rev`
 HTTPDFILE=`echo $HTTPDURL | rev | cut -d\/ -f1 | rev`
 FTPDFILE=`echo $FTPDURL | rev | cut -d\/ -f1 | rev`
 MYSQLDFILE=`echo $MYSQLDURL | rev | cut -d\/ -f1 | rev`
+MYPHPFILE=`echo $MYPHPURL | rev | cut -d\/ -f1 | rev`
 
 IRCDFOLDER=`echo $IRCDFILE | rev | cut -d\. -f3- | rev`
 REDISFOLDER=`echo $REDISFILE | rev | cut -d\. -f3- | rev`
@@ -121,6 +124,7 @@ NGINXFOLDER=`echo $NGINXFILE | rev | cut -d\. -f3- | rev`
 HTTPDFOLDER=`echo $HTTPDFILE | rev | cut -d\. -f3- | rev`
 FTPDFOLDER=`echo $FTPDFILE | rev | cut -d\. -f3- | rev`
 MYSQLDFOLDER=`echo $MYSQLDFILE | rev | cut -d\. -f3- | rev`
+PHPFOLDER=`echo $PHPFILE | rev | cut -d\. -f3- | rev`
 
 IRCDPROCESS=inspircd
 IRCDCONFIG=/etc/inspircd/inspircd.conf
@@ -149,6 +153,10 @@ FTPDROOT=$HOMEROOT/$FTPDUSER/ftpd
 FTPDCONFIG=$FTPDROOT/etc/proftpd.conf
 FTPDPID=$FTPDROOT/var/proftpd.pid
 FTPDPROCESS=proftpd
+
+PHPROOT=$HOMEROOT/$PHPUSER/php
+PHPCONFIG=$PHPROOT/etc/php.conf.test
+
 
 MYSQLDROOT=$HOMEROOT/$MYSQLDUSER/mysqld
 MYSQLDCONFIG=$HOMEROOT/$MYSQLDUSER/.my.cnf
@@ -391,6 +399,14 @@ then
 else
 	echo " - ${cc_yellow}Skipping $MYSQLDFILE${cc_normal}"
 fi
+
+if [[ $MYPHP_ROLE = *download* ]] 
+then
+	[ -f $MYPHPFILE ] && echo " - $MYPHPFILE exists" || wget $MYPHPURL
+else
+	echo " - ${cc_yellow}Skipping $MYPHPFILE${cc_normal}"
+fi
+
 
 cd ..
 
@@ -2441,6 +2457,67 @@ EOF
 
 	# Enable or disable...
 	enable_disable $MYSQLDUSER $MYSQLD_ROLE
+
+fi
+
+
+#########################################################################################
+#
+# Install PHP
+#
+
+if [ "$PHP_ROLE" != "" ]
+then
+	echo "*** ${cc_cyan}Installing PHP ($PHPFOLDER)${cc_normal}"
+	
+	create_user_and_stop_service $PHPUSER $PHPPROCESS
+
+	if [[ $PHP_ROLE = *compile* ]]
+	then
+		cp $DOWNLOADS/$PHPFILE $HOMEROOT/$PHPUSER/
+		chown $PHPUSER.$GROUP $HOMEROOT/$PHPUSER
+		cd  $HOMEROOT/$PHPUSER
+		echo " - Deleting old instance"
+		rm -rf $PHPFOLDER
+		echo " - Uncompressing"
+		tar -xzf $PHPFILE
+		echo " - Building"
+		cd $PHPFOLDER
+
+		# Start with all the correct owners...
+		chown -R $PHPUSER .
+		chgrp -R thumbwhere .		
+
+		./configure --prefix=$PHPROOT   --with-apxs2=$HTTPDROOT/bin/apxs --with-mysql  --with-config-file-path=$HTTPDROOT/php --enable-force-cgi-redirect --disable-cgi --with-zlib --with-gettext --with-gdbm		
+		make		
+	fi
+
+	if [[ $PHP_ROLE = *install* ]]
+		then
+		echo " - Installing"
+		
+		# This will install it into $PHPROOT
+ 		cd $HOMEROOT/$PHPUSER
+		cd $PHPFOLDER
+		
+		make install
+		
+	fi
+
+
+	if [[ $PHP_ROLE = *configure* ]]
+	then
+
+		echo " - Configuring"
+
+		# ---- INSTALL CONFIG -- START --
+		cat > $PHPCONFIG << EOF
+Some config..
+EOF
+
+	fi
+
+	# ---- INSTALL CONFIG -- END --
 
 fi
 
