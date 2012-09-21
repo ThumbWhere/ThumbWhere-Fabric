@@ -247,9 +247,7 @@ EOF
 		
 cat >> sites/default/settings.php << EOF		
 
-
-
-$databases = array (
+\$databases = array (
   'default' =>
   array (
     'default' =>
