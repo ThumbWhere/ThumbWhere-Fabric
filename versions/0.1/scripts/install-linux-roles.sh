@@ -2491,6 +2491,8 @@ then
 		cd $PHPFOLDER
 		
 		make install
+		
+		/etc/init.d/tw-httpd-server restart
 	fi
 
 	if [[ $PHP_ROLE = *configure* ]]
