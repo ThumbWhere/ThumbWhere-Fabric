@@ -46,7 +46,7 @@ HOMEROOT=/home
 #
 
 DRUPALUSER=tw-drupal
-DRUPALCONFIG=$HOMEROOT/$DRUPALUSER
+DRUPALCONFIG=$HOMEROOT/$DRUPALUSER/drupal.config
 
 ###############################################################################
 #
