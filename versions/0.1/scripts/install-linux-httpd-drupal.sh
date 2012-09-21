@@ -164,10 +164,10 @@ fi
 
 if [ $os = "debian" ] || [ $os = "ubuntu" ]
 then
-	apt-get -y install drush
+	apt-get -y install drush php5-gd
 elif [ $os = "centos" ]
 then
-	yum -y install drush
+	yum -y install drush php-gd
 fi
 
 #
