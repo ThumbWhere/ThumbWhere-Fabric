@@ -204,6 +204,7 @@ then
 	then
 		echo " - Installing"
 				
+
 		cd $HOMEROOT/$DRUPALUSER
 		
 		cp $DOWNLOADS/$DRUPALFILE .
@@ -228,6 +229,8 @@ EOF
 		# And we want SQL server started..
 		/etc/init.d/$MYSQLDUSER-server start
 			
+		
+		# Now perform the install
 		drush dl drupal-7.x --yes
 		drush site-install standard --account-name=admin --account-pass=wjpq6q --db-url=mysql://root:new-password@localhost/drupal --yes
 		
