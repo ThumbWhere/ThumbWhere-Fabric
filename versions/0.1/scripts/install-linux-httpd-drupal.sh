@@ -40,6 +40,7 @@ set -e
 #
 
 HOMEROOT=/home
+GROUP=thumbwhere
 
 #
 # Drupal specific.
@@ -47,6 +48,17 @@ HOMEROOT=/home
 
 DRUPALUSER=tw-drupal
 DRUPALCONFIG=$HOMEROOT/$DRUPALUSER/drupal.config
+
+###############################################################################
+#
+# Config variables ; Each one can contain the following keywords "download,compile,install,configure,enable"
+# If enable is not part of the string, then the service is deemed to be 'disabled'
+#
+
+if ["$DRUPAL_ROLE" = ""] 
+then
+	DRUPAL_ROLE=download,compile,install,configure,enable
+fi
 
 ###############################################################################
 #
@@ -160,7 +172,7 @@ echo "*** ${cc_cyan}Downloading source packages${cc_normal}"
 mkdir -p $DOWNLOADS
 cd $DOWNLOADS
 
-if [[ $DRUPAL_TASK = *download* ]] 
+if [[ $DRUPAL_ROLE = *download* ]] 
 then
 	[ -f $DRUPALFILE ] && echo " - $DRUPALFILE exists" || wget $DRUPALURL
 else
@@ -175,13 +187,13 @@ cd ..
 # Install DRUPAL
 # 
 
-if [ "$DRUPAL_TASK" != "" ]
+if [ "$DRUPAL_ROLE" != "" ]
 then
 	echo "$*** ${cc_cyan}Installing DRUPAL ($DRUPALFOLDER)${cc_normal}"
 	
 	create_user $DRUPALUSER
 
-	if [[ $DRUPAL_TASK = *install* ]]
+	if [[ $DRUPAL_ROLE = *install* ]]
 	then
 		echo " - Installing"
 
@@ -199,7 +211,7 @@ then
 	# Generate configure scripts
 	#
 	
-	if [[ $DRUPAL_TASK = *configure* ]]
+	if [[ $DRUPAL_ROLE = *configure* ]]
 	then
 		# ---- DRUPAL CONFIG -- START ----		
 	
