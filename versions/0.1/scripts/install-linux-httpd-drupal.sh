@@ -244,11 +244,32 @@ EOF
 		chmod 777 sites/default/files	
 		cp sites/default/default.settings.php  sites/default/settings.php
 		chmod 777 sites/default/settings.php
+		
+cat >> sites/default/settings.php << EOF		
+
+
+
+$databases = array (
+  'default' =>
+  array (
+    'default' =>
+    array (
+      'database' => 'drupal',
+      'username' => 'root',
+      'password' => 'new-password',
+      'host' => 'localhost',
+      'port' => '',
+      'driver' => 'mysql',
+      'prefix' => '',
+    ),
+  ),
+);
+EOF
 			
 		
 		# Now perform the install
 		#drush dl drupal-7.x --yes
-		$PHPROOT/bin/php -c $PHPROOT/php.ini  /usr/bin/drush site-install standard --debug 10 --verbose 10 --account-name=admin --account-pass=wjpq6q --url=http://localhost:81 --db-url=mysql://root:$MYSQLDPASSWORD@localhost/drupal --config drushrc.php --yes
+		$PHPROOT/bin/php -c $PHPROOT/php.ini  /usr/bin/drush site-install standard --debug --verbose --account-name=admin --account-pass=wjpq6q --url=http://localhost:81 --db-url=mysql://root:$MYSQLDPASSWORD@localhost/drupal --config drushrc.php --yes
 		
 		chmod 775 sites/default/files
 		chmod 775 sites/default/settings.php		
