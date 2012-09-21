@@ -203,6 +203,7 @@ then
 		mkdir -p $DRUPALSITE
 		cd $DRUPALSITE
 		
+		cp $DOWNLOADS/$DRUPALFILE .
 		tar -xjf $DRUPALFILE
 		
 		drush dl drupal-7.x
