@@ -341,10 +341,10 @@ fi
 
 if [ $os = "debian" ] || [ $os = "ubuntu" ]
 then
-	apt-get -y install wget bzip2 binutils g++ make tcl8.5 curl build-essential openssl libssl-dev libssh-dev pkg-config libpcre3 libpcre3-dev libpcre++0 xsltproc libncurses5-dev cmake bison libxml2-dev
+	apt-get -y install wget bzip2 binutils g++ make tcl8.5 curl build-essential openssl libssl-dev libssh-dev pkg-config libpcre3 libpcre3-dev libpcre++0 xsltproc libncurses5-dev cmake bison libxml2-dev libgdbm-dev
 elif [ $os = "centos" ]
 then
-	yum -y install wget bzip2 binutils gcc-c++ make gcc tcl curl openssl pcre gnutls openssh openssl ncurses pcre-devel gnutls-devel openssl-devel ncurses-devel libxslt redhat-lsb cmake bison libxml2-dev
+	yum -y install wget bzip2 binutils gcc-c++ make gcc tcl curl openssl pcre gnutls openssh openssl ncurses pcre-devel gnutls-devel openssl-devel ncurses-devel libxslt redhat-lsb cmake bison libxml2-dev libgdbm-dev
 fi
 
 #
