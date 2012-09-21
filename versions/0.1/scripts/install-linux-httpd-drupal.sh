@@ -54,6 +54,11 @@ DRUPALSITE=default
 MYSQLDUSER=tw-mysqld
 MYSQLDSOCKET=$HOMEROOT/$MYSQLDUSER/mysqld.sock
 MYSQLDCONFIG=$HOMEROOT/$DRUPALUSER/.my.cnf
+if ["$MYSQLDPASSWORD" = ""] 
+then
+	MYSQLDPASSWORD=new-password
+fi
+
 
 
 ###############################################################################
@@ -233,14 +238,17 @@ EOF
 		cp $MYSQLDCONFIG ~
 		
 		# And we want SQL server started..
-		/etc/init.d/$MYSQLDUSER-server start
+		/etc/init.d/$MYSQLDUSER-server restart
 			
+		mkdir sites/default/files			
 		chmod 777 sites/default/files	
+		cp sites/default/default.settings.php  sites/default/settings.php
+		chmod 777 sites/default/settings.php
 			
 		
 		# Now perform the install
 		#drush dl drupal-7.x --yes
-		drush --account-name=admin --account-pass=wjpq6q --url=http://localhost:81 --db-url=mysql://root:new-password@localhost/drupal --yes --debug --verbose --config drushrc.php site-install standard
+		$PHPROOT/bin/php -c $PHPROOT/php.ini  /usr/bin/drush site-install standard --debug 10 --verbose 10 --account-name=admin --account-pass=wjpq6q --url=http://localhost:81 --db-url=mysql://root:$MYSQLDPASSWORD@localhost/drupal --config drushrc.php --yes
 		
 		chmod 775 sites/default/files
 		chmod 775 sites/default/settings.php		
