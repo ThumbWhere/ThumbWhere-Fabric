@@ -222,6 +222,12 @@ then
 port            = 3306
 socket          = $MYSQLDSOCKET
 EOF
+
+		# Wire drush up to mysqld socket
+		cat > $HOMEROOT/$DRUPALUSER/$DRUPALSITE/drushrc.php << EOF
+$option['mysql-socket'] = '/home/tw-mysqld/mysqld.sock'		
+EOF
+		
 		
 		# we want a version of this too...
 		cp $MYSQLDCONFIG ~
@@ -229,11 +235,15 @@ EOF
 		# And we want SQL server started..
 		/etc/init.d/$MYSQLDUSER-server start
 			
+		chmod 777 sites/default/files	
+			
 		
 		# Now perform the install
-		drush dl drupal-7.x --yes
-		drush site-install standard --account-name=admin --account-pass=wjpq6q --db-url=mysql://root:new-password@localhost/drupal --yes
+		#drush dl drupal-7.x --yes
+		drush --account-name=admin --account-pass=wjpq6q --url=http://localhost:81 --db-url=mysql://root:new-password@localhost/drupal --yes --debug --verbose --config drushrc.php site-install standard
 		
+		chmod 775 sites/default/files
+		chmod 775 sites/default/settings.php		
 	fi
 
 	#

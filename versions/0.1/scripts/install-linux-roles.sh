@@ -2457,7 +2457,7 @@ then
 		chown -R $PHPUSER .
 		chgrp -R thumbwhere .		
 
-		./configure --prefix=$PHPROOT --with-apxs2=$HTTPDROOT/bin/apxs --with-mysql --with-config-file-path=$HTTPDROOT/php --enable-force-cgi-redirect --disable-cgi --with-zlib --with-gettext --with-gdbm --with-gd		
+		./configure --prefix=$PHPROOT --with-apxs2=$HTTPDROOT/bin/apxs --with-config-file-path=$PHPROOT --enable-force-cgi-redirect --with-pdo-mysql --with-mysql --with-mysql-sock=$MYSQLDSOCKET --enable-cli --disable-cgi --with-zlib --with-gettext --with-gdbm --with-gd --enable-mbstring
 		make		
 	fi
 
@@ -2476,6 +2476,10 @@ then
 	then
 
 		echo " - Configuring"
+		
+		cd  $HOMEROOT/$PHPUSER/$PHPFOLDER
+					
+		cp php.ini-production $PHPROOT/php.ini
 
 		# ---- INSTALL CONFIG -- START --
 		cat > $PHPCONFIG << EOF
