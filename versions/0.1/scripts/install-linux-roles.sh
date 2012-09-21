@@ -341,10 +341,10 @@ fi
 
 if [ $os = "debian" ] || [ $os = "ubuntu" ]
 then
-	apt-get -y install wget bzip2 binutils g++ make tcl8.5 curl build-essential openssl libssl-dev libssh-dev pkg-config libpcre3 libpcre3-dev libpcre++0 xsltproc libncurses5-dev cmake bison libxml2-dev libgdbm-dev libpng12-dev libjpeg-dev
+	apt-get -y install wget bzip2 binutils g++ make tcl8.5 curl build-essential openssl libssl-dev libssh-dev pkg-config libpcre3 libpcre3-dev libpcre++0 xsltproc libncurses5-dev cmake bison libxml2-dev libgdbm-dev libpng12-dev libjpeg-dev autoconf
 elif [ $os = "centos" ]
 then
-	yum -y install wget bzip2 binutils gcc-c++ make gcc tcl curl openssl pcre gnutls openssh openssl ncurses pcre-devel gnutls-devel openssl-devel ncurses-devel libxslt redhat-lsb cmake bison libxml2-dev libgdbm-dev libpng12-dev libjpeg-dev
+	yum -y install wget bzip2 binutils gcc-c++ make gcc tcl curl openssl pcre gnutls openssh openssl ncurses pcre-devel gnutls-devel openssl-devel ncurses-devel libxslt redhat-lsb cmake bison libxml2-dev libgdbm-dev libpng12-dev libjpeg-dev autoconf
 fi
 
 #
@@ -2457,8 +2457,29 @@ then
 		chown -R $PHPUSER .
 		chgrp -R thumbwhere .		
 
-		./configure --prefix=$PHPROOT --with-apxs2=$HTTPDROOT/bin/apxs --with-config-file-path=$PHPROOT --enable-force-cgi-redirect --with-pdo-mysql --with-mysql --with-mysql-sock=$MYSQLDSOCKET --enable-cli --disable-cgi --with-zlib --with-gettext --with-gdbm --with-gd --enable-mbstring
-		make		
+		./configure --prefix=$PHPROOT --with-apxs2=$HTTPDROOT/bin/apxs --with-config-file-path=$PHPROOT --with-pdo-mysql --with-mysql --with-mysql-sock=$MYSQLDSOCKET --enable-cli --disable-cgi --with-zlib --with-gettext --with-gdbm --with-gd --enable-mbstring
+		make
+		
+		# pdo
+		#cd ext/pdo
+		#$PHPROOT/bin/phpize
+		#./configure  --with-php-config=$PHPROOT/bin/php-config
+		#make
+		#make install
+		#cd ../..
+
+		# pdo_mysql
+		#cd ext/pdo_mysql
+		#$PHPROOT/bin/phpize
+		#./configure  --with-php-config=$PHPROOT/bin/php-config
+		#make
+		#make install		
+		#cd ../..
+		
+		# restart httpd
+		 /etc/init.d/tw-httpd-server restart
+
+		
 	fi
 
 	if [[ $PHP_ROLE = *install* ]]
