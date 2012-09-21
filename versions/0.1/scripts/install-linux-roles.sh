@@ -89,7 +89,7 @@ HTTPDURL=http://apache.mirror.aussiehq.net.au/httpd/httpd-2.2.22.tar.gz
 FTPDURL=ftp://ftp.proftpd.org/distrib/source/proftpd-1.3.4a.tar.gz
 # See: http://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-5.5.27.tar.gz/from/http://cdn.mysql.com/
 MYSQLDURL=http://cdn.mysql.com/Downloads/MySQL-5.5/mysql-5.5.27.tar.gz
-PHPURL=http://au.php.net/get/php-5.4.7.tar.gz/from/this/mirror
+PHPURL=http://au.php.net/get/php-5.4.7.tar.gz/from/this/mirror --output-file=php-5.4.X.tar.gz
 
 ###############################################################################
 #
@@ -118,7 +118,7 @@ NGINXFILE=`echo $NGINXURL | rev | cut -d\/ -f1 | rev`
 HTTPDFILE=`echo $HTTPDURL | rev | cut -d\/ -f1 | rev`
 FTPDFILE=`echo $FTPDURL | rev | cut -d\/ -f1 | rev`
 MYSQLDFILE=`echo $MYSQLDURL | rev | cut -d\/ -f1 | rev`
-PHPFILE=`echo $PHPURL | rev | cut -d\/ -f1 | rev`
+PHPFILE=`echo $PHPURL | rev | cut -d\= -f1 | rev`
 
 IRCDFOLDER=`echo $IRCDFILE | rev | cut -d\. -f3- | rev`
 REDISFOLDER=`echo $REDISFILE | rev | cut -d\. -f3- | rev`
@@ -204,35 +204,43 @@ cc_normal=`echo -en "${esc}[m\017"`
 # We assume that no user == no server.
 #
 
-create_user_and_stop_service()
+create_user()
 {
 	p_user=$1
-	p_process=$2
+	
 
 	if [ "`id -un ${p_user}`" != "${p_user}" ]
 	then
 		echo " - Adding user ${p_user}"
 		useradd ${p_user} -m -g $GROUP
-	else
+	fi
+}
 
-		if killall -0 ${p_process}
+create_user_and_stop_service()
+{
+	p_user=$1
+	p_process=$2
+
+	create_user($1)
+
+	if killall -0 ${p_process}
+	then
+		if [ -f /etc/init.d/${p_user}-server ]
 		then
-			if [ -f /etc/init.d/${p_user}-server ]
-			then
-				echo " - Stopping service"
-				echo "--------- start ----------"
-				/etc/init.d/${p_user}-server stop
-				echo "---------- end -----------"
-			else
-				echo " - Killing service (control script not found at /etc/init.d/${p_user}-server)"
-				killall -2 ${p_process}
-				#for i in `ps ax | grep ${p_process} | grep -v grep | cut -d ' ' -f 1`
-				#do
-				#	kill -2 $i
-				#done
-			fi
+			echo " - Stopping service"
+			echo "--------- start ----------"
+			/etc/init.d/${p_user}-server stop
+			echo "---------- end -----------"
+		else
+			echo " - Killing service (control script not found at /etc/init.d/${p_user}-server)"
+			killall -2 ${p_process}
+			#for i in `ps ax | grep ${p_process} | grep -v grep | cut -d ' ' -f 1`
+			#do
+			#	kill -2 $i
+			#done
 		fi
 	fi
+
 }
 
 
@@ -333,10 +341,10 @@ fi
 
 if [ $os = "debian" ] || [ $os = "ubuntu" ]
 then
-	apt-get -y install wget bzip2 binutils g++ make tcl8.5 curl build-essential openssl libssl-dev libssh-dev pkg-config libpcre3 libpcre3-dev libpcre++0 xsltproc libncurses5-dev cmake bison
+	apt-get -y install wget bzip2 binutils g++ make tcl8.5 curl build-essential openssl libssl-dev libssh-dev pkg-config libpcre3 libpcre3-dev libpcre++0 xsltproc libncurses5-dev cmake bison libxml2-dev
 elif [ $os = "centos" ]
 then
-	yum -y install wget bzip2 binutils gcc-c++ make gcc tcl curl openssl pcre gnutls openssh openssl ncurses pcre-devel gnutls-devel openssl-devel ncurses-devel libxslt redhat-lsb cmake bison
+	yum -y install wget bzip2 binutils gcc-c++ make gcc tcl curl openssl pcre gnutls openssh openssl ncurses pcre-devel gnutls-devel openssl-devel ncurses-devel libxslt redhat-lsb cmake bison libxml2-dev
 fi
 
 #
@@ -2474,7 +2482,7 @@ if [ "$PHP_ROLE" != "" ]
 then
 	echo "*** ${cc_cyan}Installing PHP ($PHPFOLDER)${cc_normal}"
 	
-	create_user_and_stop_service $PHPUSER $PHPPROCESS
+	create_user $PHPUSER
 
 	if [[ $PHP_ROLE = *compile* ]]
 	then
