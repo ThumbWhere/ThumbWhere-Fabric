@@ -265,6 +265,8 @@ cat >> sites/default/settings.php << EOF
 EOF
 			
 		
+		pwd
+		
 		# Now perform the install
 		#drush dl drupal-7.x --yes
 		$PHPROOT/bin/php -c $PHPROOT/php.ini  /usr/bin/drush site-install standard --debug --verbose --account-name=admin --account-pass=wjpq6q --url=http://localhost:81 --db-url=mysql://root:$MYSQLDPASSWORD@localhost/drupal --config drushrc.php --yes
