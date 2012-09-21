@@ -59,20 +59,20 @@ set -e
 #	NGINX_ROLE=download,compile,install,configure,enable
 #fi
 #
-if ["$HTTPD_ROLE" = ""] 
-then
-	HTTPD_ROLE=download,compile,install,configure,enable
-fi
+#if ["$HTTPD_ROLE" = ""] 
+#then
+#	HTTPD_ROLE=download,compile,install,configure,enable
+#fi
 #
 #if ["$FTPD_ROLE" = ""] 
 #then
 #	FTPD_ROLE=download,compile,install,configure,enable
 #fi
 #
-if ["$MYSQLD_ROLE" = ""] 
-then
-	MYSQLD_ROLE=download,compile,install,configure,enable
-fi
+#if ["$MYSQLD_ROLE" = ""] 
+#then
+#	MYSQLD_ROLE=download,compile,install,configure,enable
+#fi
 
 if ["$PHP_ROLE" = ""] 
 then
