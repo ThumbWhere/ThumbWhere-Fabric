@@ -59,20 +59,20 @@ set -e
 #	NGINX_ROLE=download,compile,install,configure,enable
 #fi
 #
-#if ["$HTTPD_ROLE" = ""] 
-#then
-#	HTTPD_ROLE=download,compile,install,configure,enable
-#fi
+if ["$HTTPD_ROLE" = ""] 
+then
+	HTTPD_ROLE=download,compile,install,configure,enable
+fi
 #
 #if ["$FTPD_ROLE" = ""] 
 #then
 #	FTPD_ROLE=download,compile,install,configure,enable
 #fi
 #
-#if ["$MYSQLD_ROLE" = ""] 
-#then
-#	MYSQLD_ROLE=download,compile,install,configure,enable
-#fi
+if ["$MYSQLD_ROLE" = ""] 
+then
+	MYSQLD_ROLE=download,compile,install,configure,enable
+fi
 
 if ["$PHP_ROLE" = ""] 
 then
@@ -1779,101 +1779,54 @@ EOF
 
 		# ---- INSTALL CONFIG -- START --
 		cat > $HTTPDCONFIG << EOF
-ServerRoot "$HTTPDROOT"
-Listen 127.0.0.1:81
-User $HTTPDUSER
+ServerRoot "/home/tw-httpd/apache2"
+Listen 0.0.0.0:81
+User tw-httpd
 Group thumbwhere
-ServerAdmin james@thumbwhere.com
-ServerName apache.thumbwhere.com:80
-DocumentRoot "$HTTPDROOT/htdocs"
-
-LoadModule php5_module  modules/libphp5.so
-AddHandler php5-script  .php
-DirectoryIndex index.html index.php
-AddType text/html       .php
-AddType application/x-httpd-php-source phps
- 
-
-
-<Directory />
-	Options FollowSymLinks
-	AllowOverride None
-	Order deny,allow
-	Deny from all
-</Directory>
-<Directory "$HTTPDROOT/htdocs">
-	Options Indexes FollowSymLinks
-	AllowOverride None
-	Order allow,deny
-	Allow from all
-</Directory>
+LoadModule      php5_module      modules/libphp5.so
+AddHandler      php5-script     .php
+DirectoryIndex  index.html      index.php
+AddType         text/html       .php
+AddType         application/x-httpd-php-source  phps
 <IfModule dir_module>
-	DirectoryIndex index.html
+        DirectoryIndex index.html
 </IfModule>
-<FilesMatch "^\.ht">
-	Order allow,deny
-	Deny from all
-	Satisfy All
-</FilesMatch>
 ErrorLog "logs/error_log"
 LogLevel warn
 <IfModule log_config_module>
-	LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
-	LogFormat "%h %l %u %t \"%r\" %>s %b" common
-	<IfModule logio_module>
-	  LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" combinedio
-	</IfModule>
-	CustomLog "logs/access_log" common
+        LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
+        LogFormat "%h %l %u %t \"%r\" %>s %b" common
+        <IfModule logio_module>
+          LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" combinedio
+        </IfModule>
+        CustomLog "logs/access_log" common
 </IfModule>
-<IfModule alias_module>
-	ScriptAlias /cgi-bin/ "$HTTPDROOT/cgi-bin/"
-</IfModule>
-<Directory "$HTTPDROOT/cgi-bin">
-	AllowOverride None
-	Options None
-	Order allow,deny
-	Allow from all
-</Directory>
 DefaultType text/plain
 <IfModule mime_module>
-	TypesConfig conf/mime.types
-	AddType application/x-compress .Z
-	AddType application/x-gzip .gz .tgz
+        TypesConfig conf/mime.types
+        AddType application/x-compress .Z
+        AddType application/x-gzip .gz .tgz
 </IfModule>
 <IfModule ssl_module>
-SSLRandomSeed startup builtin
-SSLRandomSeed connect builtin
+        SSLRandomSeed startup builtin
+        SSLRandomSeed connect builtin
 </IfModule>
-
 <VirtualHost *:81>
-        ServerAdmin production@thumbwhere.com
-
         DocumentRoot /home/tw-drupal/default
-        ServerName 10.0.2.38
-        ServerAlias *.my64k.com
+#        ServerName 10.0.2.38
         <Directory />
                 Options FollowSymLinks
                 AllowOverride All
-                #RewriteEngine on
-                #RewriteBase /
-                #RewriteCond %{REQUEST_FILENAME} !-f
-                #RewriteCond %{REQUEST_FILENAME} !-d
-                #RewriteRule ^(.*)$ index.php?q=$1 [L,QSA]
+                RewriteEngine on
+                RewriteBase /
+                RewriteCond %{REQUEST_FILENAME} !-f
+                RewriteCond %{REQUEST_FILENAME} !-d
+                RewriteRule ^(.*)$ index.php?q= [L,QSA]
         </Directory>
-
-
-        #ErrorLog /home/tw-httpd/apache2/log/drupal-production-error.log
-
-        # Possible values include: debug, info, notice, warn, error, crit,
-        # alert, emerg.
+        ErrorLog /home/tw-httpd/apache2/logs/drupal-production-error.log
         LogLevel warn
-
-        #CustomLog /home/tw-httpd/apache2/log/drupal-production-access.log combined
-
+        CustomLog /home/tw-httpd/apache2/logs/drupal-production-access.log combined
 </VirtualHost>
-
-
-
 EOF
 
 	# ---- INSTALL CONFIG -- END --
