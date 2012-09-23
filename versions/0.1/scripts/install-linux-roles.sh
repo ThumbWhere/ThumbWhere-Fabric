@@ -13,7 +13,7 @@
 # Bootstrapping
 # -------------
 #
-# This cript can be downloaded using teh following command
+# This script can be downloaded using the following command
 # 
 # For systems with wget, run this line.
 #
@@ -34,45 +34,45 @@ set -e
 # If enable is not part of the string, then the service is deemed to be 'disabled'
 #
 
-#if ["$IRCD_ROLE" = ""] 
-#then
-#	IRCD_ROLE="disable"
-#fi
-#
-#if ["$REDIS_ROLE" = ""] 
-#then
-#	REDIS_ROLE=download,compile,install,configure,enable
-#fi
-#
-#if ["$NODEJS_ROLE" = ""] 
-#then
-#	NODEJS_ROLE=download,compile,install,configure,enable
-#fi
-#
-#if ["$VARNISH_ROLE" = ""] 
-#then
-#	VARNISH_ROLE=disable
-#fi
-#
-#if ["$NGINX_ROLE" = ""] 
-#then
-#	NGINX_ROLE=download,compile,install,configure,enable
-#fi
-#
-#if ["$HTTPD_ROLE" = ""] 
-#then
-#	HTTPD_ROLE=download,compile,install,configure,enable
-#fi
-#
-#if ["$FTPD_ROLE" = ""] 
-#then
-#	FTPD_ROLE=download,compile,install,configure,enable
-#fi
-#
-#if ["$MYSQLD_ROLE" = ""] 
-#then
-#	MYSQLD_ROLE=download,compile,install,configure,enable
-#fi
+if ["$IRCD_ROLE" = ""] 
+then
+	IRCD_ROLE=download,compile,install,configure,enable
+fi
+
+if ["$REDIS_ROLE" = ""] 
+then
+	REDIS_ROLE=download,compile,install,configure,enable
+fi
+
+if ["$NODEJS_ROLE" = ""] 
+then
+	NODEJS_ROLE=download,compile,install,configure,enable
+fi
+
+if ["$VARNISH_ROLE" = ""] 
+then
+	VARNISH_ROLE=disable
+fi
+
+if ["$NGINX_ROLE" = ""] 
+then
+	NGINX_ROLE=download,compile,install,configure,enable
+fi
+
+if ["$HTTPD_ROLE" = ""] 
+then
+	HTTPD_ROLE=download,compile,install,configure,enable
+fi
+
+if ["$FTPD_ROLE" = ""] 
+then
+	FTPD_ROLE=download,compile,install,configure,enable
+fi
+
+if ["$MYSQLD_ROLE" = ""] 
+then
+	MYSQLD_ROLE=download,compile,install,configure,enable
+fi
 
 if ["$PHP_ROLE" = ""] 
 then
@@ -2156,8 +2156,6 @@ then
 		bin/mysqld_safe --no-defaults --user=$MYSQLDUSER --basedir=$MYSQLDROOT  --datadir=$MYSQLDDATAROOT --pid-file=$MYSQLDPID --socket=$MYSQLDSOCKET &
 
 
-
-
 		echo "sleeping for 5 seconds to ensure mysqld is started"
 		
 		sleep 5
@@ -2276,6 +2274,22 @@ start_mysqld()
 		fi
 
 	fi
+	
+	
+	
+	# Wait till it is running...
+	RUNNING="`/home/tw-mysqld/mysqld/bin/mysqladmin --user=root --password=new-password --socket=/home/tw-mysqld/mysqld.sock status  2> /dev/null`"
+	#echo "$RUNNING"
+
+	while [[ $RUNNING != *Uptime* ]]
+	do
+			echo Waiting till $PROCESSNAME is running and answering requests.	
+			sleep 1
+			RUNNING="`/home/tw-mysqld/mysqld/bin/mysqladmin --user=root --password=new-password --socket=/home/tw-mysqld/mysqld.sock status  2> /dev/null`"
+			#echo "$RUNNING"
+	done
+	echo Waiting till $PROCESSNAME is running and answering requests.
+	
 }
 
 stop_mysqld()
@@ -2478,7 +2492,8 @@ then
 		
 		# restart httpd
 		 /etc/init.d/tw-httpd-server restart
-
+		 
+		 
 		
 	fi
 

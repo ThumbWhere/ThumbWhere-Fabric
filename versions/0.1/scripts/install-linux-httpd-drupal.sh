@@ -268,7 +268,6 @@ cat >> sites/default/settings.php << EOF
   ),
 );
 EOF
-			
 		
 		pwd
 		
@@ -276,11 +275,6 @@ EOF
 		#drush dl drupal-7.x --yes
 		
 		DRUSH_PHP=$PHPROOT
-		
-		echo $PHPROOT/bin/php /usr/bin/drush site-install standard --debug --verbose --account-name=admin --account-pass=wjpq6q --url=http://localhost:81 --db-url=mysql://root:new-password@localhost/drupal --yes
-
-		echo "waiting..."
-		sleep 5
 		
 		$PHPROOT/bin/php /usr/bin/drush site-install standard --debug --verbose --account-name=admin --account-pass=wjpq6q --url=http://localhost:81 --db-url=mysql://root:new-password@localhost/drupal --yes
 			
