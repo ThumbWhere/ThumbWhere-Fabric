@@ -2278,17 +2278,15 @@ start_mysqld()
 	
 	
 	# Wait till it is running...
-	RUNNING="`/home/tw-mysqld/mysqld/bin/mysqladmin --user=root --password=new-password --socket=/home/tw-mysqld/mysqld.sock status  2> /dev/null`"
-	#echo "$RUNNING"
+	RUNNING="\`/home/tw-mysqld/mysqld/bin/mysqladmin --user=root --password=new-password --socket=/home/tw-mysqld/mysqld.sock status  2> /dev/null\`"
 
-	while [[ $RUNNING != *Uptime* ]]
+	while [[ \$RUNNING != *Uptime* ]]
 	do
-			echo Waiting till $PROCESSNAME is running and answering requests.	
+			echo Waiting till \$PROCESSNAME is running and answering requests.	
 			sleep 1
-			RUNNING="`/home/tw-mysqld/mysqld/bin/mysqladmin --user=root --password=new-password --socket=/home/tw-mysqld/mysqld.sock status  2> /dev/null`"
-			#echo "$RUNNING"
+			RUNNING="\`$MYSQLDROOT/bin/mysqladmin --user=root --password=$MYSQLDPASSWORD --socket=$MYSQLDSOCKET status  2> /dev/null\`"
 	done
-	echo Waiting till $PROCESSNAME is running and answering requests.
+	echo \$PROCESSNAME is running and answering requests.
 	
 }
 
