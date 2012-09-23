@@ -34,47 +34,47 @@ set -e
 # If enable is not part of the string, then the service is deemed to be 'disabled'
 #
 
-if ["$IRCD_ROLE" = ""] 
+if [ "$IRCD_ROLE" = "" ] 
 then
 	IRCD_ROLE=download,compile,install,configure,enable
 fi
 
-if ["$REDIS_ROLE" = ""] 
+if [ "$REDIS_ROLE" = "" ] 
 then
 	REDIS_ROLE=download,compile,install,configure,enable
 fi
 
-if ["$NODEJS_ROLE" = ""] 
+if [ "$NODEJS_ROLE" = "" ] 
 then
 	NODEJS_ROLE=download,compile,install,configure,enable
 fi
 
-if ["$VARNISH_ROLE" = ""] 
+if [ "$VARNISH_ROLE" = "" ] 
 then
 	VARNISH_ROLE=disable
 fi
 
-if ["$NGINX_ROLE" = ""] 
+if [ "$NGINX_ROLE" = "" ] 
 then
 	NGINX_ROLE=download,compile,install,configure,enable
 fi
 
-if ["$HTTPD_ROLE" = ""] 
+if [ "$HTTPD_ROLE" = "" ] 
 then
 	HTTPD_ROLE=download,compile,install,configure,enable
 fi
 
-if ["$FTPD_ROLE" = ""] 
+if [ "$FTPD_ROLE" = "" ] 
 then
 	FTPD_ROLE=download,compile,install,configure,enable
 fi
 
-if ["$MYSQLD_ROLE" = ""] 
+if [ "$MYSQLD_ROLE" = "" ] 
 then
 	MYSQLD_ROLE=download,compile,install,configure,enable
 fi
 
-if ["$PHP_ROLE" = ""] 
+if [ "$PHP_ROLE" = "" ] 
 then
 	PHP_ROLE=download,compile,install,configure,enable
 fi
@@ -168,7 +168,7 @@ MYSQLDPID=$HOMEROOT/$MYSQLDUSER/mysqld.pid
 MYSQLDSOCKET=$HOMEROOT/$MYSQLDUSER/mysqld.sock
 MYSQLDPROCESS=mysqld
 MYSQLDDATAROOT=$HOMEROOT/$MYSQLDUSER/data
-if ["$MYSQLDPASSWORD" = ""] 
+if [ "$MYSQLDPASSWORD" = "" ] 
 then
 	MYSQLDPASSWORD=new-password
 fi
