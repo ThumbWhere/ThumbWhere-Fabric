@@ -59,7 +59,7 @@ PHPROOT=$HOMEROOT/$PHPUSER/php
 MYSQLDUSER=tw-mysqld
 MYSQLDSOCKET=$HOMEROOT/$MYSQLDUSER/mysqld.sock
 MYSQLDCONFIG=$HOMEROOT/$DRUPALUSER/.my.cnf
-if ["$MYSQLDPASSWORD" = ""] 
+if [ "$MYSQLDPASSWORD" = "" ] 
 then
 	MYSQLDPASSWORD=new-password
 fi
@@ -72,7 +72,7 @@ fi
 # If enable is not part of the string, then the service is deemed to be 'disabled'
 #
 
-if [$DRUPAL_ROLE = ""] 
+if [ $DRUPAL_ROLE = "" ] 
 then
 	DRUPAL_ROLE=download,compile,install,configure,enable
 fi
@@ -312,7 +312,6 @@ EOF
 		$PHPROOT/bin/php /usr/bin/drush pm-enable views --yes				
 		$PHPROOT/bin/php /usr/bin/drush pm-enable date --yes		
 		$PHPROOT/bin/php /usr/bin/drush pm-enable simpletest --yes		
-		$PHPROOT/bin/php /usr/bin/drush pm-enable date--yes		
 		$PHPROOT/bin/php /usr/bin/drush pm-enable views_bulk_operations  --yes		
 		
 		$PHPROOT/bin/php /usr/bin/drush pm-enable emaillog --yes		
