@@ -283,24 +283,24 @@ EOF
 		chmod 775 sites/default/files
 		chmod 775 sites/default/settings.php	
 
-		$PHPROOT/bin/php /usr/bin/drush pm-download sqlsrv-1.2 --yes
-		$PHPROOT/bin/php /usr/bin/drush pm-download ctools-1.0 --yes
-		$PHPROOT/bin/php /usr/bin/drush pm-download views-3.3 --yes
-		$PHPROOT/bin/php /usr/bin/drush pm-download entity-1.0-rc3 --yes
-		$PHPROOT/bin/php /usr/bin/drush pm-download date-2.5 --yes
-		$PHPROOT/bin/php /usr/bin/drush pm-download views_bulk_operations-3.0-rc1 --yes
-		$PHPROOT/bin/php /usr/bin/drush pm-download rules-2.1 --yes
-		$PHPROOT/bin/php /usr/bin/drush pm-download entityreference-7.x-1.x --yes
-		$PHPROOT/bin/php /usr/bin/drush pm-download wysiwyg-2.1 --yes
-		$PHPROOT/bin/php /usr/bin/drush pm-download menu_attributes-1.0-rc2 --yes
-		$PHPROOT/bin/php /usr/bin/drush pm-download token-1.1 --yes
-		$PHPROOT/bin/php /usr/bin/drush pm-download pathauto-1.1 --yes
-		$PHPROOT/bin/php /usr/bin/drush pm-download globalredirect-1.5 --yes
-		$PHPROOT/bin/php /usr/bin/drush pm-download admin_menu-3.0-rc1 --yes
-		$PHPROOT/bin/php /usr/bin/drush pm-download features-1.0-rc3 --yes
-		$PHPROOT/bin/php /usr/bin/drush pm-download panels-3.2 --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download ctools --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download views --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download entity --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download date --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download views_bulk_operations --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download rules --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download rules_link --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download entityreference --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download wysiwyg --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download menu_attributes --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download token --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download pathauto --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download globalredirect --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download admin_menu --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download features --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download panels --yes
 		$PHPROOT/bin/php /usr/bin/drush pm-download module_filter-1.7 --yes
-		$PHPROOT/bin/php /usr/bin/drush pm-download filefield_paths-1.0-beta3 --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download filefield_paths --yes
 		$PHPROOT/bin/php /usr/bin/drush pm-download logging_alerts --yes
 		$PHPROOT/bin/php /usr/bin/drush pm-download progress --yes
 		$PHPROOT/bin/php /usr/bin/drush pm-download libraries --yes
@@ -316,7 +316,6 @@ EOF
 		
 		$PHPROOT/bin/php /usr/bin/drush pm-enable emaillog --yes		
 		$PHPROOT/bin/php /usr/bin/drush pm-enable errorlog --yes		
-		$PHPROOT/bin/php /usr/bin/drush pm-enable errorlog  --yes		
 		$PHPROOT/bin/php /usr/bin/drush pm-enable watchdog_rules --yes		
 		$PHPROOT/bin/php /usr/bin/drush pm-enable watchdog_triggers --yes		
 		$PHPROOT/bin/php /usr/bin/drush pm-enable rules --yes		
