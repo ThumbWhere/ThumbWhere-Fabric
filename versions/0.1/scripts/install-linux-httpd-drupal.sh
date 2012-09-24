@@ -306,8 +306,16 @@ EOF
 		$PHPROOT/bin/php /usr/bin/drush pm-download libraries --yes
 		$PHPROOT/bin/php /usr/bin/drush pm-download services-3.x-dev --yes
 		$PHPROOT/bin/php /usr/bin/drush pm-download services_views-1.x-dev --yes		
-		$PHPROOT/bin/php /usr/bin/drush pm-enable emaillog errorlog watchdog_rules watchdog_triggers --yes
-		$PHPROOT/bin/php /usr/bin/drush pm-enable ctools views entity simpletest date views_bulk_operations  --yes		
+		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable ctools --yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable views --yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable entity --yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable date --yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable simpletest --yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable date--yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable views_bulk_operations  --yes		
+		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable emaillog errorlog watchdog_rules watchdog_triggers --yes		
 		$PHPROOT/bin/php /usr/bin/drush pm-enable rules rules_scheduler entityreference wysiwyg menu_attributes  --yes		
 		$PHPROOT/bin/php /usr/bin/drush pm-enable token pathauto globalredirect admin_menu admin_menu_toolbar features --yes				
 		$PHPROOT/bin/php /usr/bin/drush pm-enable panels page_manager module_filter rules_link filefield_paths --yes				
