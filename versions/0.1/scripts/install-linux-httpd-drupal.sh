@@ -315,11 +315,30 @@ EOF
 		$PHPROOT/bin/php /usr/bin/drush pm-enable date--yes		
 		$PHPROOT/bin/php /usr/bin/drush pm-enable views_bulk_operations  --yes		
 		
-		$PHPROOT/bin/php /usr/bin/drush pm-enable emaillog errorlog watchdog_rules watchdog_triggers --yes		
-		$PHPROOT/bin/php /usr/bin/drush pm-enable rules rules_scheduler entityreference wysiwyg menu_attributes  --yes		
-		$PHPROOT/bin/php /usr/bin/drush pm-enable token pathauto globalredirect admin_menu admin_menu_toolbar features --yes				
-		$PHPROOT/bin/php /usr/bin/drush pm-enable panels page_manager module_filter rules_link filefield_paths --yes				
-		$PHPROOT/bin/php /usr/bin/drush pm-enable libraries services services_views --yes						
+		$PHPROOT/bin/php /usr/bin/drush pm-enable emaillog --yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable errorlog --yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable errorlog  --yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable watchdog_rules --yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable watchdog_triggers --yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable rules --yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable rules_scheduler --yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable entityreference --yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable wysiwyg --yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable menu_attributes --yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable token --yes				
+		$PHPROOT/bin/php /usr/bin/drush pm-enable pathauto --yes				
+		$PHPROOT/bin/php /usr/bin/drush pm-enable globalredirect --yes				
+		$PHPROOT/bin/php /usr/bin/drush pm-enable admin_menu --yes				
+		$PHPROOT/bin/php /usr/bin/drush pm-enable admin_menu_toolbar --yes				
+		$PHPROOT/bin/php /usr/bin/drush pm-enable features --yes				
+		$PHPROOT/bin/php /usr/bin/drush pm-enable panels --yes				
+		$PHPROOT/bin/php /usr/bin/drush pm-enable page_manager --yes				
+		$PHPROOT/bin/php /usr/bin/drush pm-enable module_filter --yes				
+		$PHPROOT/bin/php /usr/bin/drush pm-enable rules_link --yes				
+		$PHPROOT/bin/php /usr/bin/drush pm-enable filefield_paths --yes				
+		$PHPROOT/bin/php /usr/bin/drush pm-enable libraries --yes						
+		$PHPROOT/bin/php /usr/bin/drush pm-enable services --yes						
+		$PHPROOT/bin/php /usr/bin/drush pm-enable services_views --yes						
 		
 	fi
 
