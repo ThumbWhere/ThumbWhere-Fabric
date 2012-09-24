@@ -268,7 +268,7 @@ cat >> sites/default/settings.php << EOF
   ),
 );
 EOF
-		
+
 		pwd
 		
 		# Now perform the install
@@ -276,14 +276,42 @@ EOF
 		
 		DRUSH_PHP=$PHPROOT
 
-
 		sleep 5
 		
 		$PHPROOT/bin/php /usr/bin/drush site-install standard --debug --verbose --account-name=admin --account-pass=wjpq6q --url=http://localhost:81 --db-url=mysql://root:new-password@localhost/drupal --yes
 			
 		chmod 775 sites/default/files
-		chmod 775 sites/default/settings.php		
-		
+		chmod 775 sites/default/settings.php	
+
+		$PHPROOT/bin/php /usr/bin/drush pm-download sqlsrv-1.2 --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download ctools-1.0 --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download views-3.3 --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download entity-1.0-rc3 --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download date-2.5 --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download views_bulk_operations-3.0-rc1 --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download rules-2.1 --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download entityreference-7.x-1.x --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download wysiwyg-2.1 --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download menu_attributes-1.0-rc2 --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download token-1.1 --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download pathauto-1.1 --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download globalredirect-1.5 --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download admin_menu-3.0-rc1 --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download features-1.0-rc3 --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download panels-3.2 --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download module_filter-1.7 --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download filefield_paths-1.0-beta3 --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download logging_alerts --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download progress --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download libraries --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download services-3.x-dev --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-download services_views-1.x-dev --yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable emaillog errorlog watchdog_rules watchdog_triggers --yes
+		$PHPROOT/bin/php /usr/bin/drush pm-enable ctools views entity simpletest date views_bulk_operations  --yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable rules rules_scheduler entityreference wysiwyg menu_attributes  --yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable token pathauto globalredirect admin_menu admin_menu_toolbar features --yes				
+		$PHPROOT/bin/php /usr/bin/drush pm-enable panels page_manager module_filter rules_link filefield_paths --yes				
+		$PHPROOT/bin/php /usr/bin/drush pm-enable libraries services services_views --yes						
 		
 	fi
 
