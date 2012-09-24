@@ -307,9 +307,9 @@ EOF
 		$PHPROOT/bin/php /usr/bin/drush pm-download services-3.x-dev --yes
 		$PHPROOT/bin/php /usr/bin/drush pm-download services_views-1.x-dev --yes		
 		
-		$PHPROOT/bin/php /usr/bin/drush pm-enable ctools --yes		
-		$PHPROOT/bin/php /usr/bin/drush pm-enable views --yes		
 		$PHPROOT/bin/php /usr/bin/drush pm-enable entity --yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable ctools --yes		
+		$PHPROOT/bin/php /usr/bin/drush pm-enable views --yes				
 		$PHPROOT/bin/php /usr/bin/drush pm-enable date --yes		
 		$PHPROOT/bin/php /usr/bin/drush pm-enable simpletest --yes		
 		$PHPROOT/bin/php /usr/bin/drush pm-enable date--yes		
