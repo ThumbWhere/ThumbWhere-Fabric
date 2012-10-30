@@ -49,7 +49,25 @@ GROUP=thumbwhere
 DRUPALUSER=tw-drupal
 DRUPALCONFIG=$HOMEROOT/$DRUPALUSER/drupal.config
 DRUPALSITE=default
+if [ "$DRUPALADMIN" = "" ]
+then
+    DRUPALADMIN=admin
+fi
 
+if [ "$DRUPALADMINPASSWORD" = "" ]
+then
+    DRUPALADMINPASSWORD=new-password 
+fi
+
+if [ "$DRUPALADMINEMAIL" = "" ]
+then
+    DRUPALADMINEMAIL=log@thumbwhere.com
+fi
+
+if [ "$DRUPALEMAIL" = "" ]
+then
+    DRUPALEMAIL=log@thumbwhere.com
+fi
 
 
 # related to drupal..
@@ -65,14 +83,13 @@ then
 fi
 
 
-
 ###############################################################################
 #
 # Config variables ; Each one can contain the following keywords "download,compile,install,configure,enable"
 # If enable is not part of the string, then the service is deemed to be 'disabled'
 #
 
-if [ $DRUPAL_ROLE = "" ] 
+if [[ $DRUPAL_ROLE = "" ]] 
 then
 	DRUPAL_ROLE=download,compile,install,configure,enable
 fi
@@ -259,7 +276,7 @@ cat >> sites/default/settings.php << EOF
     array (
       'database' => 'drupal',
       'username' => 'root',
-      'password' => 'new-password',
+      'password' => '$MYSQLDPASSWORD',
       'host' => 'localhost',
       'port' => '',
       'driver' => 'mysql',
@@ -267,21 +284,37 @@ cat >> sites/default/settings.php << EOF
     ),
   ),
 );
+
+\$conf['user_mail_register_no_approval_required_notify'] = FALSE; 
+\$conf['user_mail_register_admin_created'] = FALSE;
+\$conf['user_mail_register_pending_approval'] = FALSE;
+\$conf['user_mail_status_activated'] = FALSE;
+\$conf['user_mail_password_reset'] = FALSE;
+\$conf['user_mail_status_blocked'] = FALSE;
+\$conf['user_mail_status_deleted'] = FALSE;
+
 EOF
 
-		pwd
+		#pwd
 		
 		# Now perform the install
 		#drush dl drupal-7.x --yes
 		
 		DRUSH_PHP=$PHPROOT
 
-		sleep 5
+		#sleep 5
+
+		echo "START SITE INSTALL"
 		
-		$PHPROOT/bin/php /usr/bin/drush site-install standard --debug --verbose --account-name=admin --account-pass=wjpq6q --url=http://localhost:81 --db-url=mysql://root:new-password@localhost/drupal --yes
+		$PHPROOT/bin/php /usr/bin/drush --debug --verbose site-install standard --account-name=$DRUPALADMIN --account-pass=$DRUPALADMINPASSWORD --account-mail=$DRUPALADMINEMAIL --site-mail=$DRUPALEMAIL --url=http://localhost:81 --db-url=mysql://root:$MYSQLDPASSWORD@localhost/drupal --yes
+
+		echo "FINISH SITE INSTALL"
 			
 		chmod 775 sites/default/files
 		chmod 775 sites/default/settings.php	
+
+		echo "Downloading Modules"
+
 
 		$PHPROOT/bin/php /usr/bin/drush pm-download ctools --yes
 		$PHPROOT/bin/php /usr/bin/drush pm-download views --yes
@@ -306,7 +339,10 @@ EOF
 		$PHPROOT/bin/php /usr/bin/drush pm-download libraries --yes
 		$PHPROOT/bin/php /usr/bin/drush pm-download services-3.x-dev --yes
 		$PHPROOT/bin/php /usr/bin/drush pm-download services_views-1.x-dev --yes		
-		
+	
+
+		echo "Enabling Modules"
+	
 		$PHPROOT/bin/php /usr/bin/drush pm-enable entity --yes		
 		$PHPROOT/bin/php /usr/bin/drush pm-enable ctools --yes		
 		$PHPROOT/bin/php /usr/bin/drush pm-enable views --yes				
@@ -336,7 +372,14 @@ EOF
 		$PHPROOT/bin/php /usr/bin/drush pm-enable filefield_paths --yes				
 		$PHPROOT/bin/php /usr/bin/drush pm-enable libraries --yes						
 		$PHPROOT/bin/php /usr/bin/drush pm-enable services --yes						
-		$PHPROOT/bin/php /usr/bin/drush pm-enable services_views --yes						
+		$PHPROOT/bin/php /usr/bin/drush pm-enable services_views --yes	
+
+		echo "Downloading Themes"
+
+	        
+		$PHPROOT/bin/php /usr/bin/drush dl omega --yes
+		$PHPROOT/bin/php /usr/bin/drush enable omega --yes
+		$PHPROOT/bin/php /usr/bin/drush vset theme_default omega --yes						
 		
 	fi
 

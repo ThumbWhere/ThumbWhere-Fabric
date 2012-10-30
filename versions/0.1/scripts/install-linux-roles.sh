@@ -5,6 +5,10 @@
 #
 # This will setup ThumbWhere Fabric node on a Linux Box
 #
+# Best Practice
+# Define your roles in environment variables.
+# When you run the script use sudo -E to preserve them (if they are only local)
+#
 # Although this script can be run manually, in will generally
 # be executed as part of an automated install if thumbwhere is 
 # configured with credentials of the target host that can perform 
@@ -34,46 +38,46 @@ set -e
 # If enable is not part of the string, then the service is deemed to be 'disabled'
 #
 
-#if [ "$IRCD_ROLE" = "" ] 
-#then
-#	IRCD_ROLE=download,compile,install,configure,enable
-#fi
+if [ "$IRCD_ROLE" = "" ] 
+then
+	IRCD_ROLE=download,compile,install,configure,enable
+fi
 #
-#if [ "$REDIS_ROLE" = "" ] 
-#then
-#	REDIS_ROLE=download,compile,install,configure,enable
-#fi
+if [ "$REDIS_ROLE" = "" ] 
+then
+	REDIS_ROLE=download,compile,install,configure,enable
+fi
 #
-#if [ "$NODEJS_ROLE" = "" ] 
-#then
-#	NODEJS_ROLE=download,compile,install,configure,enable
-#fi
+if [ "$NODEJS_ROLE" = "" ] 
+then
+	NODEJS_ROLE=download,compile,install,configure,enable
+fi
 #
 #if [ "$VARNISH_ROLE" = "" ] 
 #then
 #	VARNISH_ROLE=disable
 #fi
 #
-#if [ "$NGINX_ROLE" = "" ] 
-#then
-#	NGINX_ROLE=download,compile,install,configure,enable
-#fi
+if [ "$NGINX_ROLE" = "" ] 
+then
+	NGINX_ROLE=download,compile,install,configure,enable
+fi
 #
-#if [ "$HTTPD_ROLE" = "" ] 
-#then
-#	HTTPD_ROLE=download,compile,install,configure,enable
-#fi
+if [ "$HTTPD_ROLE" = "" ] 
+then
+	HTTPD_ROLE=download,compile,install,configure,enable
+fi
 ##
-#if [ "$FTPD_ROLE" = "" ] 
-#then
-#	FTPD_ROLE=download,compile,install,configure,enable
-#fi
+if [ "$FTPD_ROLE" = "" ] 
+then
+	FTPD_ROLE=download,compile,install,configure,enable
+fi
 #
-#if [ "$MYSQLD_ROLE" = "" ] 
-#then
-#	MYSQLD_ROLE=download,compile,install,configure,enable
-#fi
-
+if [ "$MYSQLD_ROLE" = "" ] 
+then
+	MYSQLD_ROLE=download,compile,install,configure,enable
+fi
+#
 if [ "$PHP_ROLE" = "" ] 
 then
 	PHP_ROLE=download,compile,install,configure,enable
@@ -89,7 +93,7 @@ HTTPDURL=http://apache.mirror.aussiehq.net.au/httpd/httpd-2.2.22.tar.gz
 FTPDURL=ftp://ftp.proftpd.org/distrib/source/proftpd-1.3.4a.tar.gz
 # See: http://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-5.5.27.tar.gz/from/http://cdn.mysql.com/
 MYSQLDURL=http://cdn.mysql.com/Downloads/MySQL-5.5/mysql-5.5.27.tar.gz
-PHPURL="http://au.php.net/get/php-5.4.7.tar.gz/from/this/mirror --output-file=php-5.4.7.tar.gz"
+PHPURL="http://au1.php.net/get/php-5.4.8.tar.gz/from/this/mirror -Ophp-5.4.8.tar.gz"
 
 ###############################################################################
 #
@@ -118,7 +122,7 @@ NGINXFILE=`echo $NGINXURL | rev | cut -d\/ -f1 | rev`
 HTTPDFILE=`echo $HTTPDURL | rev | cut -d\/ -f1 | rev`
 FTPDFILE=`echo $FTPDURL | rev | cut -d\/ -f1 | rev`
 MYSQLDFILE=`echo $MYSQLDURL | rev | cut -d\/ -f1 | rev`
-PHPFILE=`echo $PHPURL | rev | cut -d\= -f1 | rev`
+PHPFILE=`echo $PHPURL | rev | cut -d\O -f1 | rev`
 
 IRCDFOLDER=`echo $IRCDFILE | rev | cut -d\. -f3- | rev`
 REDISFOLDER=`echo $REDISFILE | rev | cut -d\. -f3- | rev`
@@ -329,7 +333,6 @@ then
 	then
 		ln -s /usr/lib/insserv/insserv /sbin/insserv
 	fi
-	
 fi
 
 
@@ -341,6 +344,7 @@ fi
 
 if [ $os = "debian" ] || [ $os = "ubuntu" ]
 then
+	apt-get update
 	apt-get -y install wget bzip2 binutils g++ make tcl8.5 curl build-essential openssl libssl-dev libssh-dev pkg-config libpcre3 libpcre3-dev libpcre++0 xsltproc libncurses5-dev cmake bison libxml2-dev libgdbm-dev libpng12-dev libjpeg-dev autoconf libcurl4-gnutls-dev 
 elif [ $os = "centos" ]
 then
@@ -411,10 +415,6 @@ then
 else
 	echo " - ${cc_yellow}Skipping $MYSQLDFILE${cc_normal}"
 fi
-
-
-echo $PHPFILE  
-
 
 if [[ $PHP_ROLE = *download* ]] 
 then
@@ -553,7 +553,7 @@ EOF
 		# ---- IRCD CONTROL SCRIPT -- START --
 
 		cat > /etc/init.d/$IRCDUSER-server << EOF
-#!/bin/sh
+#!/bin/bash
 ### BEGIN INIT INFO
 # Provides:	  $IRCDUSER-server
 # Required-Start:	\$network \$syslog \$time
@@ -798,7 +798,7 @@ then
 # --- REDIS CONTROL SCRIPT -- START ----
 	
 	cat > /etc/init.d/$REDISUSER-server << EOF
-#! /bin/sh
+#! /bin/bash
 ### BEGIN INIT INFO
 # Provides:		 $REDISUSER-server
 # Required-Start:	   $syslog $remote_fs
@@ -1026,7 +1026,7 @@ then
 # ---- VARNISH CONTROL SCRIPT -- START ----
 
 		cat > /etc/init.d/$VARNISHUSER-server << EOF
-#! /bin/sh
+#! /bin/bash
 
 ### BEGIN INIT INFO
 # Provides:	  $VARNISHUSER-server
@@ -1271,7 +1271,7 @@ then
 		# ---- NGINX CONTROL SCRIPT -- START ----
 
 		cat > /etc/init.d/$NGINXUSER-server << EOF
-#! /bin/sh
+#! /bin/bash
 
 ### BEGIN INIT INFO
 # Provides:	  $NGINXUSER-server
@@ -1458,123 +1458,68 @@ EOF
 
 		cat > $NGINXCONFIG << EOF
 
-#user  $NGINXUSER;
+
+#user  tw-nginx;
 worker_processes  1;
 
 #error_log  logs/error.log;
 #error_log  logs/error.log  notice;
 #error_log  logs/error.log  info;
 
-pid		$NGINXPID;
-
+pid             $NGINXPID
 
 events {
-	worker_connections  1024;
+        worker_connections  1024;
 }
-
 
 http {
-	include	   mime.types;
-	default_type  application/octet-stream;
 
-	#log_format  main  '\$remote_addr - \$remote_user [\$time_local] "\$request" '
-	#				  '\$status \$body_bytes_sent "\$http_referer" '
-	#				  '"\$http_user_agent" "\$http_x_forwarded_for"';
+        upstream my64k.com {
+                server 127.0.0.1:81 weight=3;
+        }
 
-	#access_log  logs/access.log  main;
+        proxy_cache_path  cache  levels=1:2    keys_zone=STATIC:10m
+                                         inactive=24h  max_size=1g;
+        #include           mime.types;
+        #default_type  application/octet-stream;
 
-	sendfile		on;
-	#tcp_nopush	 on;
+        #access_log  logs/access.log  main;
 
-	#keepalive_timeout  0;
-	keepalive_timeout  65;
+        sendfile        on;
+        #tcp_nopush     on;
 
-	#gzip  on;
+        #keepalive_timeout  0;
+        keepalive_timeout  65;
 
-	server {
-		listen	   80;
-		server_name  localhost;
+        #gzip  on;
 
-		#charset koi8-r;
+        server {
+                listen     80;
+                server_name  my64k.com;
 
-		#access_log  logs/host.access.log  main;
+                access_log  logs/my64k.com.access.log;
 
-		location / {
-			root   html;
-			index  index.html index.htm;
-		}
+                # redirect server error pages to the static page /50x.html
+                #
+                error_page   500 502 503 504  /50x.html;
+                location = /50x.html {
+                        root   html;
+                }
 
-		#error_page  404			  /404.html;
+                location / {
+                        proxy_pass              http://127.0.0.1:81;
+                        proxy_set_header        Host $host;
+                        proxy_cache             STATIC;
+                        proxy_cache_valid       200  1d;
+                        proxy_cache_use_stale   error timeout invalid_header updating
+                                                http_500 http_502 http_503 http_504;
+                }
 
-		# redirect server error pages to the static page /50x.html
-		#
-		error_page   500 502 503 504  /50x.html;
-		location = /50x.html {
-			root   html;
-		}
-
-		# proxy the PHP scripts to Apache listening on 127.0.0.1:80
-		#
-		#location ~ \\.php\$ {
-		#	proxy_pass   http://127.0.0.1;
-		#}
-
-		# pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
-		#
-		#location ~ \\.php\$ {
-		#	root		   html;
-		#	fastcgi_pass   127.0.0.1:9000;
-		#	fastcgi_index  index.php;
-		#	fastcgi_param  SCRIPT_FILENAME  /scripts\$fastcgi_script_name;
-		#	include		fastcgi_params;
-		#}
-
-		# deny access to .htaccess files, if Apache's document root
-		# concurs with nginx's one
-		#
-		#location ~ /\\.ht {
-		#	deny  all;
-		#}
-	}
-
-
-	# another virtual host using mix of IP-, name-, and port-based configuration
-	#
-	#server {
-	#	listen	   8000;
-	#	listen	   somename:8080;
-	#	server_name  somename  alias  another.alias;
-
-	#	location / {
-	#		root   html;
-	#		index  index.html index.htm;
-	#	}
-	#}
-
-
-	# HTTPS server
-	#
-	#server {
-	#	listen	   443;
-	#	server_name  localhost;
-
-	#	ssl				  on;
-	#	ssl_certificate	  cert.pem;
-	#	ssl_certificate_key  cert.key;
-
-	#	ssl_session_timeout  5m;
-
-	#	ssl_protocols  SSLv2 SSLv3 TLSv1;
-	#	ssl_ciphers  HIGH:!aNULL:!MD5;
-	#	ssl_prefer_server_ciphers   on;
-
-	#	location / {
-	#		root   html;
-	#		index  index.html index.htm;
-	#	}
-	#}
+        }
 
 }
+
+
 EOF
 
 		# ---- NGINX CONFIG -- END ----
@@ -1632,7 +1577,7 @@ then
 
 		echo " - Creating control script."
 		cat > /etc/init.d/$HTTPDUSER-server << EOF
-#!/bin/sh
+#!/bin/bash
 ### BEGIN INIT INFO
 # Provides:	  $HTTPDUSER-server
 # Required-Start:	\$network \$syslog \$time
@@ -1887,7 +1832,7 @@ then
 
 		echo " - Creating control script."
 		cat > /etc/init.d/$FTPDUSER-server << EOF
-#!/bin/sh
+#!/bin/bash
 ### BEGIN INIT INFO
 # Provides:	  $FTPDUSER-server
 # Required-Start:	\$network \$syslog \$time
@@ -2171,6 +2116,10 @@ then
 		bin/mysqladmin --user=root --password=$MYSQLDPASSWORD shutdown --socket=$MYSQLDSOCKET
 		
 		# bin/mysqladmin -u root -h localhost password 'new-password'
+
+	        # Linking in some handy tools..	
+		ln -s /home/tw-mysqld/mysqld/bin/mysql /usr/bin/mysql
+
 		
 		#chown -R root .
 		#chown -R $MYSQLDUSER data
@@ -2195,7 +2144,7 @@ then
 
 		echo " - Creating control script."
 		cat > /etc/init.d/$MYSQLDUSER-server << EOF
-#!/bin/sh
+#!/bin/bash
 ### BEGIN INIT INFO
 # Provides:	  $MYSQLDUSER-server
 # Required-Start:	\$network \$syslog \$time
