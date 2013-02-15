@@ -1,0 +1,17 @@
+Reading package lists...
+Building dependency tree...
+Reading state information...
+drush is already the newest version.
+php5-gd is already the newest version.
+0 upgraded, 0 newly installed, 0 to remove and 54 not upgraded.
+*** [0;36mDownloading source packages[m
+ - drupal-7.15.tar.gz exists
+** [0;36mInstalling DRUPAL (drupal-7.15)[m
+ - Installing
+Restarting MYSQL Server (mysqld): 
+Stopping MYSQL Server (mysqld):  [0;32mOK[m
+Starting MYSQL Server (mysqld):  [0;32mOK[m
+Waiting till mysqld is running and answering requests.
+Waiting till mysqld is running and answering requests.
+Waiting till mysqld is running and answering requests.
+Waiting till mysqld is running and answering requests.

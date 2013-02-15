@@ -38,45 +38,45 @@ set -e
 # If enable is not part of the string, then the service is deemed to be 'disabled'
 #
 
-if [ "$IRCD_ROLE" = "" ] 
-then
-	IRCD_ROLE=download,compile,install,configure,enable
-fi
+#if [ "$IRCD_ROLE" = "" ] 
+#then
+#	IRCD_ROLE=download,compile,install,configure,enable
+#fi
 #
-if [ "$REDIS_ROLE" = "" ] 
-then
-	REDIS_ROLE=download,compile,install,configure,enable
-fi
+#if [ "$REDIS_ROLE" = "" ] 
+#then
+#	REDIS_ROLE=download,compile,install,configure,enable
+#fi
 #
-if [ "$NODEJS_ROLE" = "" ] 
-then
-	NODEJS_ROLE=download,compile,install,configure,enable
-fi
+#if [ "$NODEJS_ROLE" = "" ] 
+#then
+#	NODEJS_ROLE=download,compile,install,configure,enable
+#fi
 #
 #if [ "$VARNISH_ROLE" = "" ] 
 #then
 #	VARNISH_ROLE=disable
 #fi
 #
-if [ "$NGINX_ROLE" = "" ] 
-then
-	NGINX_ROLE=download,compile,install,configure,enable
-fi
+#if [ "$NGINX_ROLE" = "" ] 
+#then
+#	NGINX_ROLE=download,compile,install,configure,enable
+#fi
 #
-if [ "$HTTPD_ROLE" = "" ] 
-then
-	HTTPD_ROLE=download,compile,install,configure,enable
-fi
-##
-if [ "$FTPD_ROLE" = "" ] 
-then
-	FTPD_ROLE=download,compile,install,configure,enable
-fi
+#if [ "$HTTPD_ROLE" = "" ] 
+#then
+#	HTTPD_ROLE=download,compile,install,configure,enable
+#fi
 #
-if [ "$MYSQLD_ROLE" = "" ] 
-then
-	MYSQLD_ROLE=download,compile,install,configure,enable
-fi
+#if [ "$FTPD_ROLE" = "" ] 
+#then
+#	FTPD_ROLE=download,compile,install,configure,enable
+#fi
+#
+#if [ "$MYSQLD_ROLE" = "" ] 
+#then
+#	MYSQLD_ROLE=download,compile,install,configure,enable
+#fi
 #
 if [ "$PHP_ROLE" = "" ] 
 then
@@ -2418,7 +2418,7 @@ then
 		chown -R $PHPUSER .
 		chgrp -R thumbwhere .		
 
-		./configure --prefix=$PHPROOT --with-apxs2=$HTTPDROOT/bin/apxs --with-config-file-path=$PHPROOT --with-pdo-mysql --with-mysql --with-mysql-sock=$MYSQLDSOCKET --with-pear --enable-cli --with-curl --disable-cgi --with-zlib --with-gettext --with-gdbm --with-gd --enable-mbstring
+		./configure --prefix=$PHPROOT --with-apxs2=$HTTPDROOT/bin/apxs --with-config-file-path=$PHPROOT --with-pdo-mysql --with-mysql --with-mysql-sock=$MYSQLDSOCKET --with-pear --enable-cli --with-curl --disable-cgi --with-zlib --with-gettext --with-gdbm --with-gd --with-openssl --enable-mbstring
 		make
 		
 		# pdo
@@ -2467,8 +2467,9 @@ then
 		cp php.ini-production $PHPROOT/php.ini
 
 		# ---- INSTALL CONFIG -- START --
-		cat > $PHPCONFIG << EOF
-Some config..
+		cat >  $PHPROOT/php.ini << EOF
+
+;extension=php_openssl.dll
 EOF
 
 	fi
