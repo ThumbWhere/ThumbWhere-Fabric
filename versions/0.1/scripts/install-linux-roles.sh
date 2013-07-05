@@ -48,10 +48,10 @@ set -e
 #	REDIS_ROLE=download,compile,install,configure,enable
 #fi
 #
-#if [ "$NODEJS_ROLE" = "" ] 
-#then
-#	NODEJS_ROLE=download,compile,install,configure,enable
-#fi
+if [ "$NODEJS_ROLE" = "" ] 
+then
+	NODEJS_ROLE=download,compile,install,configure,enable
+fi
 #
 #if [ "$VARNISH_ROLE" = "" ] 
 #then
@@ -78,17 +78,17 @@ set -e
 #	MYSQLD_ROLE=download,compile,install,configure,enable
 #fi
 #
-if [ "$PHP_ROLE" = "" ] 
-then
-	PHP_ROLE=download,compile,install,configure,enable
-fi
+#if [ "$PHP_ROLE" = "" ] 
+#then
+#	PHP_ROLE=download,compile,install,configure,enable
+#fi
 
 
 IRCDURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
 REDISURL=http://redis.googlecode.com/files/redis-2.4.6.tar.gz
 NODEJSURL=http://nodejs.org/dist/v0.9.1/node-v0.9.1.tar.gz
 VARNISHURL=http://repo.varnish-cache.org/source/varnish-3.0.2.tar.gz
-NGINXURL=http://nginx.org/download/nginx-1.0.11.tar.gz
+NGINXURL=http://nodejs.org/dist/v0.10.12/node-v0.10.12.tar.gz
 HTTPDURL=http://apache.mirror.aussiehq.net.au/httpd/httpd-2.2.22.tar.gz
 FTPDURL=ftp://ftp.proftpd.org/distrib/source/proftpd-1.3.4a.tar.gz
 # See: http://dev.mysql.com/get/Downloads/MySQL-5.5/mysql-5.5.27.tar.gz/from/http://cdn.mysql.com/
