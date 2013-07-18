@@ -73,15 +73,14 @@ set -e
 #then
 #	MYSQLD_ROLE=download,compile,install,configure,enable
 #fi
-
-if [ "$PHP_ROLE" = "" ] 
-then
-	PHP_ROLE=download,compile,install,configure,enable
-fi
+#if [ "$PHP_ROLE" = "" ] 
+#then
+#	PHP_ROLE=download,compile,install,configure,enable
+#fi
 
 
 IRCDURL=http://downloads.sourceforge.net/project/inspircd/InspIRCd-2.0/2.0.2/InspIRCd-2.0.2.tar.bz2
-REDISURL=http://redis.googlecode.com/files/redis-2.4.6.tar.gz
+REDISURL=http://redis.googlecode.com/files/redis-2.6.14.tar.gz
 NODEJSURL=http://nodejs.org/dist/v0.9.1/node-v0.9.1.tar.gz
 VARNISHURL=http://repo.varnish-cache.org/source/varnish-3.0.2.tar.gz
 NGINXURL=http://nginx.org/download/nginx-1.0.11.tar.gz
