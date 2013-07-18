@@ -142,6 +142,11 @@ REDISCONFIG=$HOMEROOT/$REDISUSER/redis.conf
 REDISLOGS=$HOMEROOT/$REDISUSER
 REDISPID=$HOMEROOT/$REDISUSER/redis.pid
 REDISPROCESS=redis-server
+if [ "$REDISBIND" = "" ] 
+then
+	REDISBIND=127.0.0.1
+fi
+
 
 VARNISHCONFIG=$HOMEROOT/$VARNISHUSER/thumbwhere.vcl
 VARNISHPROCESS=varnishd
@@ -903,7 +908,7 @@ EOF
 daemonize yes
 pidfile  $REDISPID
 port 6379
-bind 127.0.0.1
+bind $REDISBIND
 timeout 300
 loglevel notice
 logfile $REDISLOGS/redis-server.log
