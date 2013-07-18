@@ -923,7 +923,7 @@ appendonly no
 appendfsync always
 # appendfsync everysec
 # appendfsync no
-glueoutputbuf yes
+# glueoutputbuf yes
 #shareobjects no
 #shareobjectspoolsize 1024
 EOF
