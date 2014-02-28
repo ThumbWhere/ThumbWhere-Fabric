@@ -43,9 +43,9 @@ set -e
 #	IRCD_ROLE=download,compile,install,configure,enable
 #fi
 #
-#if [ "$HADOOP_ROLE" = "" ] 
+#if [ "$REDIS_ROLE" = "" ] 
 #then
-#	HADOOP_ROLE=download,compile,install,configure,enable
+#	REDIS_ROLE=download,compile,install,configure,enable
 #fi
 #
 #if [ "$NODEJS_ROLE" = "" ] 
@@ -109,7 +109,7 @@ HOMEROOT=/home
 
 GROUP=thumbwhere
 IRCDUSER=tw-ircd
-HADOOPUSER=tw-redis
+REDISUSER=tw-redis
 NODEJSUSER=tw-nodejs
 VARNISHUSER=tw-varnish
 NGINXUSER=tw-nginx
@@ -120,7 +120,7 @@ PHPUSER=tw-php
 HADOOPUSER=tw-php
 
 IRCDFILE=`echo $IRCDURL | rev | cut -d\/ -f1 | rev`
-HADOOPFILE=`echo $HADOOPURL | rev | cut -d\/ -f1 | rev`
+REDISFILE=`echo $REDISURL | rev | cut -d\/ -f1 | rev`
 NODEJSFILE=`echo $NODEJSURL | rev | cut -d\/ -f1 | rev`
 VARNISHFILE=`echo $VARNISHURL | rev | cut -d\/ -f1 | rev`
 NGINXFILE=`echo $NGINXURL | rev | cut -d\/ -f1 | rev`
@@ -131,7 +131,7 @@ PHPFILE=`echo $PHPURL | rev | cut -d\O -f1 | rev`
 HADOOPFILE=`echo $HADOOPURL | rev | cut -d\O -f1 | rev`
 
 IRCDFOLDER=`echo $IRCDFILE | rev | cut -d\. -f3- | rev`
-HADOOPFOLDER=`echo $HADOOPFILE | rev | cut -d\. -f3- | rev`
+REDISFOLDER=`echo $REDISFILE | rev | cut -d\. -f3- | rev`
 NODEJSFOLDER=`echo $NODEJSFILE | rev | cut -d\. -f3- | rev`
 VARNISHFOLDER=`echo $VARNISHFILE | rev | cut -d\. -f3- | rev`
 NGINXFOLDER=`echo $NGINXFILE | rev | cut -d\. -f3- | rev`
@@ -139,19 +139,19 @@ HTTPDFOLDER=`echo $HTTPDFILE | rev | cut -d\. -f3- | rev`
 FTPDFOLDER=`echo $FTPDFILE | rev | cut -d\. -f3- | rev`
 MYSQLDFOLDER=`echo $MYSQLDFILE | rev | cut -d\. -f3- | rev`
 PHPFOLDER=`echo $PHPFILE | rev | cut -d\. -f3- | rev`
-HADOOPFOLDER=`echo $HADOOPILE | rev | cut -d\. -f3- | rev`
+HADOOPFOLDER=`echo $HADOOPFILE | rev | cut -d\. -f3- | rev`
 
 IRCDPROCESS=inspircd
 IRCDCONFIG=/etc/inspircd/inspircd.conf
 IRCDPID=$HOMEROOT/$IRCDUSER/inspircd.pid
 
-HADOOPCONFIG=$HOMEROOT/$HADOOPUSER/redis.conf
-HADOOPLOGS=$HOMEROOT/$HADOOPUSER
-HADOOPPID=$HOMEROOT/$HADOOPUSER/redis.pid
-HADOOPPROCESS=redis-server
-if [ "$HADOOPBIND" = "" ] 
+REDISCONFIG=$HOMEROOT/$REDISUSER/redis.conf
+REDISLOGS=$HOMEROOT/$REDISUSER
+REDISPID=$HOMEROOT/$REDISUSER/redis.pid
+REDISPROCESS=redis-server
+if [ "$REDISBIND" = "" ] 
 then
-	HADOOPBIND=127.0.0.1
+	REDISBIND=127.0.0.1
 fi
 
 
@@ -383,11 +383,11 @@ else
 	echo " - ${cc_yellow}Skipping $IRCDFILE${cc_normal}"
 fi
 
-if [[ $HADOOP_ROLE = *download* ]] 
+if [[ $REDIS_ROLE = *download* ]] 
 then
-	[ -f $HADOOPFILE ] && echo " - $HADOOPFILE exists" || wget $HADOOPURL
+	[ -f $REDISFILE ] && echo " - $REDISFILE exists" || wget $REDISURL
 else
-	echo " - ${cc_yellow}Skipping $HADOOPFILE${cc_normal}"
+	echo " - ${cc_yellow}Skipping $REDISFILE${cc_normal}"
 fi
 
 if [[ $NODEJS_ROLE = *download* ]] 
@@ -776,31 +776,31 @@ fi
 # Install Redis
 #
 
-if [ "$HADOOP_ROLE" != "" ]
+if [ "$REDIS_ROLE" != "" ]
 then
-	echo "*** ${cc_cyan}Installing HADOOP ($HADOOPFILE)${cc_normal}"
+	echo "*** ${cc_cyan}Installing REDIS ($REDISFILE)${cc_normal}"
 
-	create_user_and_stop_service $HADOOPUSER $HADOOPPROCESS
+	create_user_and_stop_service $REDISUSER $REDISPROCESS
 
-	if [[ $HADOOP_ROLE = *compile* ]]
+	if [[ $REDIS_ROLE = *compile* ]]
 	then
 
-		cp $DOWNLOADS/$HADOOPFILE $HOMEROOT/$HADOOPUSER/
-		chown $HADOOPUSER.$GROUP $HOMEROOT/$HADOOPUSER
-		cd  $HOMEROOT/$HADOOPUSER
+		cp $DOWNLOADS/$REDISFILE $HOMEROOT/$REDISUSER/
+		chown $REDISUSER.$GROUP $HOMEROOT/$REDISUSER
+		cd  $HOMEROOT/$REDISUSER
 		echo " - Deleting old instance"
-		rm -rf $HADOOPFOLDER
+		rm -rf $REDISFOLDER
 		echo " - Uncompressing"
-		tar -xvf $HADOOPFILE
+		tar -xvf $REDISFILE
 		echo " - Building"
-		cd $HADOOPFOLDER
+		cd $REDISFOLDER
 		make
-		if [[ $HADOOP_ROLE = *test* ]]
+		if [[ $REDIS_ROLE = *test* ]]
 			then
 			echo " - Testing"
 			make test
 		fi
-		if [[ $HADOOP_ROLE = *install* ]]
+		if [[ $REDIS_ROLE = *install* ]]
 		then		
 			echo " - Installing"
 			make install
@@ -809,7 +809,7 @@ then
 
 
 
-	if [[ $HADOOP_ROLE = *configure* ]]
+	if [[ $REDIS_ROLE = *configure* ]]
 	then
 
 		# 
@@ -818,20 +818,20 @@ then
 
 		echo " - Configuring"
 
-# --- HADOOP CONTROL SCRIPT -- START ----
+# --- REDIS CONTROL SCRIPT -- START ----
 	
-	cat > /etc/init.d/$HADOOPUSER-server << EOF
+	cat > /etc/init.d/$REDISUSER-server << EOF
 #! /bin/bash
 ### BEGIN INIT INFO
-# Provides:		 $HADOOPUSER-server
+# Provides:		 $REDISUSER-server
 # Required-Start:	   $syslog $remote_fs
 # Required-Stop:	$syslog $remote_fs
 # Should-Start:	 $local_fs
 # Should-Stop:	  $local_fs
 # Default-Start:	2 3 4 5
 # Default-Stop:	 0 1 6
-# Short-Description:	$HADOOPUSER-server - Persistent key-value db for ThumbWhere
-# Description:	  $HADOOPUSER-server - Persistent key-value db for ThumbWhere
+# Short-Description:	$REDISUSER-server - Persistent key-value db for ThumbWhere
+# Description:	  $REDISUSER-server - Persistent key-value db for ThumbWhere
 ### END INIT INFO
 
 # Source function library
@@ -848,11 +848,11 @@ fi
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/local/bin/redis-server
-DAEMON_ARGS=$HADOOPCONFIG
-USER=\$HADOOPUSER
+DAEMON_ARGS=$REDISCONFIG
+USER=\$REDISUSER
 PROCESSNAME=redis-server
 DESC=redis-server
-PIDFILE=$HADOOPPID
+PIDFILE=$REDISPID
 DESC="Redis"
 
 test -x \$DAEMON || exit 0
@@ -860,7 +860,7 @@ test -x \$DAEMON || exit 0
 set -e
 
 if [ -f "\$PIDFILE" ]; then
-	HADOOPPIDN="\`cat \"\$PIDFILE\" 2> /dev/null\`"
+	REDISPIDN="\`cat \"\$PIDFILE\" 2> /dev/null\`"
 fi
 
 case "\$1" in
@@ -879,7 +879,7 @@ case "\$1" in
 		fi
 	elif [ "\$os" = "debian" ] || [ "\$os" = "ubuntu" ]
 	then	
-		if start-stop-daemon --start --quiet --umask 007 --pidfile \$PIDFILE --chuid $HADOOPUSER:$GROUP --exec \$DAEMON -- \$DAEMON_ARGS  2> /dev/null
+		if start-stop-daemon --start --quiet --umask 007 --pidfile \$PIDFILE --chuid $REDISUSER:$GROUP --exec \$DAEMON -- \$DAEMON_ARGS  2> /dev/null
  		then
 			echo " ${cc_green}OK${cc_normal}"
 		else
@@ -914,29 +914,29 @@ esac
 exit 0
 EOF
 
-		chmod +x /etc/init.d/$HADOOPUSER-server
-		chown root.root /etc/init.d/$HADOOPUSER-server
+		chmod +x /etc/init.d/$REDISUSER-server
+		chown root.root /etc/init.d/$REDISUSER-server
 		
-		# ---- HADOOP CONTROL SCRIPT -- END ----
+		# ---- REDIS CONTROL SCRIPT -- END ----
 
 
-		# ---- HADOOP CONFIG -- START ----
+		# ---- REDIS CONFIG -- START ----
 
-		cat > $HADOOPCONFIG << EOF
+		cat > $REDISCONFIG << EOF
 daemonize yes
-pidfile  $HADOOPPID
+pidfile  $REDISPID
 port 6379
-bind $HADOOPBIND
+bind $REDISBIND
 timeout 300
 loglevel notice
-logfile $HADOOPLOGS/redis-server.log
+logfile $REDISLOGS/redis-server.log
 databases 16
 save 900 1
 save 300 10
 save 60 10000
 rdbcompression yes
 dbfilename thumbwhere.rdb
-dir $HOMEROOT/$HADOOPUSER
+dir $HOMEROOT/$REDISUSER
 # slaveof <masterip> <masterport>
 # masterauth <master-password>
 # requirepass foobared
@@ -950,14 +950,14 @@ appendfsync always
 #shareobjects no
 #shareobjectspoolsize 1024
 EOF
-		# ---- HADOOP CONFIG -- END ----
+		# ---- REDIS CONFIG -- END ----
  	fi
 
 	echo " - Setting permissions"
-	chown -R $HADOOPUSER.$GROUP $HOMEROOT/$HADOOPUSER/
+	chown -R $REDISUSER.$GROUP $HOMEROOT/$REDISUSER/
 	
 	# Enable or disable...
-	enable_disable $HADOOPUSER $HADOOP_ROLE
+	enable_disable $REDISUSER $REDIS_ROLE
 
 fi
 
